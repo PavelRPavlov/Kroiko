@@ -34,15 +34,15 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="sib_api_v3_sdk" Version="4.0.2" />
-    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="34.1.30" />
-    <PackageReference Include="Syncfusion.Blazor.Cards" Version="34.1.30" />
-    <PackageReference Include="Syncfusion.Blazor.Grid" Version="34.1.30" />
-    <PackageReference Include="Syncfusion.Blazor.InPlaceEditor" Version="34.1.30" />
-    <PackageReference Include="Syncfusion.Blazor.Inputs" Version="34.1.30" />
-    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="34.1.30" />
-    <PackageReference Include="Syncfusion.Blazor.PivotTable" Version="34.1.30" />
-    <PackageReference Include="Syncfusion.Blazor.SplitButtons" Version="34.1.30" />
-    <PackageReference Include="Syncfusion.Blazor.Themes" Version="34.1.30" />
+    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="28.1.41" />
+    <PackageReference Include="Syncfusion.Blazor.Cards" Version="28.1.41" />
+    <PackageReference Include="Syncfusion.Blazor.Grid" Version="28.1.41" />
+    <PackageReference Include="Syncfusion.Blazor.InPlaceEditor" Version="28.1.41" />
+    <PackageReference Include="Syncfusion.Blazor.Inputs" Version="28.1.41" />
+    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="28.1.41" />
+    <PackageReference Include="Syncfusion.Blazor.PivotTable" Version="28.1.41" />
+    <PackageReference Include="Syncfusion.Blazor.SplitButtons" Version="28.1.41" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="28.1.41" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
   </ItemGroup>
 

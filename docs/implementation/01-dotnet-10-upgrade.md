@@ -109,9 +109,14 @@ Phase-0 commit(s) to return to the .NET 8 baseline.
   here — is what would catch. LargeXlsx-in-WASM already gets a dedicated **Phase 0.5 spike**; adopt 2.x there.
   This also leaves one residual **moderate** transitive advisory (`SharpCompress 0.39.0`, pulled by LargeXlsx),
   which LargeXlsx 2.x's newer dependency clears.
-- **Radzen** bumped `5.7.10 → 11.1.3` per the plan; it compiles clean against the current Server UI, so no
-  fallback was needed (Radzen is still removed in Phase 1).
-- **Syncfusion** bumped `28.1.41 → 34.1.30`, which has a native **net10.0** build (targets net8/net9/net10).
+- **Radzen** bumped `5.7.10 → 11.1.3` — kept (it clears a **high**-severity `System.Linq.Dynamic.Core`
+  advisory that 5.7.10 pulls in). One runtime break had to be fixed: Radzen 11 removed the `material3`
+  theme, so `_Host.cshtml` now references `material.css`.
+- **Syncfusion** bumped to `34.1.30` then **reverted to `28.1.41`** (the shipped/validated version). v34
+  introduced runtime breaking changes that the build doesn't catch (e.g. `SfTab` requires an `ID` with
+  `EnablePersistence`, and the grids were unverified). Since Syncfusion is **removed in Phase 1**, chasing
+  v34 breakage is churn on soon-to-be-deleted code; 28.1.41 runs on .NET 10 via net8 compat and preserves
+  behaviour. No vuln regression from the revert.
 
 ## Findings from the upgrade
 - **EF Core 10 `PendingModelChangesWarning` now throws.** The `User` columns `Name`, `MobileNumber`
