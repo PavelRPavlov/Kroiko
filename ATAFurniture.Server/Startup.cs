@@ -23,9 +23,8 @@ using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
-using Radzen;
+using MudBlazor.Services;
 using Serilog;
-using Syncfusion.Blazor;
 
 namespace ATAFurniture.Server;
 
@@ -71,14 +70,10 @@ public class Startup(IConfiguration configuration, IWebHostEnvironment environme
             }*/
         ).AddMicrosoftIdentityUI();
 
-        services.AddScoped<DialogService>();
-        services.AddScoped<NotificationService>();
-        services.AddScoped<ContextMenuService>();
-        services.AddScoped<TooltipService>();
         services.AddRazorComponents();
-        
-        services.AddSyncfusionBlazor();
-        
+
+        services.AddMudServices();
+
         services.AddRazorPages();
         services.AddServerSideBlazor();
 

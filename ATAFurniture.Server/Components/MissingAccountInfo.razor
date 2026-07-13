@@ -1,48 +1,31 @@
-﻿@using Kroiko.Domain
+@using Kroiko.Domain
 
 @if (!_isContactInfoComplete)
 {
-    <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Filled">
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="my-2">
         Потребителският профил няма пълна информация
-    </RadzenAlert>
-    <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Filled">
+    </MudAlert>
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="my-2">
         Генерираните документи няма да съдържат контакти
-    </RadzenAlert>
-    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Outlined" Shade="Shade.Default">
+    </MudAlert>
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-2">
         Може да въведете информацията в профилa си от <a href="MicrosoftIdentity/Account/EditProfile" class="btn btn-link">тук</a>
-    </RadzenAlert>
-    
-    <RadzenTemplateForm TItem="ContactInfo" Data=@ConverterContext.ContactInfo>
-        <RadzenFieldset Text="Временни контакти (няма да бъдат запазени)">
-            <RadzenStack Gap="1rem">
-                <RadzenRow>
-                    <RadzenColumn Size="12" SizeMD="4">
-                        <RadzenLabel Text="Име на фирма"></RadzenLabel>
-                    </RadzenColumn>
-                    <RadzenColumn Size="12" SizeMD="8">
-                        <RadzenTextBox 
-                            class="w-100"
-                            style="display: block"
-                            Name="CompanyName"
-                            @bind-Value=@ConverterContext.ContactInfo.CompanyName/>
-                        <RadzenRequiredValidator Component="CompanyName" Text="Полето е задължително" Style="position: relative"/>
-                    </RadzenColumn>
-                </RadzenRow>
-                <RadzenRow>
-                    <RadzenColumn Size="12" SizeMD="4">
-                        <RadzenLabel Text="Телефон за връзка"></RadzenLabel>
-                    </RadzenColumn>
-                    <RadzenColumn Size="12" SizeMD="8">
-                        <RadzenTextBox
-                            class="w-100"
-                            style="display: block"
-                            Name="MobileNumber"
-                            @bind-Value=@ConverterContext.ContactInfo.MobileNumber/>
-                        <RadzenRequiredValidator Component="MobileNumber" Text="Полето е задължително" Style="position: relative"/>
-                    </RadzenColumn>
-                </RadzenRow>
-            </RadzenStack>
-        </RadzenFieldset>
-    </RadzenTemplateForm>
+    </MudAlert>
+
+    <MudPaper Class="pa-4 my-2">
+        <MudText Typo="Typo.subtitle1" GutterBottom="true">Временни контакти (няма да бъдат запазени)</MudText>
+        <MudForm>
+            <MudTextField @bind-Value="ConverterContext.ContactInfo.CompanyName"
+                          Label="Име на фирма"
+                          Required="true"
+                          RequiredError="Полето е задължително"
+                          Class="my-2" />
+            <MudTextField @bind-Value="ConverterContext.ContactInfo.MobileNumber"
+                          Label="Телефон за връзка"
+                          Required="true"
+                          RequiredError="Полето е задължително"
+                          Class="my-2" />
+        </MudForm>
+    </MudPaper>
     <br/>
 }

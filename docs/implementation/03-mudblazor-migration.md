@@ -1,6 +1,8 @@
 # Phase 1 — Implementation plan: Replace Syncfusion + Radzen with MudBlazor
 
-> **Status:** Not started
+> **Status:** Done (2026-07-13) — MudBlazor 9.7.0; all components ported, both kits + the
+> Syncfusion license removed; solution builds clean. Manual click-through still recommended
+> (see Testing & verification).
 > **ADR:** [ADR-0006](../adr/0006-replace-syncfusion-radzen-with-mudblazor.md) · **Prerequisite:** Phase 0; Spike B reviewed
 > **Est. effort:** M–L (the grid port is the bulk)
 > Index: [00-overview.md](00-overview.md) · Context: [../../CONTEXT.md](../../CONTEXT.md)
@@ -127,10 +129,10 @@ Per-commit revert. T7 (removal) is the point of no return for the old kits — v
 thoroughly before it.
 
 ## Definition of done
-- [ ] Zero `Syncfusion.*` / `Radzen.*` references anywhere.
-- [ ] No Syncfusion license key; `Program.cs` no longer registers one; CONTEXT.md updated.
-- [ ] Full flow works for all companies on MudBlazor; one shared spinner; dead CSS gone.
-- [ ] Fix-while-here bugs (spinner-hang, dead `OnTabCreated`, `ContinueWith`) resolved.
+- [x] Zero `Syncfusion.*` / `Radzen.*` references anywhere. *(Verified: package refs, `@using`s, CSS/JS, and DI registrations all removed; `grep -rE "Syncfusion|Radzen"` over source is empty.)*
+- [x] No Syncfusion license key; `Program.cs` no longer registers one; CONTEXT.md updated. *(License block deleted from `Program.cs`; §4 secrets updated; `init-local-secrets.ps1` comment updated.)*
+- [~] Full flow works for all companies on MudBlazor; one shared spinner; dead CSS gone. *(Shared `Components/Spinner.razor` in all five spots; `.e-grid`/`.e-tab` `<style>` blocks gone; solution builds clean. **End-to-end click-through per company still to be run manually** — see Testing & verification.)*
+- [x] Fix-while-here bugs (spinner-hang, dead `OnTabCreated`, `ContinueWith`) resolved. *(Upload spinner reset in a `finally`; `OnTabCreated`/`OnTabItemSelected` deleted; `ContinueWith` replaced with `await Task.Delay`.)*
 
 ## Phase-specific risks
 | Risk | Mitigation |

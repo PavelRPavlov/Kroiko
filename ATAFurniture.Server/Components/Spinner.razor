@@ -1,0 +1,11 @@
+@* Shared indeterminate spinner — one place for the loading indicator reused across the app
+   (previously five duplicated progress-circular blocks). *@
+
+<MudStack AlignItems="AlignItems.Center" Class="pa-3">
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    <MudText Typo="Typo.subtitle2">@Label</MudText>
+</MudStack>
+
+@code {
+    [Parameter] public string Label { get; set; } = "Working";
+}

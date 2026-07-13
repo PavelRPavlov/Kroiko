@@ -18,7 +18,10 @@ public static class LoniraExtensions
                 Width = detail.Width,
                 Height = detail.Height,
                 Quantity = detail.Quantity,
-                LoniraEdges = $"{GetLoniraEdges(detail)}; {detail.Cabinet} {detail.CuttingNumber}",
+                // Only the edging descriptor goes into the "Кантиране" column — shown in the review
+                // grid and written to the generated file. (The cabinet/cutting-number suffix that
+                // used to be appended here is intentionally dropped.)
+                LoniraEdges = GetLoniraEdges(detail),
                 Note = CreateLoniraNote(detail)
             });
         }

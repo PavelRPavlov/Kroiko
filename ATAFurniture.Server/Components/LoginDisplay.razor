@@ -1,18 +1,17 @@
-﻿<AuthorizeView>
+<AuthorizeView Context="authState">
     <Authorized>
-        <RadzenProfileMenu>
-            <Template>
-                <RadzenRow>
-                    <RadzenLabel Text="Hello,"/>
-                    <RadzenLabel Text=@context.User.Identity.Name></RadzenLabel>
-                </RadzenRow>
-            </Template>
+        <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft">
+            <ActivatorContent>
+                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AccountCircle">
+                    Hello, @authState.User.Identity.Name
+                </MudButton>
+            </ActivatorContent>
             <ChildContent>
-                <RadzenProfileMenuItem Text="Edit Profile" Path="MicrosoftIdentity/Account/EditProfile" Icon="edit"></RadzenProfileMenuItem>
-                <RadzenProfileMenuItem Text="Reset Password" Path="MicrosoftIdentity/Account/ResetPassword" Icon="lock_reset"></RadzenProfileMenuItem>
-                <RadzenProfileMenuItem Text="Sign Out" Path="MicrosoftIdentity/Account/SignOut" Icon="logout"></RadzenProfileMenuItem>
+                <MudMenuItem Href="MicrosoftIdentity/Account/EditProfile" Icon="@Icons.Material.Filled.Edit">Edit Profile</MudMenuItem>
+                <MudMenuItem Href="MicrosoftIdentity/Account/ResetPassword" Icon="@Icons.Material.Filled.LockReset">Reset Password</MudMenuItem>
+                <MudMenuItem Href="MicrosoftIdentity/Account/SignOut" Icon="@Icons.Material.Filled.Logout">Sign Out</MudMenuItem>
             </ChildContent>
-        </RadzenProfileMenu>
+        </MudMenu>
     </Authorized>
     <NotAuthorized>
         <a href="MicrosoftIdentity/Account/SignIn" class="btn btn-primary">Log in</a>

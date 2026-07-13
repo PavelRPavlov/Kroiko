@@ -8,11 +8,11 @@
 
 @if(_isUserContextReady)
 {
-    <RadzenStack Gap="1em">
+    <MudStack Spacing="4">
         <UserCreditsComponent UserContextService="@UserContextService"/>
         <TargetCompanySelectionComponent UserContextService="@UserContextService" Context="@Context"/>
         <FileUploadComponent UserContextService="@UserContextService" Context="@Context"/>
-    
+
         @if (Context.Details.Any())
         {
             <FileDisplayComponent Context="@Context"/>
@@ -22,13 +22,11 @@
         {
             <OrderHandlingComponent UserContextService="@UserContextService"  Context="@Context"/>
         }
-    </RadzenStack>
+    </MudStack>
 }
 else
 {
-    <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large">
-        <Template><h6>Working</h6></Template>
-    </RadzenProgressBarCircular>
+    <Spinner />
 }
 
 @code {

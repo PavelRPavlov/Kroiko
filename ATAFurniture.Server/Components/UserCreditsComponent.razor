@@ -1,20 +1,19 @@
 ﻿@using ATAFurniture.Server.DataAccess
 @implements IDisposable
 
-<RadzenCard>
-    <RadzenRow AlignItems="AlignItems.Center">
-        <RadzenLabel Text="Налични кредити: "/><RadzenLabel Text="@UserContextService.User.CreditsCount.ToString()"></RadzenLabel>
+<MudPaper Class="pa-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudText>Налични кредити: </MudText>
+        <MudText Typo="Typo.subtitle1"><b>@UserContextService.User.CreditsCount</b></MudText>
         @if (UserContextService.User.CreditsCount <= 0)
         {
-            <RadzenColumn Size="12" SizeMD="8">
-                <RadzenButton Text="Добави кредити"
-                              Icon="add_circle_outline"
-                              ButtonStyle="ButtonStyle.Secondary"
-                              Click="OnAddCreditsButtonPress"/>
-            </RadzenColumn>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.AddCircleOutline"
+                       OnClick="OnAddCreditsButtonPress">Добави кредити</MudButton>
         }
-    </RadzenRow>
-</RadzenCard>
+    </MudStack>
+</MudPaper>
 
 @code {
     [Parameter] public UserContextService UserContextService { get; set; }

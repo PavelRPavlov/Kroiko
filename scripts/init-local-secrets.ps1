@@ -5,9 +5,8 @@
 #
 #   ./scripts/init-local-secrets.ps1
 #
-# SyncfusionLicenseKey and the Azure AD B2C (AzureAd:*) section are intentionally left unset:
-# in Development the app falls back to a Development-only Syncfusion bypass and an auto
-# sign-in dev user (see Program.cs / Startup.cs / Auth/DevAuthHandler.cs).
+# The Azure AD B2C (AzureAd:*) section is intentionally left unset: in Development the app
+# falls back to an auto sign-in dev user (see Startup.cs / Auth/DevAuthHandler.cs).
 
 $ErrorActionPreference = "Stop"
 $project = Join-Path $PSScriptRoot "..\ATAFurniture.Server"

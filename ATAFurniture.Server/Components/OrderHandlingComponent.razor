@@ -1,18 +1,14 @@
-﻿@implements IDisposable
-
-<RadzenCard>
-    <RadzenLabel class="py-3" Text="Избери една от опциите:"></RadzenLabel>
-    <RadzenRow class="py-3">
-        <SfButton CssClass="e-primary" @onclick="OnCreateFilesOptionSelected"><i class="bi-file-earmark-excel"></i> Генерирай бланки за поръчка</SfButton>
-        <SfButton CssClass="e-primary" @onclick="OnSendEmailOptionSelected"><i class="bi-envelope-at"></i> Изпрати Email поръчка</SfButton>
-    </RadzenRow>
+<MudPaper Class="pa-4">
+    <MudText Class="py-3">Избери една от опциите:</MudText>
+    <MudStack Row="true" Class="py-3" Spacing="2">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.GridOn" OnClick="OnCreateFilesOptionSelected">Генерирай бланки за поръчка</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Email" OnClick="OnSendEmailOptionSelected">Изпрати Email поръчка</MudButton>
+    </MudStack>
     @if (_shouldGenerateFiles)
     {
         @if (_areFilesGenerating)
         {
-            <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large">
-                <Template><h6>Working</h6></Template>
-            </RadzenProgressBarCircular>
+            <Spinner />
         }
         else
         {
@@ -29,43 +25,45 @@
         if (string.IsNullOrEmpty(Context.ContactInfo.CompanyName) ||
             string.IsNullOrEmpty(Context.ContactInfo.MobileNumber))
         {
-            <RadzenAlert Variant="Variant.Filled" AlertStyle="AlertStyle.Danger" Title="Липсващи контакти">
-                <p>Няма въведен телефонен номер! Поръчката ще бъде изпратена без тази инфомация.</p>
-            </RadzenAlert>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
+                <MudText Typo="Typo.subtitle2">Липсващи контакти</MudText>
+                Няма въведен телефонен номер! Поръчката ще бъде изпратена без тази инфомация.
+            </MudAlert>
         }
-        
-        <RadzenAlert Variant="Variant.Filled" AlertStyle="AlertStyle.Warning" Title="Тестване">
-            <p>Използвайте отметката за да изпратите тестов Email само към вашата поща</p>
-            <SfCheckBox TChecked="bool" @bind-Checked="_isTestEmail" Label="Изпрати тестов Email"></SfCheckBox>
-        </RadzenAlert>
-        
-        <RadzenAlert Variant="Variant.Outlined" AlertStyle="AlertStyle.Info" Title="Информация">
-            <p>Тази опция ще изпрати реален Email към <span class="font-weight-bold">@(_isTestEmail ? Context.ContactInfo.Email : Context.TargetCompany.Email)</span> с прикачени и попълнени бланки</p>
-        </RadzenAlert>
-        
-        <SfButton CssClass="e-sucess" Content="Изпрати e-mail поръчка" @onclick="OnSendEmailClicked"></SfButton>
-        
-        if(_sendingEmail)
+
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="my-2">
+            <MudText Typo="Typo.subtitle2">Тестване</MudText>
+            Използвайте отметката за да изпратите тестов Email само към вашата поща
+            <MudCheckBox T="bool" @bind-Value="_isTestEmail" Label="Изпрати тестов Email" />
+        </MudAlert>
+
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-2">
+            <MudText Typo="Typo.subtitle2">Информация</MudText>
+            Тази опция ще изпрати реален Email към <span class="font-weight-bold">@(_isTestEmail ? Context.ContactInfo.Email : Context.TargetCompany.Email)</span> с прикачени и попълнени бланки
+        </MudAlert>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="OnSendEmailClicked">Изпрати e-mail поръчка</MudButton>
+
+        if (_sendingEmail)
         {
-            <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" class="p-3">
-                <Template><h6>Working</h6></Template>
-            </RadzenProgressBarCircular>
+            <Spinner />
         }
         else
         {
             @if (_isEmailSentSuccessful.HasValue && _isEmailSentSuccessful.Value)
             {
-                <RadzenAlert Variant="Variant.Filled" AlertStyle="AlertStyle.Success" Title="Информация">
-                    <p>Успешно изпратихме е-mail към @_toEmail.Email</p>
-                </RadzenAlert>
-                
+                <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="my-2">
+                    <MudText Typo="Typo.subtitle2">Информация</MudText>
+                    Успешно изпратихме е-mail към @_toEmail.Email
+                </MudAlert>
             }
             @if (_isEmailSentSuccessful.HasValue && !_isEmailSentSuccessful.Value)
             {
-                <RadzenAlert Variant="Variant.Filled" AlertStyle="AlertStyle.Danger" Title="Възникна грешка">
-                    <p>Моля опитайте пак или опишете проблема на email support@kroiko.com</p>
-                </RadzenAlert>
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
+                    <MudText Typo="Typo.subtitle2">Възникна грешка</MudText>
+                    Моля опитайте пак или опишете проблема на email support@kroiko.com
+                </MudAlert>
             }
         }
     }
-</RadzenCard>
+</MudPaper>

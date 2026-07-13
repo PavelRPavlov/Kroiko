@@ -57,7 +57,7 @@ Browser ──SignalR circuit──► ATAFurniture.Server (Blazor Server, .NET 
 
 - **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `ATAFurniture.Server.Tests` (xUnit — currently **empty**), `UWPTextConverter` (**dead legacy**, to be deleted).
 - **Auth:** Azure AD B2C; per-page `[Authorize]` (global filter is commented out). Claims read in `UserContextService`.
-- **Secrets:** SQL conn string, Azure Storage conn string, SendinBlue API key, Syncfusion license key — all from user-secrets/env (not committed). Sentry DSN **is** committed (should be rotated/moved).
+- **Secrets:** SQL conn string, Azure Storage conn string, SendinBlue API key — all from user-secrets/env (not committed). Sentry DSN **is** committed (should be rotated/moved). *(The Syncfusion license key is gone — [ADR-0006](docs/adr/0006-replace-syncfusion-radzen-with-mudblazor.md) replaced Syncfusion + Radzen with MudBlazor, one fewer secret.)*
 - **Observability:** Serilog (console + rolling file) + Sentry.
 
 ## 5. Target architecture (what we are migrating to)

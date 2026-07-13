@@ -2,22 +2,32 @@
 @using ATAFurniture.Server.Models
 @using ATAFurniture.Server.DataAccess
 
-<RadzenCard>
-    <RadzenRow AlignItems="AlignItems.Center">
-        <RadzenLabel Text="Изберете към коя фирма ще правите поръчка: "></RadzenLabel>
-        <RadzenDropDown @bind-Value="Context.TargetCompany" TValue="SupportedCompany" Data="@_supportedCompanies" TextProperty="Translation" Change="@(args => OnUserSelection(args))"></RadzenDropDown>
-    </RadzenRow>
-</RadzenCard>
+<MudPaper Class="pa-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudText>Изберете към коя фирма ще правите поръчка: </MudText>
+        <MudSelect T="SupportedCompany"
+                   Value="Context.TargetCompany"
+                   ValueChanged="OnUserSelection"
+                   ToStringFunc="@(c => c?.Translation)"
+                   Dense="true"
+                   Variant="Variant.Outlined">
+            @foreach (var company in _supportedCompanies)
+            {
+                <MudSelectItem Value="@company">@company.Translation</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+</MudPaper>
 
 @code {
     [Parameter] public UserContextService UserContextService { get; set; }
     [Parameter] public ConverterContext Context { get; set; }
-    
+
     readonly SupportedCompany[] _supportedCompanies = [SupportedCompanies.Lonira, SupportedCompanies.MegaTrading, SupportedCompanies.Suliver, SupportedCompanies.SuliverKuklensko];
 
-    private async Task OnUserSelection(object args)
+    private async Task OnUserSelection(SupportedCompany company)
     {
-        Context.TargetCompany = (SupportedCompany)args;
+        Context.TargetCompany = company;
         await UserContextService.UpdateSelectedCompanyAsync(Context.TargetCompany);
     }
 }

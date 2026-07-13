@@ -1,30 +1,22 @@
-﻿@using ATAFurniture.Server.Models
+@using ATAFurniture.Server.Models
 @using Kroiko.Domain.CellsExtracting
 @using Kroiko.Domain.TemplateBuilding
 @using System.Collections.ObjectModel
-@using AnimationEffect = Syncfusion.Blazor.AnimationEffect
 @implements IDisposable
 
-<RadzenCard>
-    <RadzenLabel class="py-3" Text="Прегледай информацията и редактирай при необходимост:"></RadzenLabel>
+<MudPaper Class="pa-4">
+    <MudText Class="py-3">Прегледай информацията и редактирай при необходимост:</MudText>
     @if (_isLoadingFiles)
     {
-        <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large">
-            <Template><h6>Working</h6></Template>
-        </RadzenProgressBarCircular>
+        <Spinner />
     }
     else
     {
-        <SfTab ID="orderFilesTab" ShowCloseButton="false" AllowDragAndDrop="false" EnablePersistence="true" ReorderActiveTab="false">
-            <TabEvents Selecting="OnTabItemSelected"/>
-            <TabAnimationSettings>
-                <TabAnimationPrevious Effect="AnimationEffect.None"></TabAnimationPrevious>
-                <TabAnimationNext Effect="AnimationEffect.None"></TabAnimationNext>
-            </TabAnimationSettings>
-            <TabItems>
-                @foreach (var file in Context.Files)
-                {
-                    switch (Context.TargetCompany.Name)
+        <MudTabs Rounded="true" Border="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-4">
+            @foreach (var file in Context.Files)
+            {
+                <MudTabPanel Text="@file.FileName">
+                    @switch (Context.TargetCompany.Name)
                     {
                         case nameof(SupportedCompanies.Lonira):
                             <LoniraTabItemContent File="@file" Context="@Context"/>
@@ -38,11 +30,11 @@
                         default:
                             break;
                     }
-                }
-            </TabItems>
-        </SfTab>
+                </MudTabPanel>
+            }
+        </MudTabs>
     }
-</RadzenCard>
+</MudPaper>
 
 @code {
     [Parameter] public ConverterContext Context { get; set; }
@@ -60,23 +52,18 @@
         if (firstRender)
         {
             LoadDataSource();
-            
-            // add 1s delay to show loading indicator
-            await Task.Delay(TimeSpan.FromSeconds(1)).ContinueWith((t) =>
-            {
-                InvokeAsync(() =>
-                {
-                    _isLoadingFiles = false;
-                    StateHasChanged();
-                });
-            });
+
+            // Brief delay so the loading indicator is visible before the tabs appear.
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            _isLoadingFiles = false;
+            StateHasChanged();
         }
     }
 
     private void ContextPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(ConverterContext.Details) ||
-            e.PropertyName == nameof(ConverterContext.TargetCompany) && 
+            e.PropertyName == nameof(ConverterContext.TargetCompany) &&
             !_isInternalChange)
         {
             _isLoadingFiles = true;
@@ -141,41 +128,4 @@
     {
         Context.PropertyChanged -= ContextPropertyChanged;
     }
-
-    private void OnTabItemSelected(SelectingEventArgs obj)
-    {
-        if (obj.IsSwiped)
-        {
-            obj.Cancel = true;
-        }
-    }
-
-    private void OnTabCreated(object obj)
-    {
-        _isLoadingFiles = false;
-    }
 }
-<style>
-    .e-tab .e-tab-header {
-       background: #FAFAFA !important;
-       color: whitesmoke;
-   }
-   .e-tab .e-tab-header .e-toolbar-item.e-active {
-        border-left: 1px solid black;
-        border-top: 1px solid black;
-        border-right: 1px solid black;
-        border-radius: 6px 6px 0 0;
-        color: black;
-    }
-    .e-tab .e-tab-header .e-toolbar-item .e-tab-wrap:hover {
-        border-left: 1px solid black;
-        border-top: 1px solid black;
-        border-right: 1px solid black;
-        border-radius: 6px 6px 0 0;
-        color: black;
-     }
-   .e-tab .e-content {
-        background: #FAFAFA !important;
-        border: 1px solid black;
-   }
-</style>
