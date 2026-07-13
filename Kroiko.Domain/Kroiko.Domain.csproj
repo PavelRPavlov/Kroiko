@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="LargeXlsx" Version="1.11.1" />
+      <PackageReference Include="LargeXlsx" Version="1.12.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -20,11 +20,6 @@
       <None Update="TemplateBuilding\MegaTrading\template.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="DataAccess\CosmosDbConfiguration.cs" />
-      <Compile Remove="DataAccess\CosmosDbContext.cs" />
     </ItemGroup>
 
 </Project>

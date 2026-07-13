@@ -1,0 +1,36 @@
+# Local-only backing services for ATAFurniture.Server — see docs/local-development.md.
+# NOT for production. The credentials below are throwaway local defaults and must match
+# scripts/init-local-secrets.ps1.
+#
+#   docker compose up -d      # start SQL Server + Azurite
+#   docker compose down       # stop (add -v to also wipe the data volumes)
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: kroiko-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Your_strong_Passw0rd!"
+    ports:
+      # Host 14330 (not the default 1433) so this coexists with any other local SQL Server.
+      - "14330:1433"
+    volumes:
+      - kroiko-sql:/var/opt/mssql
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: kroiko-azurite
+    # --skipApiVersionCheck: the Azure SDK requests a newer Storage API version than this
+    # Azurite build recognises; real Azure Storage supports it, so skip the emulator's check.
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data --skipApiVersionCheck"
+    ports:
+      - "10000:10000" # blob
+      - "10001:10001" # queue
+      - "10002:10002" # table
+    volumes:
+      - kroiko-azurite:/data
+
+volumes:
+  kroiko-sql:
+  kroiko-azurite:

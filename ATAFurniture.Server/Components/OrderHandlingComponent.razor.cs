@@ -1,6 +1,7 @@
 ﻿using ATAFurniture.Server.DataAccess;
 using ATAFurniture.Server.Models;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.ExcelFilesGeneration;
 using Kroiko.Domain.TemplateBuilding;
@@ -93,6 +94,9 @@ public partial class OrderHandlingComponent
         var storageContainerName = Configuration["StorageContainerName"];
         
         var blobContainer = new BlobContainerClient(storageConnectionString, storageContainerName);
+        // Ensure the container exists (no-op when it already does, e.g. in production). The download
+        // links are bare blob URIs, so the container must allow public blob read.
+        await blobContainer.CreateIfNotExistsAsync(PublicAccessType.Blob);
         foreach (var file in alreadyGeneratedFiles)
         {
             result.Add(await CreateFileDownloadLink(blobContainer, file));

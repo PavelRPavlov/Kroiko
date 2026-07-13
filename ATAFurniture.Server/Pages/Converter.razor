@@ -4,6 +4,7 @@
 @using ATAFurniture.Server.Models
 @using ATAFurniture.Server.DataAccess
 @using ATAFurniture.Server.Components.FileDisplay
+@using Kroiko.Domain.CellsExtracting
 
 @if(_isUserContextReady)
 {
@@ -42,7 +43,12 @@ else
         {
             await UserContextService.ExtractUserIdentity();
             var lastSelection = UserContextService.User!.LastSelectedCompany;
-            Context.TargetCompany = lastSelection ?? await UserContextService.GetPreviouslySelectedTargetCompanyAsync();
+            // Default to Lonira when the user has no previously-selected company, so a first-time
+            // user can convert without first picking from the dropdown. Revisit if a deliberate
+            // "no default" selection is preferred.
+            Context.TargetCompany = lastSelection
+                ?? await UserContextService.GetPreviouslySelectedTargetCompanyAsync()
+                ?? SupportedCompanies.Lonira;
 
             Context.ContactInfo.CompanyName = UserContextService.User.CompanyName;
             Context.ContactInfo.MobileNumber = UserContextService.User.MobileNumber;
