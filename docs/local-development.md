@@ -38,8 +38,9 @@ keys the app reads is in the phase notes below and in `docs/implementation/01-do
 docker compose up -d
 ```
 
-This starts SQL Server (`localhost,1433`, sa password `Your_strong_Passw0rd!`) and Azurite
-(blob on `localhost:10000`). First run pulls the images (~1.5 GB for SQL Server).
+This starts SQL Server (`localhost,14330`, sa password `Your_strong_Passw0rd!`) and Azurite
+(blob on `localhost:10000`). The non-default SQL port `14330` lets it coexist with any other
+local SQL Server on `1433`. First run pulls the images (~1.5 GB for SQL Server).
 
 ### 2. Create the blob container
 

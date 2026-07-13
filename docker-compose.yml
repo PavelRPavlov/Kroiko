@@ -13,7 +13,8 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "Your_strong_Passw0rd!"
     ports:
-      - "1433:1433"
+      # Host 14330 (not the default 1433) so this coexists with any other local SQL Server.
+      - "14330:1433"
     volumes:
       - kroiko-sql:/var/opt/mssql
 

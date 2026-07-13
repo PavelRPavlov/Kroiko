@@ -14,7 +14,7 @@ $project = Join-Path $PSScriptRoot "..\ATAFurniture.Server"
 
 dotnet user-secrets init --project $project | Out-Null
 
-dotnet user-secrets set "SharkAspNetConnectionString" "Server=localhost,1433;Database=Kroiko;User Id=sa;Password=Your_strong_Passw0rd!;TrustServerCertificate=True;MultipleActiveResultSets=true" --project $project
+dotnet user-secrets set "SharkAspNetConnectionString" "Server=localhost,14330;Database=Kroiko;User Id=sa;Password=Your_strong_Passw0rd!;TrustServerCertificate=True;MultipleActiveResultSets=true" --project $project
 dotnet user-secrets set "AzureStorageConnectionString" "UseDevelopmentStorage=true" --project $project
 dotnet user-secrets set "StorageContainerName" "files" --project $project
 dotnet user-secrets set "EmailSettings:Name" "Local Dev" --project $project
