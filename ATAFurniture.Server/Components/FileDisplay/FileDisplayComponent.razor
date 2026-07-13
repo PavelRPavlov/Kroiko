@@ -88,6 +88,15 @@
 
     private void LoadDataSource()
     {
+        // A target company must be chosen before the details can be grouped into files.
+        // For a first-time user (no previously-selected company) TargetCompany is null
+        // until they pick one from the dropdown, so bail out instead of dereferencing it.
+        // Selecting a company later re-invokes this via ContextPropertyChanged.
+        if (Context.TargetCompany is null)
+        {
+            return;
+        }
+
         var result = new List<KroikoFile>();
         switch (Context.TargetCompany.Name)
         {
