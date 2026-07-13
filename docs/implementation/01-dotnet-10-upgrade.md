@@ -1,7 +1,9 @@
 # Phase 0 — Implementation plan: Upgrade to .NET 10
 
-> **Status:** In progress — solution builds green on .NET 10, packages bumped, CI updated;
-> **manual smoke test (P0-T6) pending** (needs user-secrets + real data; must not auto-send order emails).
+> **Status:** In progress — solution builds green on .NET 10, packages bumped, CI updated.
+> Verified on .NET 10: parse→generate for all three companies (no-secrets tests) **and** a full
+> local Development boot (SQL migrations + dev-only auth). **Real-secret smoke test (B2C sign-in +
+> blob + email) still pending** (needs the lost secrets; must not auto-send order emails).
 > **ADR:** [ADR-0001](../adr/0001-upgrade-to-dotnet-10.md) · **Prerequisite:** .NET 10 SDK installed
 > **Est. effort:** S–M (mostly mechanical; risk is package availability)
 > Index: [00-overview.md](00-overview.md) · Context: [../../CONTEXT.md](../../CONTEXT.md)
@@ -94,7 +96,9 @@ Phase-0 commit(s) to return to the .NET 8 baseline.
 
 ## Definition of done
 - [x] Solution builds on .NET 10, no errors. *(0 errors; only pre-existing nullable/style warnings — see CONTEXT.md §7.)*
-- [ ] Full flow works for all three companies. *(P0-T6 — manual smoke test still pending; needs user-secrets + real data.)*
+- [~] Full flow works for all three companies. *(parse→generate verified on .NET 10 by no-secrets
+  tests; local Development boot verified end-to-end (dev-auth + local SQL + migrations, `[Authorize]`
+  page returns 200). Real B2C sign-in + blob + email still need the recovered secrets.)*
 - [~] CI green on .NET 10; dead functions workflow removed; `cleanup.yml` fixed. *(Workflows updated + functions workflow deleted + `cleanup.yml` token fixed; "green on a push" not yet verified.)*
 - [x] UWP project, Cosmos csproj lines, and tracked cruft gone; `.gitignore` is .NET.
 - [x] Baseline committed. *(On branch `dotnet-10-upgrade`; not yet merged/smoke-tested.)*
@@ -108,6 +112,22 @@ Phase-0 commit(s) to return to the .NET 8 baseline.
 - **Radzen** bumped `5.7.10 → 11.1.3` per the plan; it compiles clean against the current Server UI, so no
   fallback was needed (Radzen is still removed in Phase 1).
 - **Syncfusion** bumped `28.1.41 → 34.1.30`, which has a native **net10.0** build (targets net8/net9/net10).
+
+## Findings from the upgrade
+- **EF Core 10 `PendingModelChangesWarning` now throws.** The `User` columns `Name`, `MobileNumber`
+  and `CompanyName` are `string?` in the entity but the old migrations created them `NOT NULL`.
+  EF Core 9 tolerated this drift at runtime; EF Core 10 promotes it to an error, which broke the
+  Development auto-migrate on boot. **Resolution:** the old (never-deployed) migrations were dropped
+  and replaced by a single fresh **`InitialCreate`** generated on EF Core 10 (no backwards-compat
+  concern — confirmed with the repo owner). The local app now boots and applies it cleanly.
+
+## Local verification harness (added)
+Because the production secrets were lost, two no-secret paths now exist to verify the upgrade:
+- **`ATAFurniture.Server.Tests/GenerationSmokeTests.cs`** — runs parse→generate for all three
+  companies against the checked-in fixtures; asserts real `.xlsx` (ZIP) + the MegaTrading `.cut_mt`.
+- **`docs/local-development.md`** — Docker SQL + Azurite and Development-only bypasses for the
+  Syncfusion licence and Azure AD B2C, so the UI runs locally without cloud secrets. The bypasses
+  are gated to Development and cannot affect production.
 
 ## Phase-specific risks
 | Risk | Mitigation |
