@@ -44,7 +44,7 @@ combine phases**. Each has its own doc with a done-criteria checklist.
 | Phase | Doc | Goal | Depends on |
 |---|---|---|---|
 | 0 | [01-dotnet-10-upgrade.md](01-dotnet-10-upgrade.md) | Retarget everything to .NET 10 on the **current** architecture; green baseline. | — |
-| 0.5 | [02-preflight-spikes.md](02-preflight-spikes.md) | Prove the risky assumptions (esp. LargeXlsx in WASM) before writing migration code. | Phase 0 |
+| 0.5 ✅ | [02-preflight-spikes.md](02-preflight-spikes.md) | Prove the risky assumptions (esp. LargeXlsx in WASM) before writing migration code. **Done: Spike A/B ✅, C deferred.** | Phase 0 |
 | 1 | [03-mudblazor-migration.md](03-mudblazor-migration.md) | Swap Syncfusion + Radzen → MudBlazor on the **still-Server** app. | Phase 0 |
 | 2 | [04-backend-api.md](04-backend-api.md) | Carve out the Minimal API; move DB/credits/email/blob; fix credit bugs. | Phase 1 |
 | 3 | [05-blazor-wasm-client.md](05-blazor-wasm-client.md) | Build the WASM client; move UI + domain gen client-side; rewire auth. | Phase 2 |

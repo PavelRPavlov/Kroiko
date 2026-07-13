@@ -118,6 +118,11 @@ These were found in a code review; several are naturally fixed by the migration.
 - 🟡 **Dead code:** `INotifyPropertyChanged` plumbing on immutable records/entities;
   empty test project; dead UWP project; stale `<Compile Remove Cosmos…>` entries.
 - 🟡 **`SupportedCompanies` key collision:** Suliver / SuliverKuklensko share `Name`.
+- 🟠 **Browser-safety gaps for [ADR-0004](docs/adr/0004-client-side-file-generation.md) (found in Spike 0.5).**
+  `TemplateBuilderBase.ReadTemplateAsync` uses `File.ReadAllTextAsync` (no filesystem in WASM →
+  fetch `template.json` via `HttpClient`); its `JsonSerializer.Deserialize` and the
+  `MegaTrading`/`Suliver` `TableRowProvider` `Type.GetProperty` reflection are trim-fragile
+  (IL2026/IL2070). LargeXlsx generation itself is WASM/trim-clean. → Phase 3 P3-T3/P3-T8.
 
 ## 8. Cross-cutting invariants (do not break)
 

@@ -37,6 +37,11 @@ in-browser file generation into it, and rewire it to call the API with a bearer 
   (previously in `Startup.cs`) in the client. **Fix-while-here:** parser skips a bad line
   instead of discarding the whole file; **fail fast** when a builder/provider is missing
   (null-deref bug).
+- **Spike 0.5 finding — `template.json` loading:** `TemplateBuilderBase.ReadTemplateAsync`
+  reads the template with `File.ReadAllTextAsync`, which has no filesystem in WASM. Fetch each
+  `template.json` via `HttpClient` (ship them under `wwwroot`) and pass the content in; the
+  `JsonSerializer.Deserialize` is trim-unsafe (IL2026) → deserialize via a `JsonSerializerContext`
+  (source-gen). See [02-preflight-spikes.md](02-preflight-spikes.md#findings-for-later-phases).
 - **Verify:** parse + `FileGeneratorService` produce correct bytes entirely in-browser.
 - **Depends on:** P3-T2
 
@@ -88,7 +93,13 @@ in-browser file generation into it, and rewire it to call the API with a bearer 
 ### P3-T8 — Client concerns (logging, config, trimming)
 - **Do:** browser logging (Sentry WASM/Blazor or console); client config holds only public
   values (Api base URL, B2C client id/authority/scope); enable trimming; measure payload.
-- **Verify:** no secret in the shipped bundle; acceptable first-load size.
+- **Spike 0.5 finding — trim-fragile reflection:** `MegaTrading`/`Suliver` `TableRowProvider`
+  read columns via `Type.GetProperty` (IL2070). They survived the trimmed spike (properties were
+  otherwise referenced), but harden them so a future change can’t silently blank cells —
+  source-gen the mapping, add `[DynamicallyAccessedMembers(PublicProperties)]` to the detail type,
+  or add a trimmer-roots descriptor. LargeXlsx/`ExcelFileGenerator` itself is trim-clean.
+- **Verify:** no secret in the shipped bundle; acceptable first-load size; MegaTrading/Suliver
+  `.xlsx` still fully populated from the **trimmed** publish (not just Debug).
 - **Depends on:** P3-T2
 
 ## Sequencing

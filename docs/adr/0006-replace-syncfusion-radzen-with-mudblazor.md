@@ -1,8 +1,13 @@
 # ADR-0006: Replace Syncfusion + Radzen with MudBlazor
 
-- Status: Accepted
+- Status: Accepted — **grid/upload parity validated by Spike B (2026-07-13)**
 - Date: 2026-07-13
 - Deciders: Repo owner
+
+> **Spike B result:** MudBlazor **9.7.0** (net10) under WASM. `MudDataGrid` (`EditMode=Cell`)
+> honours per-column `Editable`, pages 25 rows, and **cell edits write back to the bound item**;
+> `MudFileUpload` → `OpenReadStream(maxAllowedSize)` reads a 600 KB file whole (no 512 KB cap).
+> No blocking customizations. See [../implementation/02-preflight-spikes.md](../implementation/02-preflight-spikes.md).
 
 ## Context
 

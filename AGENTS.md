@@ -69,8 +69,23 @@ dotnet test                                   # test project exists but is curre
   reintroduce Syncfusion or Radzen (they are paid; we removed them deliberately —
   [ADR-0006](docs/adr/0006-replace-syncfusion-radzen-with-mudblazor.md)).
 
+## Commits — the user owns them (applies to every agent & sub-agent)
+
+The user creates **all** commits and writes **all** commit messages **manually**,
+always. No agent or sub-agent may commit on their behalf.
+
+- ❌ Never run `git commit`, `git push`, `git commit --amend`, `git merge`,
+  `git rebase`, `git cherry-pick`, or anything else that creates, rewrites, or
+  publishes a commit — even when the change looks finished or you were just asked to
+  "commit this".
+- ✅ Do edit files, build, and run tests freely. Then **stop before committing** and
+  leave the working tree for the user to review and commit themselves.
+- ✅ If a commit seems warranted, describe what you'd commit (and a suggested
+  message) and let the user run it.
+
 ## Guardrails (do / don't)
 
+- ❌ **Never commit or push.** The user makes every commit manually (see "Commits" above).
 - ✅ Update [CONTEXT.md](CONTEXT.md) and the relevant `docs/implementation/` guide when
   you change things; **record an architectural decision as a new ADR** in `docs/adr/`
   (see [docs/adr/README.md](docs/adr/README.md) for the format).

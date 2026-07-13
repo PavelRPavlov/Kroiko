@@ -1,8 +1,15 @@
 # ADR-0004: Parse and generate order files in the browser
 
-- Status: Accepted (pending validation by Spike A)
+- Status: Accepted — **validated by Spike A (2026-07-13)**
 - Date: 2026-07-13
 - Deciders: Repo owner
+
+> **Spike A result:** `LargeXlsx` runs under the Blazor WASM runtime, including a **trimmed**
+> publish (full Emscripten relink); a generated `.xlsx` re-opened cleanly (openpyxl), with Cyrillic
+> and numeric cells intact. The client-side path holds. Caveats for Phase 3, not this decision:
+> `template.json` loading must move off `File.ReadAllTextAsync` to `HttpClient` + source-gen JSON,
+> and the reflection `TableRowProvider`s want trimmer hardening. See
+> [../implementation/02-preflight-spikes.md](../implementation/02-preflight-spikes.md).
 
 ## Context
 
