@@ -32,11 +32,20 @@ public class Program
             var host = CreateHostBuilder(args).Build();
 
             var key = Configuration.GetSection("SyncfusionLicenseKey").Value;
-            if (string.IsNullOrEmpty(key))
+            if (!string.IsNullOrEmpty(key))
+            {
+                Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(key);
+            }
+            else if (string.Equals(Environment, "Development", StringComparison.OrdinalIgnoreCase))
+            {
+                // Development-only: allow running without a Syncfusion licence (e.g. a lost/rotated
+                // key). Components may render a licensing dialog. Production still requires the key.
+                Log.Warning("SyncfusionLicenseKey is not set; continuing without a Syncfusion licence (Development only).");
+            }
+            else
             {
                 throw new Exception("SyncfusionLicenseKey is not set");
             }
-            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(key);
             
             
             host.Run();

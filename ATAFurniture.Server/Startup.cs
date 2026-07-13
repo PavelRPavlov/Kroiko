@@ -1,7 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using ATAFurniture.Server.Auth;
 using ATAFurniture.Server.DataAccess;
 using ATAFurniture.Server.TemplateBuilding;
+using Microsoft.AspNetCore.Authentication;
 using ATAFurniture.Server.TemplateBuilding.Lonira;
 using ATAFurniture.Server.TemplateBuilding.Suliver;
 using Microsoft.AspNetCore.Builder;
@@ -27,7 +29,7 @@ using Syncfusion.Blazor;
 
 namespace ATAFurniture.Server;
 
-public class Startup(IConfiguration configuration)
+public class Startup(IConfiguration configuration, IWebHostEnvironment environment)
 {
     public IConfiguration Configuration { get; } = configuration;
 
@@ -42,7 +44,20 @@ public class Startup(IConfiguration configuration)
         JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
         // Configuration to sign-in users with Azure AD B2C.
-        services.AddMicrosoftIdentityWebAppAuthentication(Configuration);
+        // Development-only fallback: when there is no B2C configuration (e.g. the secrets are
+        // unavailable locally), auto-sign-in a fixed dev user so the app is usable offline.
+        // Any non-Development environment, or a configured AzureAd:ClientId, uses real B2C.
+        if (environment.IsDevelopment() && string.IsNullOrEmpty(Configuration["AzureAd:ClientId"]))
+        {
+            services
+                .AddAuthentication(DevAuthHandler.SchemeName)
+                .AddScheme<AuthenticationSchemeOptions, DevAuthHandler>(DevAuthHandler.SchemeName, null);
+            services.AddAuthorization();
+        }
+        else
+        {
+            services.AddMicrosoftIdentityWebAppAuthentication(Configuration);
+        }
         
         services.AddHttpContextAccessor();
             
