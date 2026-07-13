@@ -42,17 +42,12 @@ This starts SQL Server (`localhost,14330`, sa password `Your_strong_Passw0rd!`) 
 (blob on `localhost:10000`). The non-default SQL port `14330` lets it coexist with any other
 local SQL Server on `1433`. First run pulls the images (~1.5 GB for SQL Server).
 
-### 2. Create the blob container
+### 2. Blob container — nothing to do
 
-The app uploads generated files to a container named `files`; Azurite starts empty, so
-create it once. With Azure CLI:
-
-```bash
-az storage container create -n files --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
-```
-
-Or connect Azure Storage Explorer to the local emulator and add a `files` blob container.
-(Skip this if you only need parse → generate; the download step is what needs blob.)
+The app creates the `files` blob container on demand (`CreateIfNotExistsAsync`), so no manual
+step is needed. Azurite runs with `--skipApiVersionCheck` (in `docker-compose.yml`) because the
+Azure SDK requests a newer Storage API version than the emulator recognises — real Azure Storage
+supports it, so the check is only skipped locally.
 
 ### 3. Set the local user-secrets
 
