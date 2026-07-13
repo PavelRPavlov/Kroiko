@@ -4,11 +4,13 @@
 name: Build and deploy kroiko-test
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'ATAFurniture.Server/**'
+  # TEMPORARILY DISABLED during active development — auto-deploy on push to main is paused.
+  # Re-enable by uncommenting the push: block below.
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'ATAFurniture.Server/**'
   workflow_dispatch:
 
 jobs:
