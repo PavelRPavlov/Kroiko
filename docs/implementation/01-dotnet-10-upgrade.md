@@ -1,6 +1,7 @@
 # Phase 0 — Implementation plan: Upgrade to .NET 10
 
-> **Status:** Not started
+> **Status:** In progress — solution builds green on .NET 10, packages bumped, CI updated;
+> **manual smoke test (P0-T6) pending** (needs user-secrets + real data; must not auto-send order emails).
 > **ADR:** [ADR-0001](../adr/0001-upgrade-to-dotnet-10.md) · **Prerequisite:** .NET 10 SDK installed
 > **Est. effort:** S–M (mostly mechanical; risk is package availability)
 > Index: [00-overview.md](00-overview.md) · Context: [../../CONTEXT.md](../../CONTEXT.md)
@@ -92,11 +93,21 @@ Isolated to `.csproj`, package versions, `global.json`, CI, and deletions. Rever
 Phase-0 commit(s) to return to the .NET 8 baseline.
 
 ## Definition of done
-- [ ] Solution builds on .NET 10, no errors.
-- [ ] Full flow works for all three companies.
-- [ ] CI green on .NET 10; dead functions workflow removed; `cleanup.yml` fixed.
-- [ ] UWP project, Cosmos csproj lines, and tracked cruft gone; `.gitignore` is .NET.
-- [ ] Baseline committed.
+- [x] Solution builds on .NET 10, no errors. *(0 errors; only pre-existing nullable/style warnings — see CONTEXT.md §7.)*
+- [ ] Full flow works for all three companies. *(P0-T6 — manual smoke test still pending; needs user-secrets + real data.)*
+- [~] CI green on .NET 10; dead functions workflow removed; `cleanup.yml` fixed. *(Workflows updated + functions workflow deleted + `cleanup.yml` token fixed; "green on a push" not yet verified.)*
+- [x] UWP project, Cosmos csproj lines, and tracked cruft gone; `.gitignore` is .NET.
+- [x] Baseline committed. *(On branch `dotnet-10-upgrade`; not yet merged/smoke-tested.)*
+
+## Deviations from the plan (recorded)
+- **LargeXlsx** bumped `1.11.1 → 1.12.0` (latest within major 1), **not** `2.0.x`. A 1→2 major bump on the
+  core Excel-generation library can silently change output, which the manual smoke test (P0-T6) — not runnable
+  here — is what would catch. LargeXlsx-in-WASM already gets a dedicated **Phase 0.5 spike**; adopt 2.x there.
+  This also leaves one residual **moderate** transitive advisory (`SharpCompress 0.39.0`, pulled by LargeXlsx),
+  which LargeXlsx 2.x's newer dependency clears.
+- **Radzen** bumped `5.7.10 → 11.1.3` per the plan; it compiles clean against the current Server UI, so no
+  fallback was needed (Radzen is still removed in Phase 1).
+- **Syncfusion** bumped `28.1.41 → 34.1.30`, which has a native **net10.0** build (targets net8/net9/net10).
 
 ## Phase-specific risks
 | Risk | Mitigation |
