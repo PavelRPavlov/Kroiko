@@ -4,6 +4,7 @@
 > **Domain & architecture context:** [CONTEXT.md](CONTEXT.md).
 > **Architecture decisions (ADRs):** [docs/adr/](docs/adr/).
 > **Active migration plan:** [docs/implementation/00-overview.md](docs/implementation/00-overview.md).
+> **Issue tracker (agents, incl. /wayfinder):** [docs/agents/issue-tracker.md](docs/agents/issue-tracker.md) — GitHub Issues + Project 3, this repo only.
 
 ---
 
@@ -69,23 +70,27 @@ dotnet test                                   # test project exists but is curre
   reintroduce Syncfusion or Radzen (they are paid; we removed them deliberately —
   [ADR-0006](docs/adr/0006-replace-syncfusion-radzen-with-mudblazor.md)).
 
-## Commits — the user owns them (applies to every agent & sub-agent)
+## Commits, pushes & PRs — agents may (applies to every agent & sub-agent, THIS REPO ONLY)
 
-The user creates **all** commits and writes **all** commit messages **manually**,
-always. No agent or sub-agent may commit on their behalf.
+Agents and sub-agents **may create commits, push branches, and open pull requests** on
+this repository ([PavelRPavlov/Kroiko](https://github.com/PavelRPavlov/Kroiko)). This
+permission is scoped to this repo only — it does not extend to any other repository.
 
-- ❌ Never run `git commit`, `git push`, `git commit --amend`, `git merge`,
-  `git rebase`, `git cherry-pick`, or anything else that creates, rewrites, or
-  publishes a commit — even when the change looks finished or you were just asked to
-  "commit this".
-- ✅ Do edit files, build, and run tests freely. Then **stop before committing** and
-  leave the working tree for the user to review and commit themselves.
-- ✅ If a commit seems warranted, describe what you'd commit (and a suggested
-  message) and let the user run it.
+- ✅ Work on a **feature branch** (e.g. `feat/…`, `fix/…`, `docs/…`), commit there, push it,
+  and open a PR against `main` with `gh pr create`. Small, one-concern commits;
+  Conventional-Commit style messages (`feat:`, `fix:`, `docs:`, `chore:` — match `git log`).
+- ✅ Build and run tests before pushing; say in the PR body what was verified.
+- ✅ Review what you stage (`git status` / `git diff --staged`) — commit only the files
+  your task touched, never someone else's unrelated work-in-progress.
+- ❌ Don't push directly to `main`, force-push (`--force` / `--force-with-lease`) any shared
+  branch, or rewrite already-pushed history.
+- ❌ Don't merge PRs or enable auto-merge — the user reviews and merges.
+- ❌ Don't skip hooks (`--no-verify`) or signing.
+- ❌ The repo is **public**: never commit secrets, customer data, or real Polyboard files.
 
 ## Guardrails (do / don't)
 
-- ❌ **Never commit or push.** The user makes every commit manually (see "Commits" above).
+- ✅ Commit, push and open PRs **on a branch** (see "Commits, pushes & PRs" above); never push to `main` or merge.
 - ✅ Update [CONTEXT.md](CONTEXT.md) and the relevant `docs/implementation/` guide when
   you change things; **record an architectural decision as a new ADR** in `docs/adr/`
   (see [docs/adr/README.md](docs/adr/README.md) for the format).
