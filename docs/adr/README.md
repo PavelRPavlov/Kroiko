@@ -14,6 +14,7 @@ The earlier ADRs were deliberately removed (see git history) and are not carried
 | ADR | Decision | Status |
 |---|---|---|
 | [0001](0001-host-pwa-on-azure-static-web-apps.md) | Host the PWA on Azure Static Web Apps at `app.kroiko.com` | Accepted |
+| [0002](0002-pwa-updates-reload-prompt.md) | Deliver PWA updates silently, with an opt-in reload prompt | Accepted |
 
 ## Format
 
