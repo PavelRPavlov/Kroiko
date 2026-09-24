@@ -2,7 +2,7 @@
 
 namespace Kroiko.Domain.ExcelFilesGeneration.XlsxWrapper;
 
-public static class ColumnGeneratorExtensions
+internal static class ColumnGeneratorExtensions
 {
     public static IEnumerable<XlsxColumn> ToColumnStyle(this IEnumerable<int> columnWidths)
     {

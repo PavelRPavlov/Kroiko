@@ -11,6 +11,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <!-- The builders, row providers and generators are internal behind IOrderFormat (ADR-0004 §1); the
+           domain's own tests still pin them one by one. -->
+      <InternalsVisibleTo Include="Kroiko.Domain.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
       <!-- Compiled into the DLL (ADR-0004 §2): no file on disk, so they work in the browser and are
            offline-cached with the assembly. Manifest names: Kroiko.Domain.TemplateBuilding.<Manufacturer>.template.json -->
       <None Remove="TemplateBuilding\*\template.json" />

@@ -2,7 +2,7 @@
 
 namespace Kroiko.Domain.TemplateBuilding.Suliver;
 
-public class SuliverTableRowProvider : ITableRowProvider
+internal sealed class SuliverTableRowProvider : ITableRowProvider
 {
     // Suliver passes an empty value through as it is (null stays null); Lonira writes "".
     private static readonly TableColumn<SuliverDetail>[] Columns =

@@ -2,11 +2,11 @@ using Kroiko.Domain.CellsExtracting;
 
 namespace Kroiko.Domain.TemplateBuilding.Lonira;
 
-public class LoniraTemplateBuilder(ITableRowProvider tableRowProvider) : TemplateBuilderBase
+internal sealed class LoniraTemplateBuilder(ITableRowProvider tableRowProvider) : TemplateBuilderBase
 {
     private const string MaterialNameCellFlag = "{MaterialName}";
 
-    public override Task<IList<ISheet>> BuildTemplateAsync(ContactInfo contactInfo, IEnumerable<KroikoFile> files)
+    public override IList<ISheet> BuildTemplate(ContactInfo contactInfo, IEnumerable<KroikoFile> files)
     {
         List<ISheet> sheets = new();
         foreach (var file in files)
@@ -25,7 +25,7 @@ public class LoniraTemplateBuilder(ITableRowProvider tableRowProvider) : Templat
             sheets.Add(sheet);
         }
 
-        return Task.FromResult<IList<ISheet>>(sheets);
+        return sheets;
     }
 
     private static void PopulateMaterialName(ISheet sheet, string materialName)

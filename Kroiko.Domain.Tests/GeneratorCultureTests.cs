@@ -29,7 +29,7 @@ public sealed class GeneratorCultureTests
     }
 
     [Fact]
-    public async Task Excel_writes_a_centred_invariant_decimal_as_a_number_under_bg_BG()
+    public void Excel_writes_a_centred_invariant_decimal_as_a_number_under_bg_BG()
     {
         var sheet = new SheetBase
         {
@@ -40,7 +40,7 @@ public sealed class GeneratorCultureTests
         List<FileSaveContext> files;
         using (CultureScope.BgBg())
         {
-            files = await new ExcelFileGenerator().GenerateExcelFilesAsync([sheet], new FixedFileName());
+            files = ExcelFileGenerator.GenerateExcelFiles([sheet], new FixedFileName());
         }
 
         var xml = WorksheetXml(files.Should().ContainSingle().Subject.Content);
@@ -63,7 +63,7 @@ public sealed class GeneratorCultureTests
         string text;
         using (CultureScope.BgBg())
         {
-            var file = new MegaTradingFileGenerator()
+            var file = MegaTradingFileGenerator
                 .CreateTextBasedFile(new ContactInfo("Тест ООД", "0888123456"), files)
                 .Should().ContainSingle().Subject;
             text = Encoding.UTF8.GetString(file.Content);

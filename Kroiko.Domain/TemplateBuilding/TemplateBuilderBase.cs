@@ -3,14 +3,14 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace Kroiko.Domain.TemplateBuilding;
 
-public abstract class TemplateBuilderBase : ITemplateBuilder
+internal abstract class TemplateBuilderBase : ITemplateBuilder
 {
     public const string CompanyNameCellFlag = "{CompanyName}";
     public const string MobileNumberCellFlag = "{MobileNumber}";
     public const string TableStartCellFlag = "{TableStart}";
     public const string DifferentEdgeColorCellFlag = "{DifferentEdgeColor}";
 
-    public abstract Task<IList<ISheet>> BuildTemplateAsync(ContactInfo contactInfo, IEnumerable<KroikoFile> files);
+    public abstract IList<ISheet> BuildTemplate(ContactInfo contactInfo, IEnumerable<KroikoFile> files);
 
     protected Cell PopulateStaticInfo(ISheet sheet, ContactInfo contactInfo)
     {

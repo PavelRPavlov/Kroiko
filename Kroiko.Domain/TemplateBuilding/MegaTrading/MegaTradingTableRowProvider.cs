@@ -2,7 +2,7 @@
 
 namespace Kroiko.Domain.TemplateBuilding.MegaTrading;
 
-public class MegaTradingTableRowProvider: ITableRowProvider
+internal sealed class MegaTradingTableRowProvider: ITableRowProvider
 {
     // MegaTrading passes an empty value through as it is (null stays null); Lonira writes "".
     private static readonly TableColumn<MegaTradingDetail>[] Columns =

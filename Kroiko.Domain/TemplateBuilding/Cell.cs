@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Kroiko.Domain.TemplateBuilding;
 
-public record Cell(string Name, byte ContentAlignment = 0)
+internal sealed record Cell(string Name, byte ContentAlignment = 0)
 {
     public static readonly Cell Empty = new(string.Empty);
 

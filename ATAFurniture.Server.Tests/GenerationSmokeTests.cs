@@ -1,15 +1,7 @@
-using System.Collections.ObjectModel;
-using ATAFurniture.Server.Models;
 using FluentAssertions;
 using Kroiko.Domain;
 using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.ExcelFilesGeneration;
-using Kroiko.Domain.ExcelFilesGeneration.XlsxWrapper;
-using Kroiko.Domain.TemplateBuilding;
-using Kroiko.Domain.TemplateBuilding.Lonira;
-using Kroiko.Domain.TemplateBuilding.MegaTrading;
-using Kroiko.Domain.TemplateBuilding.Suliver;
-using Kroiko.Domain.TextFileGeneration;
 using Kroiko.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -34,9 +26,6 @@ public class GenerationSmokeTests
         var extractor = new DetailsExtractorService(NullLogger<DetailsExtractorService>.Instance);
         return await extractor.ExtractDetails(stream);
     }
-
-    private static FileGeneratorService NewGenerator() =>
-        new(new ExcelFileGenerator(), new MegaTradingFileGenerator());
 
     private static ContactInfo Contact() => new(CompanyName: "Test Company", MobileNumber: "0888123456");
 
@@ -79,13 +68,9 @@ public class GenerationSmokeTests
     public async Task Lonira_produces_one_xlsx_per_material()
     {
         var details = await Parse("wardrobes-4-materials");
-        var files = details.GroupBy(d => d.Material)
-            .Where(g => !string.IsNullOrEmpty(g.Key))
-            .Select(g => new KroikoFile { FileName = g.Key, Details = g.ToList().ToLoniraDetails() })
-            .ToList();
+        var format = OrderFormats.For(SupportedCompanies.Lonira);
 
-        var builder = new LoniraTemplateBuilder(new LoniraTableRowProvider());
-        var result = await NewGenerator().CreateFiles(Contact(), files, builder, new LoniraFileNameProvider());
+        var result = format.Generate(Contact(), format.CreateFiles(details), differentEdgeColor: null);
 
         result.Should().HaveCount(4);
         result.Should().OnlyContain(f => f.FileName.EndsWith(".xlsx"));
@@ -95,14 +80,10 @@ public class GenerationSmokeTests
     [Fact]
     public async Task Suliver_produces_a_single_xlsx()
     {
-        var details = new ObservableCollection<Detail>(await Parse("wardrobes-4-materials"));
-        var files = new List<KroikoFile>
-        {
-            new() { FileName = "Suliver", Details = details.ToSuliverDetails() }
-        };
+        var details = await Parse("wardrobes-4-materials");
+        var format = OrderFormats.For(SupportedCompanies.Suliver);
 
-        var builder = new SuliverTemplateBuilder(new SuliverTableRowProvider());
-        var result = await NewGenerator().CreateFiles(Contact(), files, builder, new SuliverFileNameProvider());
+        var result = format.Generate(Contact(), format.CreateFiles(details), differentEdgeColor: null);
 
         result.Should().ContainSingle();
         result[0].FileName.Should().EndWith(".xlsx");
@@ -112,16 +93,11 @@ public class GenerationSmokeTests
     [Fact]
     public async Task MegaTrading_produces_an_xlsx_plus_a_cut_mt_with_exactly_six_material_rows()
     {
-        var details = new ObservableCollection<Detail>(await Parse("wardrobes-4-materials"));
-        var files = new List<KroikoFile>
-        {
-            new() { FileName = "MegaTrading", Details = details.ToMegaTradingDetails() }
-        };
+        var details = await Parse("wardrobes-4-materials");
+        var format = OrderFormats.For(SupportedCompanies.MegaTrading);
 
-        var builder = new MegaTradingTemplateBuilder(new MegaTradingTableRowProvider());
-        // generateTextFiles: true -> also emit the .cut_mt text file.
-        var result = await NewGenerator().CreateFiles(
-            Contact(), files, builder, new MegaTradingFileNameProvider(), generateTextFiles: true);
+        // MegaTrading also emits the .cut_mt text file.
+        var result = format.Generate(Contact(), format.CreateFiles(details), differentEdgeColor: null);
 
         var xlsx = result.Should().ContainSingle(f => f.FileName.EndsWith(".xlsx")).Subject;
         IsXlsx(xlsx).Should().BeTrue();

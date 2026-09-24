@@ -1,18 +1,8 @@
-using System.Collections.ObjectModel;
 using System.Globalization;
-using ATAFurniture.Server.Models;
 using Kroiko.Domain;
 using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.ExcelFilesGeneration;
-using Kroiko.Domain.ExcelFilesGeneration.XlsxWrapper;
-using Kroiko.Domain.TemplateBuilding;
-using Kroiko.Domain.TemplateBuilding.Lonira;
-using Kroiko.Domain.TemplateBuilding.MegaTrading;
-using Kroiko.Domain.TemplateBuilding.Suliver;
-using Kroiko.Domain.TextFileGeneration;
 using Kroiko.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace ATAFurniture.Server.Tests;
@@ -92,108 +82,29 @@ public sealed class GoldenTests
     private static async Task<IReadOnlyList<FileSaveContext>> RunPipelineAsync(
         string fixture, string manufacturer, string? differentEdgeColor = null, CultureInfo? culture = null)
     {
+        var content = await File.ReadAllBytesAsync(TestData.Polyboard(fixture));
+
         // The host's culture for this run: invariant unless a test says otherwise (the bg-BG test).
-        var hostCulture = culture ?? CultureInfo.InvariantCulture;
-        var previousCulture = CultureInfo.CurrentCulture;
-        var previousUiCulture = CultureInfo.CurrentUICulture;
-        CultureInfo.CurrentCulture = hostCulture;
-        CultureInfo.CurrentUICulture = hostCulture;
-        try
+        using var _ = new CultureScope((culture ?? CultureInfo.InvariantCulture).Name);
+
+        // FileUploadComponent (through DetailsExtractorService): a file with any bad line loads nothing.
+        var parsed = PolyboardParser.Parse(content);
+        if (parsed.Errors.Count > 0 || parsed.Details.Count == 0)
         {
-            // FileUploadComponent.razor: parse the uploaded file into ConverterContext.Details.
-            using var stream = new MemoryStream(await File.ReadAllBytesAsync(TestData.Polyboard(fixture)));
-            var extractor = new DetailsExtractorService(NullLogger<DetailsExtractorService>.Instance);
-            var details = new ObservableCollection<Detail>(await extractor.ExtractDetails(stream));
-            if (!details.Any())
-            {
-                // The live app stops here with an error, so there is nothing to record.
-                throw new InvalidOperationException($"'{fixture}' parses to no details; it is not a valid fixture.");
-            }
-
-            var files = GroupIntoFiles(manufacturer, details);
-
-            // Copied from Startup.ConfigureServices (keep in step with it): the keyed builder, row provider and file-name provider, resolved by
-            // company name as OrderHandlingComponent.GenerateFiles does. The builders read their template.json
-            // embedded in Kroiko.Domain, as in production.
-            var services = new ServiceCollection();
-            services.AddKeyedScoped<ITemplateBuilder>(nameof(SupportedCompanies.Lonira),
-                (sp, key) => new LoniraTemplateBuilder(sp.GetRequiredKeyedService<ITableRowProvider>(key)));
-            services.AddKeyedScoped<ITableRowProvider, LoniraTableRowProvider>(nameof(SupportedCompanies.Lonira));
-            services.AddKeyedScoped<IFileNameProvider, LoniraFileNameProvider>(nameof(SupportedCompanies.Lonira));
-            services.AddKeyedScoped<ITemplateBuilder>(nameof(SupportedCompanies.Suliver),
-                (sp, key) => new SuliverTemplateBuilder(sp.GetRequiredKeyedService<ITableRowProvider>(key)));
-            services.AddKeyedScoped<ITableRowProvider, SuliverTableRowProvider>(nameof(SupportedCompanies.Suliver));
-            services.AddKeyedScoped<IFileNameProvider, SuliverFileNameProvider>(nameof(SupportedCompanies.Suliver));
-            services.AddKeyedScoped<ITemplateBuilder>(nameof(SupportedCompanies.MegaTrading),
-                (sp, key) => new MegaTradingTemplateBuilder(sp.GetRequiredKeyedService<ITableRowProvider>(key)));
-            services.AddKeyedScoped<ITableRowProvider, MegaTradingTableRowProvider>(nameof(SupportedCompanies.MegaTrading));
-            services.AddKeyedScoped<IFileNameProvider, MegaTradingFileNameProvider>(nameof(SupportedCompanies.MegaTrading));
-            services.AddScoped<IExcelFileGenerator, ExcelFileGenerator>();
-            services.AddScoped<ITextFileGenerator, MegaTradingFileGenerator>();
-            services.AddScoped<FileGeneratorService>();
-            await using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
-            await using var scope = provider.CreateAsyncScope();
-            var serviceProvider = scope.ServiceProvider;
-
-            // OrderHandlingComponent.GenerateFiles.
-            var fileNameProvider = serviceProvider.GetKeyedService<IFileNameProvider>(manufacturer);
-            var templateBuilder = serviceProvider.GetKeyedService<ITemplateBuilder>(manufacturer);
-            var contact = new ContactInfo(CompanyName: "Тест ООД", MobileNumber: "0888123456");
-            return await serviceProvider.GetRequiredService<FileGeneratorService>().CreateFiles(
-                contact,
-                files,
-                templateBuilder,
-                fileNameProvider,
-                // ConverterContext.DifferentEdgeColor starts as string.Empty when the operator leaves it alone.
-                differentEdgeColor ?? string.Empty,
-                manufacturer == SupportedCompanies.MegaTrading.Name);
+            // The live app stops here with an error, so there is nothing to record.
+            throw new InvalidOperationException($"'{fixture}' does not parse cleanly; it is not a valid fixture.");
         }
-        finally
-        {
-            CultureInfo.CurrentCulture = previousCulture;
-            CultureInfo.CurrentUICulture = previousUiCulture;
-        }
+
+        // FileDisplayComponent, then OrderHandlingComponent.GenerateFiles, through the manufacturer's
+        // IOrderFormat (the Server resolves the same instance by its keyed DI name).
+        var format = OrderFormats.For(Manufacturer(manufacturer));
+        var files = format.CreateFiles(parsed.Details);
+        var contact = new ContactInfo(CompanyName: "Тест ООД", MobileNumber: "0888123456");
+
+        // ConverterContext.DifferentEdgeColor starts as string.Empty when the operator leaves it alone.
+        return format.Generate(contact, files, differentEdgeColor ?? string.Empty);
     }
 
-    // Copied verbatim from FileDisplayComponent.razor's LoadDataSource (ATAFurniture.Server/Components/
-    // FileDisplay/), with Context.TargetCompany.Name -> manufacturer and Context.Details -> details.
-    private static List<KroikoFile> GroupIntoFiles(string manufacturer, ObservableCollection<Detail> details)
-    {
-        var result = new List<KroikoFile>();
-        switch (manufacturer)
-        {
-            case nameof(SupportedCompanies.Lonira):
-                var groups = details.GroupBy(x => x.Material).ToList();
-                foreach (var group in groups.Where(group => !string.IsNullOrEmpty(group.Key)))
-                {
-                    result.Add(new KroikoFile { FileName = group.Key, Details = group.ToList().ToLoniraDetails() });
-                }
-
-                break;
-            case nameof(SupportedCompanies.Suliver):
-                if (details.Any())
-                {
-                    result.Add(new KroikoFile
-                    {
-                        // TODO what is the required file name
-                        FileName = "Suliver",
-                        Details = details.ToSuliverDetails()
-                    });
-                }
-                break;
-            case nameof(SupportedCompanies.MegaTrading):
-                if (details.Any())
-                {
-                    result.Add(new KroikoFile
-                    {
-                        // TODO what is the required file name
-                        FileName = "MegaTrading",
-                        Details = details.ToMegaTradingDetails()
-                    });
-                }
-                break;
-        }
-
-        return result;
-    }
+    private static SupportedCompany Manufacturer(string name) =>
+        new[] { SupportedCompanies.Lonira, SupportedCompanies.Suliver, SupportedCompanies.MegaTrading }.Single(c => c.Name == name);
 }

@@ -2,7 +2,7 @@
 
 namespace Kroiko.Domain.TemplateBuilding.Suliver;
 
-public class SuliverFileNameProvider : IFileNameProvider
+internal sealed class SuliverFileNameProvider : IFileNameProvider
 {
     public string GetFileNameForSheet(ISheet sheet)
     { 

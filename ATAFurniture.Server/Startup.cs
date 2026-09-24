@@ -8,14 +8,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Kroiko.Domain.CellsExtracting;
-using Kroiko.Domain.ExcelFilesGeneration;
-using Kroiko.Domain.ExcelFilesGeneration.XlsxWrapper;
-using Kroiko.Domain.TemplateBuilding;
-using Kroiko.Domain.TemplateBuilding.Lonira;
-using Kroiko.Domain.TemplateBuilding.MegaTrading;
-using Kroiko.Domain.TemplateBuilding.Suliver;
-using Kroiko.Domain.TextFileGeneration;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
@@ -83,21 +75,8 @@ public class Startup(IConfiguration configuration, IWebHostEnvironment environme
         services.AddScoped<UserContextService>();
         
         services.AddScoped<IDetailsExtractorService, DetailsExtractorService>();
-        services.AddKeyedScoped<ITemplateBuilder>(nameof(SupportedCompanies.Lonira),
-            (sp, key) => new LoniraTemplateBuilder(sp.GetRequiredKeyedService<ITableRowProvider>(key)));
-        services.AddKeyedScoped<ITableRowProvider, LoniraTableRowProvider>(nameof(SupportedCompanies.Lonira));
-        services.AddKeyedScoped<IFileNameProvider, LoniraFileNameProvider>(nameof(SupportedCompanies.Lonira));
-        services.AddKeyedScoped<ITemplateBuilder>(nameof(SupportedCompanies.Suliver),
-            (sp, key) => new SuliverTemplateBuilder(sp.GetRequiredKeyedService<ITableRowProvider>(key)));
-        services.AddKeyedScoped<ITableRowProvider, SuliverTableRowProvider>(nameof(SupportedCompanies.Suliver));
-        services.AddKeyedScoped<IFileNameProvider, SuliverFileNameProvider>(nameof(SupportedCompanies.Suliver));
-        services.AddKeyedScoped<ITemplateBuilder>(nameof(SupportedCompanies.MegaTrading),
-            (sp, key) => new MegaTradingTemplateBuilder(sp.GetRequiredKeyedService<ITableRowProvider>(key)));
-        services.AddKeyedScoped<ITableRowProvider, MegaTradingTableRowProvider>(nameof(SupportedCompanies.MegaTrading));
-        services.AddKeyedScoped<IFileNameProvider, MegaTradingFileNameProvider>(nameof(SupportedCompanies.MegaTrading));
-        services.AddScoped<IExcelFileGenerator, ExcelFileGenerator>();
-        services.AddScoped<ITextFileGenerator, MegaTradingFileGenerator>();
-        services.AddScoped<FileGeneratorService>();
+        // One IOrderFormat per manufacturer, keyed by nameof(SupportedCompanies.X) (ADR-0004 §1).
+        services.AddOrderFormats();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

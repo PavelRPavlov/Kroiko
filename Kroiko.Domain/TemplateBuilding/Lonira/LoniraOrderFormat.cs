@@ -1,34 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using Kroiko.Domain.CellsExtracting;
-using Kroiko.Domain.TemplateBuilding;
 
-namespace ATAFurniture.Server.Models;
+namespace Kroiko.Domain.TemplateBuilding.Lonira;
 
-public static class LoniraExtensions
+/// <summary>Lonira: one <c>.xlsx</c> per material, named after it.</summary>
+internal sealed class LoniraOrderFormat()
+    : OrderFormatBase(new LoniraTemplateBuilder(new LoniraTableRowProvider()), new LoniraFileNameProvider())
 {
-    public static List<IKroikoDetail> ToLoniraDetails(this List<Detail> details)
-    {
-        var result = new List<IKroikoDetail>();
-        foreach (var detail in details)
-        {
-            result.Add(new LoniraDetail
-            {
-                Id = Guid.NewGuid(),
-                Width = detail.Width,
-                Height = detail.Height,
-                Quantity = detail.Quantity,
-                // Only the edging descriptor goes into the "Кантиране" column — shown in the review
-                // grid and written to the generated file. (The cabinet/cutting-number suffix that
-                // used to be appended here is intentionally dropped.)
-                LoniraEdges = GetLoniraEdges(detail),
-                Note = CreateLoniraNote(detail)
-            });
-        }
+    public override SupportedCompany Company => SupportedCompanies.Lonira;
 
-        return result;
-    }
+    // One file per material, in order of first use; parts without a material are left out.
+    public override IReadOnlyList<KroikoFile> CreateFiles(IReadOnlyList<Detail> details) =>
+        details.GroupBy(detail => detail.Material)
+            .Where(group => !string.IsNullOrEmpty(group.Key))
+            .Select(group => new KroikoFile { FileName = group.Key, Details = group.Select(ToLoniraDetail).ToList() })
+            .ToList();
+
+    private static IKroikoDetail ToLoniraDetail(Detail detail) => new LoniraDetail
+    {
+        Id = Guid.NewGuid(),
+        Width = detail.Width,
+        Height = detail.Height,
+        Quantity = detail.Quantity,
+        // Only the edging descriptor goes into the "Кантиране" column — shown in the review
+        // grid and written to the generated file. (The cabinet/cutting-number suffix that
+        // used to be appended here is intentionally dropped.)
+        LoniraEdges = GetLoniraEdges(detail),
+        Note = CreateLoniraNote(detail),
+    };
 
     private static string CreateLoniraNote(Detail detail)
     {
@@ -47,7 +46,7 @@ public static class LoniraExtensions
         {
             detail = detail with { Height = detail.Width, Width = detail.Height };
         }
-    
+
         int longEdgeCount = 0;
         int shortEdgeCount = 0;
 
@@ -103,14 +102,14 @@ public static class LoniraExtensions
 
         if (shortEdgeCount == 0 && longEdgeCount != 0)
         {
-            return $"{longEdgeCount} d";
+            return string.Create(CultureInfo.InvariantCulture, $"{longEdgeCount} d");
         }
 
         if (longEdgeCount == 0 && shortEdgeCount != 0)
         {
-            return $"{shortEdgeCount} k";
+            return string.Create(CultureInfo.InvariantCulture, $"{shortEdgeCount} k");
         }
 
-        return $"{shortEdgeCount} k {longEdgeCount} d";
+        return string.Create(CultureInfo.InvariantCulture, $"{shortEdgeCount} k {longEdgeCount} d");
     }
 }

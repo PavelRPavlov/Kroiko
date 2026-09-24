@@ -2,13 +2,11 @@
 using ATAFurniture.Server.Models;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using Kroiko.Domain.CellsExtracting;
+using Kroiko.Domain;
 using Kroiko.Domain.ExcelFilesGeneration;
-using Kroiko.Domain.TemplateBuilding;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using sib_api_v3_sdk.Api;
 using sib_api_v3_sdk.Model;
 using System;
@@ -23,9 +21,7 @@ namespace ATAFurniture.Server.Components;
 
 public partial class OrderHandlingComponent
 {
-    [Inject] private FileGeneratorService FileGenerator { get; set; }
     [Inject] private IServiceProvider ServiceProvider { get; set; }
-    [Inject] private ILogger<OrderHandlingComponent> Logger { get; set; }
     [Inject] private IConfiguration Configuration { get; set; }
     [Parameter] public UserContextService UserContextService { get; set; }
     [Parameter] public ConverterContext Context { get; set; }
@@ -58,36 +54,23 @@ public partial class OrderHandlingComponent
     {
         _shouldGenerateFiles = true;
         _shouldSendEmail = false;
-        var alreadyGeneratedFiles = await GenerateFiles();
+        var alreadyGeneratedFiles = GenerateFiles();
         _files = await SaveFilesForDownload(alreadyGeneratedFiles);
         _areFilesGenerating = false;
         StateHasChanged();
     }
-    private async Task<List<FileSaveContext>> GenerateFiles()
+    private IReadOnlyList<FileSaveContext> GenerateFiles()
     {
-        var fileNameProvider = ServiceProvider.GetKeyedService<IFileNameProvider>(Context.TargetCompany.Name);
-        if (fileNameProvider is null)
-        {
-            Logger.LogWarning("No file name provider found for company {CompanyName}", Context.TargetCompany.Name);
-        }
-
-        var templateBuilder = ServiceProvider.GetKeyedService<ITemplateBuilder>(Context.TargetCompany.Name) as ITemplateBuilder;
-        if (templateBuilder is null)
-        {
-            Logger.LogWarning("No template builder found for company {CompanyName}", Context.TargetCompany.Name);
-        }
+        // Every ManufacturerBranch name is a manufacturer key, so a format is always registered (ADR-0004 §1).
+        var orderFormat = ServiceProvider.GetRequiredKeyedService<IOrderFormat>(Context.TargetCompany.Name);
 
         _areFilesGenerating = true;
-        var alreadyGeneratedFiles = await FileGenerator.CreateFiles(
+        return orderFormat.Generate(
             Context.ContactInfo.ToContactInfo(),
             Context.Files,
-            templateBuilder,
-            fileNameProvider,
-            Context.DifferentEdgeColor,
-            Context.TargetCompany.Name == SupportedCompanies.MegaTrading.Name);
-        return alreadyGeneratedFiles;
+            Context.DifferentEdgeColor);
     }
-    private async Task<List<FileDisplayContext>> SaveFilesForDownload(List<FileSaveContext> alreadyGeneratedFiles)
+    private async Task<List<FileDisplayContext>> SaveFilesForDownload(IReadOnlyList<FileSaveContext> alreadyGeneratedFiles)
     {
         var result = new List<FileDisplayContext>();
         var storageConnectionString = Configuration["AzureStorageConnectionString"];
@@ -157,7 +140,7 @@ public partial class OrderHandlingComponent
         Configuration.GetSection("EmailSettings").Bind(settings);
         var client = new TransactionalEmailsApi();
         client.Configuration.ApiKey["api-key"] = settings.ApiKey;
-        var files = await GenerateFiles();
+        var files = GenerateFiles();
         var usedMaterials = Context.Details.Select(d => d.Material).Distinct().ToList();
         _toEmail = _isTestEmail ?
             new SendSmtpEmailTo(Context.ContactInfo.Email) :

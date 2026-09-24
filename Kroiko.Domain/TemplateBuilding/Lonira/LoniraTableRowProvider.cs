@@ -2,7 +2,7 @@
 
 namespace Kroiko.Domain.TemplateBuilding.Lonira;
 
-public class LoniraTableRowProvider : ITableRowProvider
+internal sealed class LoniraTableRowProvider : ITableRowProvider
 {
     // Lonira writes "" for an empty value (MegaTrading and Suliver pass null through).
     private static readonly TableColumn<LoniraDetail>[] Columns =

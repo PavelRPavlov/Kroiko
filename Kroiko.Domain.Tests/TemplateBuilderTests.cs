@@ -22,7 +22,7 @@ public sealed class TemplateBuilderTests
         new() { Material = material, Height = 350, Width = 150, Quantity = 2 };
 
     [Fact]
-    public async Task Lonira_fills_one_fresh_template_sheet_per_material_file()
+    public void Lonira_fills_one_fresh_template_sheet_per_material_file()
     {
         var builder = new LoniraTemplateBuilder(new LoniraTableRowProvider());
         var files = new[]
@@ -31,7 +31,7 @@ public sealed class TemplateBuilderTests
             new KroikoFile { FileName = "OAK_18", Details = [LoniraDetail("OAK_18"), LoniraDetail("OAK_18")] },
         };
 
-        var sheets = await builder.BuildTemplateAsync(Contact, files);
+        var sheets = builder.BuildTemplate(Contact, files);
 
         sheets.Should().HaveCount(2);
         sheets.Should().AllSatisfy(sheet =>
@@ -46,7 +46,7 @@ public sealed class TemplateBuilderTests
     }
 
     [Fact]
-    public async Task Suliver_fills_a_fresh_template_sheet_on_every_build()
+    public void Suliver_fills_a_fresh_template_sheet_on_every_build()
     {
         var builder = new SuliverTemplateBuilder(new SuliverTableRowProvider());
         KroikoFile[] files =
@@ -54,19 +54,19 @@ public sealed class TemplateBuilderTests
             new() { FileName = "Suliver", Details = [new SuliverDetail { Material = "MELA_BL", Height = 350, Width = 150, Quantity = 2 }] },
         ];
 
-        var first = (await builder.BuildTemplateAsync(Contact, files)).Should().ContainSingle().Subject;
-        var second = (await builder.BuildTemplateAsync(Contact, files)).Should().ContainSingle().Subject;
+        var first = builder.BuildTemplate(Contact, files).Should().ContainSingle().Subject;
+        var second = builder.BuildTemplate(Contact, files).Should().ContainSingle().Subject;
 
         first.Cells.Should().Contain(cell => cell.Value == "MELA_BL");
         first.Cells.Should().NotContain(cell => cell.Value == TemplateBuilderBase.TableStartCellFlag);
-        // The operator's colour is filled later, by FileGeneratorService.
+        // The operator's colour is filled later, by the order format's Generate.
         first.Cells.Should().ContainSingle(cell => cell.Value == TemplateBuilderBase.DifferentEdgeColorCellFlag);
         second.Should().NotBeSameAs(first);
         second.Cells.Should().BeEquivalentTo(first.Cells);
     }
 
     [Fact]
-    public async Task MegaTrading_fills_a_fresh_template_sheet_on_every_build()
+    public void MegaTrading_fills_a_fresh_template_sheet_on_every_build()
     {
         var builder = new MegaTradingTemplateBuilder(new MegaTradingTableRowProvider());
         KroikoFile[] files =
@@ -85,8 +85,8 @@ public sealed class TemplateBuilderTests
             },
         ];
 
-        var first = (await builder.BuildTemplateAsync(Contact, files)).Should().ContainSingle().Subject;
-        var second = (await builder.BuildTemplateAsync(Contact, files)).Should().ContainSingle().Subject;
+        var first = builder.BuildTemplate(Contact, files).Should().ContainSingle().Subject;
+        var second = builder.BuildTemplate(Contact, files).Should().ContainSingle().Subject;
 
         first.Cells.Should().Contain(cell => cell.Value == "MELA_BL");
         first.Cells.Should().NotContain(cell => IsTemplateFlag(cell));
