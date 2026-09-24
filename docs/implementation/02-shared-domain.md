@@ -1,6 +1,6 @@
 # 02 — Shared domain
 
-- **Status:** Not started
+- **Status:** In progress
 - **Depends on:** [01 Golden baseline](01-golden-baseline.md)  **Can run alongside:** [03 Client shell](03-client-shell.md)
 - **ADRs:** [0004](../adr/0004-shared-browser-safe-conversion-domain.md), [0006](../adr/0006-known-conversion-bugs-in-pwa.md) §1–3, [0003](../adr/0003-save-order-files-to-picked-folder.md) §7, [0007](../adr/0007-parity-and-test-strategy.md) §1–2, §8, [0008](../adr/0008-upgrade-largexlsx-to-2.md)
 
@@ -32,6 +32,17 @@ project, and LargeXlsx is on 2.x.
 - `ContactInfo` becomes a plain `CompanyName` + `MobileNumber` type. The Server keeps the email
   wherever it needs it (e.g. a Server-side record that wraps `ContactInfo`).
 - Remove the dead `INotifyPropertyChanged` plumbing from `Detail` and the other domain types.
+
+Done. `User` is `ATAFurniture.Server.DataAccess.User`; the migrations still name the entity
+`Kroiko.Domain.User`, and the model has no pending changes against the snapshot
+(`HasPendingModelChanges()` is false, checked once by hand), so there is no migration. Its
+`LastSelectedCompany` is the Server's `ManufacturerBranch(Name, Translation, Email)` with the same
+columns; `ManufacturerBranches` holds the four branches with today's labels and emails (Kuklensko is a
+branch named `Suliver`), pinned by `ManufacturerBranchesTests`. The domain's `SupportedCompany` is a
+`(Name, Translation)` record and `ContactInfo` a `(CompanyName, MobileNumber)` record, both nullable
+as the Server may pass a profile without them. The Server's fields bind to `ContactInfoModel` (still
+INPC, so `ConverterContext` keeps re-raising contact edits, and it carries the `Email`), which hands
+the domain `ToContactInfo()`. `User` keeps its INPC: `UserCreditsComponent` listens to it.
 
 **Green:** full `dotnet test`, golden files unchanged.
 
@@ -131,7 +142,7 @@ Its own PR, once steps 1–8 are merged.
 ## Done criteria
 
 - [ ] `PolyboardParser.Parse`, `IOrderFormat` (`CreateFiles`, `Generate`, `Check`) and `OrderFormats` are the only public conversion entry points; builders, providers and generators are `internal`.
-- [ ] The domain has no `User`, no email, no INPC; `SupportedCompany` has three manufacturers.
+- [x] The domain has no `User`, no email, no INPC; `SupportedCompany` has three manufacturers.
 - [ ] Templates are embedded resources read through a source-generated JSON context.
 - [ ] `Kroiko.Domain` builds with the trim/AOT analyzers as errors and the banned-API list, with no suppressions.
 - [ ] The golden tests pass under invariant **and** `bg-BG` culture, and live in `Kroiko.Domain.Tests`.

@@ -25,16 +25,16 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 | **Old vs latest format** | Polyboard lines come in two shapes: **11 fields** (legacy) or **23 fields** (current). Field count selects the parser. | `DetailsExtractorService.cs` |
 | **Parse result** | What parsing a Polyboard file yields: the Details plus a list of **Parse errors** (line number + reason). The parser reports bad lines; the caller decides what to do with them (the PWA rejects the file and lists them; the Server discards it). | [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md), [ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) |
 | **KroikoFile** | A logical output unit — a filename plus its details. Lonira produces one KroikoFile per material; Suliver/MegaTrading produce one. | `Kroiko.Domain/TemplateBuilding/KroikoFile.cs` |
-| **SupportedCompany** | A target manufacturer (name, translated label). The domain knows three: Lonira, Suliver, MegaTrading. Order emails and Suliver's second branch are Server-only. | `Kroiko.Domain/CellsExtracting/SupportedCompanies.cs` |
+| **SupportedCompany** | A target manufacturer (name, translated label). The domain knows three: Lonira, Suliver, MegaTrading. Order emails and Suliver's second branch are Server-only: the Server's **ManufacturerBranch** (name, label, order email) has four, Kuklensko being a branch named `Suliver`. | `Kroiko.Domain/CellsExtracting/SupportedCompanies.cs`, `ATAFurniture.Server/Models/ManufacturerBranch.cs` |
 | **Order format** | Everything one manufacturer needs to turn Details into order files: map + group Details into KroikoFiles, then generate the files. One per SupportedCompany; the only way the apps reach TemplateBuilders, TableRowProviders and FileNameProviders. | `IOrderFormat` — [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md) |
 | **Order problem** | A reason an Order format refuses to generate, found by `IOrderFormat.Check` before generating — today only MegaTrading's "more than 6 materials". The PWA blocks generation while any exist; the Server does not check. | [ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) |
 | **Order** | One conversion in progress: a parsed Polyboard file, the chosen SupportedCompany, its editable KroikoFiles, the Contact info and, once generated, the order files. Changing any of these inputs discards the generated files. Not the same as the Server's `User`/credit records. | [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) |
-| **Contact info** | The end customer's company name and phone number, written into the order files. Both must be filled before generating; the PWA remembers the last values used per device. _Avoid_: account info, profile. | [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) |
+| **Contact info** | The end customer's company name and phone number, written into the order files. Both must be filled before generating; the PWA remembers the last values used per device. The Server edits a `ContactInfoModel` that also carries the user's email. _Avoid_: account info, profile. | `Kroiko.Domain/ContactInfo.cs`, [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) |
 | **Sheet / Cell** | In-memory spreadsheet model. A Cell has an Excel-style name ("A1"), a value, and alignment. | `Kroiko.Domain/TemplateBuilding/` |
 | **TemplateBuilder** | Per-company: fills a JSON template sheet with static info + detail rows. | `*/TemplateBuilding/*TemplateBuilder.cs` |
 | **TableRowProvider** | Per-company: maps a detail into a row of Cells (explicit column list; reflection is being removed). | `Kroiko.Domain/TemplateBuilding/*/` |
 | **FileNameProvider** | Per-company: names the produced file. | `Kroiko.Domain/TemplateBuilding/*/` |
-| **Credit** | Unit of metered usage. Consumed on download / successful email. Stored on the `User` row. | `UserContextService`, `KroikoDataRepository` |
+| **Credit** | Unit of metered usage. Consumed on download / successful email. Stored on the Server's `User` row. | `UserContextService`, `KroikoDataRepository` |
 | **FALC** | A special panel operation that adjusts a detail's height/width. | `Models/SuliverExtensions.cs` |
 
 ## 3. The three target manufacturers
@@ -129,8 +129,10 @@ These were found in a code review; several are naturally fixed by the migration.
   → PWA rule: busy flags clear in `finally`, errors show a snackbar ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)).
 - 🟡 **Dead code:** `INotifyPropertyChanged` plumbing on immutable records/entities;
   empty test project; dead UWP project; stale `<Compile Remove Cosmos…>` entries.
+  → ✅ The domain has no INPC left (phase 02 step 1); the Server keeps it only where its UI listens.
 - 🟡 **`SupportedCompanies` key collision:** Suliver / SuliverKuklensko share `Name`.
-  → Gone from the domain (three manufacturers, ADR-0004); Kuklensko stays Server-only.
+  → ✅ Gone from the domain (three manufacturers, ADR-0004; phase 02 step 1); Kuklensko is the Server's
+  `ManufacturerBranches.SuliverKuklensko`, which shares the Suliver format on purpose.
 - 🟠 **Browser-safety gaps in `Kroiko.Domain`.**
   `TemplateBuilderBase.ReadTemplateAsync` uses `File.ReadAllTextAsync` (no filesystem in WASM);
   its `JsonSerializer.Deserialize` and all three `TableRowProvider`s' `Type.GetProperty`
