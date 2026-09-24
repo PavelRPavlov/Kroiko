@@ -126,16 +126,23 @@ registered scoped (once for a WASM app) by `AddConverterState()` in `Program.cs`
 question before files are discarded; `MudDialogConfirmation`, a Bulgarian "Да"/"Не" MudBlazor message box, registered by `AddConfirmationDialog()`)
 and `IDeviceSettingsStore` (the last `ContactInfo` and manufacturer: loaded once per app start into whatever the
 operator has not chosen yet — a device that remembers no manufacturer starts on Lonira, as the Server does — saved
-after each successful generation) and `IFileDownloader` (hands one file to the browser as a download: `BrowserFileDownloader`
+after each successful generation), `IFileDownloader` (hands one file to the browser as a download: `BrowserFileDownloader`
 streams it through a `DotNetStreamReference` to `wwwroot/js/files.js`, which saves it with a `Blob` and an `<a download>`, registered
-by `AddFileDownloader()`). Components read it and re-render on `Changed`;
+by `AddFileDownloader()`) and `IFolderPicker` (`showDirectoryPicker`: `IsAvailableAsync`, and `PickAsync` → picked / cancelled (`AbortError`) /
+blocked (`SecurityError`, `NotAllowedError`), the picked `IPickedFolder` listing its entry names and writing one file; `BrowserFolderPicker` over
+`files.js`, which keeps the last picked folder's handle per device in IndexedDB (database `kroiko`, store `folders`, key `last`) and opens the
+picker there, registered by `AddFolderPicker()`; both interop classes share one `FilesModule` import). Components read it and re-render on `Changed`;
 grids edit the domain details in `Files` in place and call `NotifyInputEdited()`; an edit made while generating
 drops that generation's output. `DownloadAllAsync` ("Изтегли всички") triggers the downloads one after another, each under its
 `FileNameSanitizer` name ([ADR-0003](docs/adr/0003-save-order-files-to-picked-folder.md) §5, §7); the first triggered download sets the saved flag, and an
-edit meanwhile stops the downloads of the files it discarded. Failures of reading, the dialog, making files, generating, device storage and
-downloads are logged and raise `Error` with a Bulgarian message instead of throwing. `HasUnsavedWork` = a file is loaded and its current input
-has not been generated and saved (at least one download triggered; `MarkSaved()` for phase 05's folder save).
-`ClashNaming.FinalNames` (pure, for phase 05's folder save) gives each sanitised name ` (2)`, ` (3)`, … before its extension when the folder
+edit meanwhile stops the downloads of the files it discarded. `SaveToFolderAsync` ("Запази в папка…", ADR-0003 §2–4, §6) opens the picker before
+it awaits anything (the click's user activation), lists the picked folder, writes every generated file under its `ClashNaming.FinalNames` name
+and then sets the saved flag and `FolderSave` (the folder's name and the final names, for the confirmation; cleared with the generated files); a
+cancel does nothing, a blocked picker or a failed list/write raises `Error` pointing to "Изтегли всички" and saves nothing, and an edit meanwhile
+stops the writes. Downloading and saving to a folder never run together. Failures of reading, the dialog, making files, generating, device storage,
+downloads and folder saves are logged and raise `Error` with a Bulgarian message instead of throwing. `HasUnsavedWork` = a file is loaded and its current input
+has not been generated and saved (at least one download triggered, or a folder save succeeded).
+`ClashNaming.FinalNames` (pure) gives each sanitised name ` (2)`, ` (3)`, … before its extension when the folder
 (ignoring case) or an earlier file of the same save already has it ([ADR-0003](docs/adr/0003-save-order-files-to-picked-folder.md) §4).
 
 **Conversion UI** (`Kroiko.Client.Blazor/Components/`, copied from the Server and stripped, [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §1): components
@@ -153,10 +160,16 @@ the rename, so renames never chain and two materials can swap). The MegaTrading 
 contact fields are not copied: once there are files, `ContactInfoComponent` ("Контакти на клиента") above the tabs edits
 `CompanyName`/`MobileNumber`, both required, each keystroke an input edit; below them `OrderHandlingComponent` (the Server's, without email,
 credits and Blob Storage) has "Генерирай бланки за поръчка", enabled by `CanGenerate`, a spinner while generating, and then the generated
-files listed under their sanitised names with "Изтегли всички". `E2E/UploadPanelTests` covers the alert, the discard confirmation, the Lonira default and the remembered manufacturer;
+files listed under their sanitised names with "Изтегли всички" and, where `IFolderPicker.IsAvailableAsync` (asked on init, which also loads the
+last folder ahead of the click), "Запази в папка…", whose success shows a `MudAlert` listing the final names. `E2E/UploadPanelTests` covers the alert, the discard confirmation, the Lonira default and the remembered manufacturer;
 `E2E/ConversionTabsTests` the three tabs, the rename and invariant numbers under `bg-BG`; `E2E/GenerationTests` the contact guard,
 the `Check` guard, an edit discarding the generated files, sanitised download names, a Lonira order downloaded under `bg-BG` that
-matches the golden files, and the contacts and manufacturer pre-filled after a reload (device storage). `Conversion/FileDownloaderRegistrationTests` pins the `files.js` interop with a faked JS runtime.
+matches the golden files, and the contacts and manufacturer pre-filled after a reload (device storage). `Conversion/FileDownloaderRegistrationTests` and `Conversion/FolderPickerRegistrationTests` pin the `files.js` interop with a faked JS runtime.
+`E2E/FolderSaveTests` replaces `showDirectoryPicker` with a stub returning an origin-private (OPFS) folder, so the rest runs for real: the
+saved files match the golden files, a second save after a reload gets ` (2)` names and opens at the last folder, the pick had the click's user
+activation, a cancel does nothing, a blocked picker shows the message, and a browser without the picker offers only the downloads. Its main test
+uses `PublishedApp.NewPersistentContextAsync` (a profile on disk): in Playwright's off-the-record contexts, reading a file-system handle back
+from IndexedDB crashes the page. The real picker is a manual release check.
 
 **Device settings** (`LocalStorageDeviceSettingsStore`, registered by `AddDeviceSettingsStore()`) are one JSON document
 in `localStorage` under `kroiko.deviceSettings`: `{"schemaVersion":1,"companyName":…,"mobileNumber":…,"manufacturer":"Lonira"}`,
@@ -274,5 +287,5 @@ Server's output. The manual acceptance check (`docs/release-checklist.md`) walks
 | Any input edit clears the generated files (Server: stale output kept) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §7 | `ConverterStateTests.Any_input_edit_clears_the_generated_files_and_the_saved_flag_without_asking` + Playwright `GenerationTests.An_edit_after_generating_discards_the_generated_files` |
 | Switching manufacturer or re-uploading asks before discarding files (Server: silent rebuild) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §5 | `ConverterStateTests.Switching_manufacturer_when_files_exist_asks_and_no_changes_nothing`, `…Uploading_again_when_files_exist_asks_and_no_changes_nothing` + Playwright `UploadPanelTests.Switching_manufacturer_or_uploading_again_asks_first_and_no_keeps_the_Order` |
 | Order persists across in-app navigation (Server: lost when leaving the Converter page) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §4 | `ConverterStateRegistrationTests.Every_page_of_the_app_gets_the_same_Order`, `ConverterStateTests.The_device_settings_are_loaded_once_so_returning_to_the_page_keeps_the_Order` |
-| Files are saved to a picked folder or downloaded; clashes get ` (n)`; names pass through `FileNameSanitizer` (Server: Blob Storage links) | [0003](docs/adr/0003-save-order-files-to-picked-folder.md) | `FileNameSanitizerTests` (every case), `ClashNamingTests` (every case), `ConverterStateTests.Downloading_all_triggers_every_generated_file_in_order_under_its_sanitised_name` + Playwright `GenerationTests.The_files_are_listed_and_downloaded_under_their_sanitised_names`; picker manual |
+| Files are saved to a picked folder or downloaded; clashes get ` (n)`; names pass through `FileNameSanitizer` (Server: Blob Storage links) | [0003](docs/adr/0003-save-order-files-to-picked-folder.md) | `FileNameSanitizerTests` (every case), `ClashNamingTests` (every case), `ConverterStateTests.Downloading_all_triggers_every_generated_file_in_order_under_its_sanitised_name`, `…Saving_to_a_folder_never_overwrites_and_confirms_the_numbered_names` + Playwright `GenerationTests.The_files_are_listed_and_downloaded_under_their_sanitised_names`, `FolderSaveTests` (picker stubbed); the real picker manual |
 | Busy spinners always clear; errors show a snackbar (Server: generate spinner can hang) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §4 | `ConverterStateTests.A_failed_generation_raises_an_error_and_leaves_the_Order_as_it_was`, `…A_file_that_cannot_be_read_raises_an_error_and_leaves_the_Order_as_it_was`, `…A_download_that_cannot_start_raises_an_error_and_is_not_saved` |
