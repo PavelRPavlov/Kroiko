@@ -5,6 +5,12 @@ self.importScripts('./service-worker-assets.js');
 self.addEventListener('install', event => event.waitUntil(onInstall(event)));
 self.addEventListener('activate', event => event.waitUntil(onActivate(event)));
 self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
+// Kroiko: a waiting new version activates when the operator chooses "Презареди" (ADR-0002 §1); js/updates.js asks,
+// then reloads the page on `controllerchange`, so the page never mixes the old and the new cache.
+self.addEventListener('message', event => {
+    if (event.data === 'SKIP_WAITING')
+        event.waitUntil(self.skipWaiting());
+});
 
 const cacheNamePrefix = 'offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;

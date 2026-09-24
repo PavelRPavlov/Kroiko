@@ -1,5 +1,7 @@
 @inherits LayoutComponentBase
+@using Kroiko.Client.Blazor.Updates
 @inject IDialogService DialogService
+@inject AppUpdates AppUpdates
 
 <MudThemeProvider/>
 <MudPopoverProvider/>
@@ -39,6 +41,13 @@
         new("./", Icons.Material.Filled.ReceiptLong, "Converter"), // not "": MudBlazor renders an empty Href as a <button>
         new("configuration", Icons.Material.Filled.Settings, "Configuration"),
     ];
+
+    // The layout lives as long as the app: from its first render on, the app hears about new versions (ADR-0002 §1).
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await AppUpdates.StartAsync();
+    }
 
     private Task OpenAboutAsync() =>
         DialogService.ShowAsync<AboutDialog>("Относно", new DialogOptions { CloseButton = true });
