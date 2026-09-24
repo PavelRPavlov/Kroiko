@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+    <!-- Keep ICU globalization: do not set InvariantGlobalization. MudBlazor's number and date display
+         follows the operator's culture; the domain stays invariant on its own (ADR-0004). -->
   </PropertyGroup>
 
   <ItemGroup>
