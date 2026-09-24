@@ -43,7 +43,7 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 |---|---|---|
 | **Lonira** | One `.xlsx` **per material** (details grouped by material). | Reads `{MaterialName}` template flag; per-file sheet. |
 | **Suliver** (two branches: main + Kuklensko Shosе) | One `.xlsx`. | Both branches currently share `Name = "Suliver"` — they differ only by order email. ⚠️ see Known issues. |
-| **MegaTrading** | One `.xlsx` **and** one `.cut_mt` text file. | `.cut_mt` uses a special separator (`╪`) and always emits **exactly 6 material rows**; supports bulk material rename. The PWA refuses orders with more than 6 materials ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)). |
+| **MegaTrading** | One `.xlsx` **and** one `.cut_mt` text file. | `.cut_mt` uses a special separator (`╪`), CRLF line endings ([ADR-0009](docs/adr/0009-cut-mt-line-endings-crlf.md)) and always emits **exactly 6 material rows**; supports bulk material rename. The PWA refuses orders with more than 6 materials ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)). |
 
 ## 4. Current architecture (as of migration start)
 
@@ -87,7 +87,7 @@ ATAFurniture.Server (unchanged behaviour) ──► the same Kroiko.Domain
 **Projects:** `Kroiko.Client.Blazor` (PWA), `Kroiko.Domain` (shared, **must stay
 browser-safe**), `ATAFurniture.Server` (maintained), and the test projects `Kroiko.Testing`,
 `Kroiko.Domain.Tests`, `Kroiko.Client.Tests`, `ATAFurniture.Server.Tests`
-([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0008](docs/adr/README.md).
+([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0009](docs/adr/README.md).
 Build order: [docs/implementation/00-overview.md](docs/implementation/00-overview.md).
 
 ## 6. Decision log
@@ -128,6 +128,9 @@ These were found in a code review; several are naturally fixed by the migration.
   dates; the `bg-BG` golden theory runs and matches the invariant golden files.
   The PWA blocks MegaTrading orders with more than 6 materials
   via `IOrderFormat.Check` ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)); the Server still truncates.
+  Line endings were `Environment.NewLine` (LF on Linux and in WASM, CRLF on Windows, where the golden files
+  were recorded). → ✅ Pinned to CRLF on every host ([ADR-0009](docs/adr/0009-cut-mt-line-endings-crlf.md));
+  a Linux-hosted Server's `.cut_mt` changes from LF to CRLF.
 - 🟠 **Fire-and-forget** credit consume; **spinners hang** on error paths;
   **`ConverterContext` never disposed** (event-handler leak).
   → PWA rule: busy flags clear in `finally`, errors show a snackbar ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)).
@@ -150,6 +153,8 @@ These were found in a code review; several are naturally fixed by the migration.
 - **Culture:** all numeric parse/format must use `CultureInfo.InvariantCulture`.
   Hosts and browsers may be `bg-BG` (comma decimal) — ambient culture corrupts both
   the Polyboard parse and the `.cut_mt` output.
+- **`.cut_mt` line endings are CRLF** on every host ([ADR-0009](docs/adr/0009-cut-mt-line-endings-crlf.md)) —
+  never `AppendLine` / `Environment.NewLine` in generated order files.
 - **`Kroiko.Domain` must stay browser-safe** ([ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)) — no server-only APIs
   (no direct EF, no `System.Net` server calls, no file-system assumptions).
 - **Secrets never ship to the browser.** The PWA has none; DB/email/blob credentials live only in the Server.

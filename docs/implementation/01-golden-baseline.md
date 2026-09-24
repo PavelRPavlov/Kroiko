@@ -66,8 +66,9 @@ names and in the `.cut_mt` header line only (it has no date today; detail rows a
 Worksheet XML is compared byte for byte, which is stricter than text. Recording deletes and
 rewrites the whole `<fixture>/<manufacturer>/` folder, so both arguments must be plain folder
 names. A mismatch throws `GoldenFileMismatchException`. `.gitattributes` marks
-`TestData/golden/**` `-text` so git never converts line endings; note that the `.cut_mt` is built
-with `AppendLine`, so its golden bytes carry the recording OS's line endings (CRLF on Windows). The
+`TestData/golden/**` `-text` so git never converts line endings. The `.cut_mt` was built with
+`AppendLine`, so its golden bytes carry the recording OS's line endings (CRLF on Windows); the domain now
+writes CRLF on every host ([ADR-0009](../adr/0009-cut-mt-line-endings-crlf.md)), which matches them. The
 `manufacturer` argument is only a folder name, so step 3's different-edge-colour case can use its
 own (e.g. `Suliver-different-edge-color`). `OrderFilesAssertTests` (in `ATAFurniture.Server.Tests`
 for now, via `InternalsVisibleTo`) records into a temp folder; they move with the golden tests in phase 02.
@@ -110,8 +111,9 @@ worksheet XML parses, row counts equal details plus template header rows, only L
 carries the contact cells, and the generated `.xlsx` packages are valid. No fixture contains Cyrillic,
 so the `.cut_mt` bodies are ASCII plus `╪` (UTF-8, no BOM) and Cyrillic appears only in the
 `Тест ООД.cut_mt` file name. The `.cut_mt` golden files were recorded on Windows and carry CRLF
-(`AppendLine`), so the five MegaTrading cases fail on Linux/macOS until the line ending is pinned;
-there is no CI yet, so this is accepted for now.
+(`AppendLine`), so the five MegaTrading cases failed on Linux/macOS until the line ending was pinned.
+It is now pinned to CRLF on every host ([ADR-0009](../adr/0009-cut-mt-line-endings-crlf.md), step 02.5b),
+so they pass on any OS with the golden files unchanged.
 
 ### 4. The culture test (recorded, expected to fail today)
 

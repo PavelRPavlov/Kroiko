@@ -2,7 +2,7 @@
 
 - **Status:** In progress
 - **Depends on:** [01 Golden baseline](01-golden-baseline.md)  **Can run alongside:** [03 Client shell](03-client-shell.md)
-- **ADRs:** [0004](../adr/0004-shared-browser-safe-conversion-domain.md), [0006](../adr/0006-known-conversion-bugs-in-pwa.md) §1–3, [0003](../adr/0003-save-order-files-to-picked-folder.md) §7, [0007](../adr/0007-parity-and-test-strategy.md) §1–2, §8, [0008](../adr/0008-upgrade-largexlsx-to-2.md)
+- **ADRs:** [0004](../adr/0004-shared-browser-safe-conversion-domain.md), [0006](../adr/0006-known-conversion-bugs-in-pwa.md) §1–3, [0003](../adr/0003-save-order-files-to-picked-folder.md) §7, [0007](../adr/0007-parity-and-test-strategy.md) §1–2, §8, [0008](../adr/0008-upgrade-largexlsx-to-2.md), [0009](../adr/0009-cut-mt-line-endings-crlf.md)
 
 ## Goal
 
@@ -145,14 +145,18 @@ for no Details). The shared `OrderFormatBase.Generate` fills the template, the d
 `{CompanyName}` in the file names; MegaTrading puts its `.cut_mt` first. `FileGeneratorService`, the
 `IExcelFileGenerator`/`ITextFileGenerator` interfaces and every `async` in generation are gone; the builders, row
 providers, file-name providers, sheets, cells, `ExcelFileGenerator` and `MegaTradingFileGenerator` are `internal`
-(`InternalsVisibleTo` `Kroiko.Domain.Tests`). Every `.cut_mt` line ends in one place (`AppendRow`, still
-`Environment.NewLine`). The Server's `AddOrderFormats()` registers each format as a keyed singleton by its name;
+(`InternalsVisibleTo` `Kroiko.Domain.Tests`). Every `.cut_mt` line ends in one place (`AppendRow`). The Server's
+`AddOrderFormats()` registers each format as a keyed singleton by its name;
 `FileDisplayComponent` calls `CreateFiles` and `OrderHandlingComponent` calls `Generate`; `MegaTradingExtensions`
 keeps only the view-model conversions. `RunPipelineAsync` is now `PolyboardParser.Parse` → `OrderFormats.For(m)
 .CreateFiles` → `Generate`. `OrderFormatsTests` (domain) pins the registry, the grouping and the invariant
 "СДВ" notes (they replace the Server's `OversizeNoteTests`); `OrderFormatRegistrationTests` (Server) pins that every
 `SupportedCompanies` key and every dropdown branch resolves a format, and that Kuklensko resolves to the Suliver
-format with its own email. The golden files are unchanged. **Still to do:** the manual smoke check of the rewired
+format with its own email. The golden files are unchanged. **02.5b:** `AppendRow` appends `"\r\n"` instead of
+calling `AppendLine`, so the `.cut_mt` is CRLF on every host instead of the host's `Environment.NewLine` (LF on
+Linux and in WASM), and the CRLF golden files pass on any OS
+([ADR-0009](../adr/0009-cut-mt-line-endings-crlf.md)); an `OrderFormatsTests` case asserts CRLF explicitly.
+**Still to do:** the manual smoke check of the rewired
 UI against the golden files, once per manufacturer.
 
 ### 6. `Check` / `OrderProblem` and `FileNameSanitizer`

@@ -77,7 +77,8 @@ Write it from ADR-0007 §9, with two sections:
 - **Go-live (once).** Pavel plus one operator; ~10 recent real orders across all three manufacturers,
   both field formats and Cyrillic material names. Run each through the deployed Server and through
   the installed PWA on `app.kroiko.com` in Edge. Files match (Excel identical; `.cut_mt` byte-equal
-  apart from the date), open in each manufacturer's software, and decode as UTF-8, including a check
+  apart from the date), open in each manufacturer's software (including a CRLF `.cut_mt` in
+  MegaTrading's, [ADR-0009](../adr/0009-cut-mt-line-endings-crlf.md)), and decode as UTF-8, including a check
   that Polyboard never exports another encoding (ADR-0006 §5). Every row of
   [CONTEXT.md §9](../../CONTEXT.md) behaves as listed. Real files stay on the local machine and are
   never committed or attached to issues.

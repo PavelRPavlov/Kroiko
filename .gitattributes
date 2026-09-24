@@ -8,5 +8,5 @@ Kroiko.Testing/TestData/polyboard/*-bom.txt -text
 Kroiko.Testing/TestData/polyboard/*-whitespace-lines.txt -text
 
 # Golden files (01-golden-baseline) are compared byte for byte / as exact text: worksheet XML
-# uses LF, the .cut_mt uses the generator's line endings. Never let git convert them.
+# uses LF, the .cut_mt uses CRLF (ADR-0009). Never let git convert them.
 Kroiko.Testing/TestData/golden/** -text
