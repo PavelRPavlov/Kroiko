@@ -18,11 +18,7 @@ internal static class TableColumn
     public const byte Centred = 1;
 
     // Numbers are written in the invariant culture (ADR-0004 §4), as ExcelFileGenerator reads them back.
-    public static string Invariant(double value) => value.ToString(CultureInfo.InvariantCulture);
-
-    public static string Invariant(int value) => value.ToString(CultureInfo.InvariantCulture);
-
-    public static string Invariant(byte value) => value.ToString(CultureInfo.InvariantCulture);
+    public static string Invariant<T>(T value) where T : IFormattable => value.ToString(null, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// The cells <paramref name="detail"/> writes into row <paramref name="rowNumber"/>, one per column,

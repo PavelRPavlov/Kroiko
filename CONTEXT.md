@@ -122,8 +122,9 @@ These were found in a code review; several are naturally fixed by the migration.
 - 🟠 **MegaTrading `.cut_mt`:** materials beyond 6 are silently dropped; doubles were
   formatted with ambient culture (comma decimal on `bg-BG` corrupted the file). `MegaTradingFileGenerator.cs`.
   → ✅ Culture fixed (ADR-0004 §4, phase 02 step 4): the `.cut_mt` rows, the row providers' values and
-  `ExcelFileGenerator`'s `double.TryParse` are all invariant, as are the "СДВ" notes and the file-name dates;
-  the `bg-BG` golden theory runs and matches the invariant golden files. The PWA blocks MegaTrading orders with more than 6 materials
+  `ExcelFileGenerator`'s `double.TryParse` are all invariant, as are the "СДВ" notes and the file-name
+  dates; the `bg-BG` golden theory runs and matches the invariant golden files.
+  The PWA blocks MegaTrading orders with more than 6 materials
   via `IOrderFormat.Check` ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)); the Server still truncates.
 - 🟠 **Fire-and-forget** credit consume; **spinners hang** on error paths;
   **`ConverterContext` never disposed** (event-handler leak).

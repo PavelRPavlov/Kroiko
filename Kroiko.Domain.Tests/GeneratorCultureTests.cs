@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text;
 using FluentAssertions;
+using Kroiko.Domain.ExcelFilesGeneration;
 using Kroiko.Domain.ExcelFilesGeneration.XlsxWrapper;
 using Kroiko.Domain.TemplateBuilding;
 using Kroiko.Domain.TextFileGeneration;
@@ -36,7 +37,7 @@ public sealed class GeneratorCultureTests
             Cells = [new Cell("A1", 1) { Value = "609.5" }, new Cell("B1", 1) { Value = "Фалц 13x4" }],
         };
 
-        List<Kroiko.Domain.ExcelFilesGeneration.FileSaveContext> files;
+        List<FileSaveContext> files;
         using (CultureScope.BgBg())
         {
             files = await new ExcelFileGenerator().GenerateExcelFilesAsync([sheet], new FixedFileName());
