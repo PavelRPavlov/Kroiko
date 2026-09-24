@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Text;
 using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.TemplateBuilding;
@@ -83,7 +84,7 @@ public static class SuliverExtensions
         var note = new StringBuilder();
         if (detail.OversizingHeight.Equals(detail.OversizingWidth) && detail.OversizingHeight > 0)
         {
-            note.Append($"СДВ с краен размер {suliverDetail.Height - detail.OversizingHeight}x{suliverDetail.Width - detail.OversizingWidth}; ");
+            note.Append(CultureInfo.InvariantCulture, $"СДВ с краен размер {suliverDetail.Height - detail.OversizingHeight}x{suliverDetail.Width - detail.OversizingWidth}; ");
         }
 
         if (detail.TopEdgeMaterial.ToLowerInvariant().Contains(DifferentEdgeMaterialName) ||

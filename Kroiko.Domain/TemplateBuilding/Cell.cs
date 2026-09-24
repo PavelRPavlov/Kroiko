@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 
 namespace Kroiko.Domain.TemplateBuilding;
 
@@ -38,7 +39,7 @@ public record Cell(string Name, byte ContentAlignment = 0)
             builder.Insert(0, (char)(remainder + 64));
             col = (col - remainder) / 26;
         }
-        builder.Append(row);
+        builder.Append(row.ToString(CultureInfo.InvariantCulture));
         return builder.ToString();
     }
 }

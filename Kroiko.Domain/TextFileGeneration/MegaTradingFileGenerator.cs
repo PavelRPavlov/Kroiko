@@ -1,5 +1,6 @@
 ﻿using Kroiko.Domain.ExcelFilesGeneration;
 using Kroiko.Domain.TemplateBuilding;
+using System.Globalization;
 using System.Text;
 
 namespace Kroiko.Domain.TextFileGeneration;
@@ -47,7 +48,7 @@ public class MegaTradingFileGenerator : ITextFileGenerator {
     private static void CreateDetailRow(StringBuilder builder, MegaTradingDetail d)
     {
         var rotated = d.Rotated ? "Yes" : "No";
-        builder.AppendLine(
+        builder.AppendLine(CultureInfo.InvariantCulture,
         $"{d.Material}{S}{d.Height}{S}{d.Width}{S}{d.Quantity}{S}{rotated}{S}{d.LeftEdge}{S}{d.BottomEdge}{S}{d.RightEdge}{S}{d.TopEdge}{S}{d.EdgeBandingMaterial}{S}{d.Note}{S}");
     }
     private static void CreateColumnSizeRow(StringBuilder builder)
@@ -62,7 +63,7 @@ public class MegaTradingFileGenerator : ITextFileGenerator {
         // there should always be exactly 6 rows, containing different materials
         var material = detail == null ? string.Empty : detail.Material;
         var thickness = detail == null ? 18.0 : detail.Thickness;
-        builder.AppendLine($"{material}{S}{thickness}{S}True{S}True{S}2800{S}2070{S}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"{material}{S}{thickness}{S}True{S}True{S}2800{S}2070{S}");
     }
     private static void CreateFirstRow(StringBuilder builder)
     {

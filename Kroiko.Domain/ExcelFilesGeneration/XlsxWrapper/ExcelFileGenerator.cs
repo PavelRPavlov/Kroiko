@@ -1,4 +1,5 @@
-﻿using Kroiko.Domain.TemplateBuilding;
+﻿using System.Globalization;
+using Kroiko.Domain.TemplateBuilding;
 using LargeXlsx;
 
 namespace Kroiko.Domain.ExcelFilesGeneration.XlsxWrapper;
@@ -66,7 +67,8 @@ public class ExcelFileGenerator() : IExcelFileGenerator
                 return;
             }
 
-            if (double.TryParse(cell.Value, out var val))
+            // Invariant, as the row providers write numbers (ADR-0004 §4): "609.5" is a number on any host.
+            if (double.TryParse(cell.Value, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var val))
             {
                 writer.Write(
                     val,

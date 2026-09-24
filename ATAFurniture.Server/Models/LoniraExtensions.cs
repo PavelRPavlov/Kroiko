@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.TemplateBuilding;
 
@@ -33,7 +34,8 @@ public static class LoniraExtensions
     {
         if (detail.OversizingHeight.Equals(detail.OversizingWidth) && detail.OversizingHeight > 0)
         {
-            return $"СДВ с краен размер {detail.Height - detail.OversizingHeight}x{detail.Width - detail.OversizingWidth}; ";
+            return string.Create(CultureInfo.InvariantCulture,
+                $"СДВ с краен размер {detail.Height - detail.OversizingHeight}x{detail.Width - detail.OversizingWidth}; ");
         }
 
         return string.Empty;

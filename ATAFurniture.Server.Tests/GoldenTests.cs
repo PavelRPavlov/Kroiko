@@ -64,9 +64,9 @@ public sealed class GoldenTests
         OrderFilesAssert.MatchGolden(fixture, manufacturer, files);
     }
 
-    // 01 step 4 (ADR-0004 §8): a bg-BG host must produce the same order files as the invariant recording.
-    // Today only the MegaTrading .cut_mt differs, by decimal commas ("609,18"); see CONTEXT.md §7.
-    [Theory(Skip = "Un-skipped in phase 02 step 4 — invariant culture")]
+    // ADR-0004 §4, §8: a bg-BG host (decimal comma) must produce the same order files as the invariant
+    // recording. Green since phase 02 step 4 made every number↔string conversion invariant.
+    [Theory]
     [MemberData(nameof(EveryValidFixtureAndManufacturer))]
     public async Task Order_files_under_bg_BG_match_the_golden_files(string fixture, string manufacturer)
     {

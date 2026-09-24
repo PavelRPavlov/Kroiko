@@ -1,65 +1,26 @@
-﻿namespace Kroiko.Domain.TemplateBuilding.Suliver;
+﻿using static Kroiko.Domain.TemplateBuilding.TableColumn;
+
+namespace Kroiko.Domain.TemplateBuilding.Suliver;
 
 public class SuliverTableRowProvider : ITableRowProvider
 {
-    private static readonly List<string> DetailPropertyToColumnMap =
+    // Suliver passes an empty value through as it is (null stays null); Lonira writes "".
+    private static readonly TableColumn<SuliverDetail>[] Columns =
     [
-        nameof(SuliverDetail.Material),
-        nameof(SuliverDetail.MaterialThickness),
-        nameof(SuliverDetail.IsGrainDirectionReversed),
-        nameof(SuliverDetail.Height),
-        nameof(SuliverDetail.Width),
-        nameof(SuliverDetail.Quantity),
-        nameof(SuliverDetail.Cabinet),
-        nameof(SuliverDetail.LongEdge),
-        nameof(SuliverDetail.LongEdge2),
-        nameof(SuliverDetail.ShortEdge),
-        nameof(SuliverDetail.ShortEdge2),
-        nameof(SuliverDetail.Note)
+        new(d => d.Material, Left),
+        new(d => Invariant(d.MaterialThickness), Centred),
+        new(d => Invariant(d.IsGrainDirectionReversed), Centred),
+        new(d => Invariant(d.Height), Centred),
+        new(d => Invariant(d.Width), Centred),
+        new(d => Invariant(d.Quantity), Centred),
+        new(d => d.Cabinet, Left),
+        new(d => d.LongEdge, Centred),
+        new(d => d.LongEdge2, Centred),
+        new(d => d.ShortEdge, Centred),
+        new(d => d.ShortEdge2, Centred),
+        new(d => d.Note, Left),
     ];
-    public IEnumerable<Cell> GetTableRow(IKroikoDetail det, int rowNumber, int startColumnNumber)
-    {
-        var currentColumnNumber = startColumnNumber;
-        var result = new List<Cell>();
 
-        var detailType = typeof(SuliverDetail);
-        var detail = (SuliverDetail)det;
-        foreach (var property in DetailPropertyToColumnMap)
-        {
-            currentColumnNumber = ExtractDirectColumnInfo(detail, rowNumber, detailType, property, currentColumnNumber, result);
-        }
-        
-        return result;
-    }
-
-    private static int ExtractDirectColumnInfo(SuliverDetail detail, int rowNumber, Type detailType, string property,
-        int currentColumnNumber, List<Cell> result)
-    {
-        var info = detailType.GetProperty(property);
-        var propertyName = info?.Name;
-        var propertyStringValue = info?.GetValue(detail)?.ToString();
-        Cell newCell;
-        switch (propertyName)
-        {
-            // NOTE this switch controls how the content of a cell will be aligned
-            case nameof(SuliverDetail.Material):
-            case nameof(SuliverDetail.Note):
-            case nameof(SuliverDetail.Cabinet):
-                newCell = new Cell(Cell.GetCellName(rowNumber, currentColumnNumber))
-                {
-                    Value = propertyStringValue
-                };
-                break;
-                
-            default:
-                newCell = new Cell(Cell.GetCellName(rowNumber, currentColumnNumber), 1)
-                {
-                    Value = propertyStringValue
-                };
-                break;
-        }
-        result.Add(newCell);
-        currentColumnNumber++;
-        return currentColumnNumber;
-    }
+    public IEnumerable<Cell> GetTableRow(IKroikoDetail detail, int rowNumber, int startColumnNumber) =>
+        Row(Columns, (SuliverDetail)detail, rowNumber, startColumnNumber);
 }
