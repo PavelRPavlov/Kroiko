@@ -1,7 +1,7 @@
 /*
  * Self-hosted Roboto (Latin + Cyrillic subsets) for MudBlazor's default typography, so the app
  * makes no cross-origin requests and renders the same offline (docs/implementation/03-client-shell.md, step 2).
- * Weights: 300, 400, 500 (MudBlazor's typography) and 700 (bold text).
+ * Weights: 300, 400, 500 (MudBlazor's typography) and 700 (bold text; MudBlazor's few 600 rules fall back to it).
  * Font files from the @fontsource/roboto 5.3.0 npm package; licence: SIL OFL 1.1, see OFL.txt.
  * The service worker precaches them because /\.woff2$/ is in offlineAssetsInclude.
  */

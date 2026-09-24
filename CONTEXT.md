@@ -163,7 +163,7 @@ These were found in a code review; several are naturally fixed by the migration.
 - **`Kroiko.Domain` must stay browser-safe** ([ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)) — no server-only APIs
   (no direct EF, no `System.Net` server calls, no file-system assumptions).
 - **Secrets never ship to the browser.** The PWA has none; DB/email/blob credentials live only in the Server.
-- **The PWA makes no cross-origin requests** and must start fully offline: every asset (incl. the
+- **The PWA makes no cross-origin requests** and must start fully offline ([ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §5–6): every asset (incl. the
   self-hosted Roboto in `wwwroot/fonts/`) is same-origin and matched by the service worker's
   `offlineAssetsInclude`. Adding an asset of a new file type means extending that list.
 - **Two Polyboard formats** (11 and 23 fields) must both keep parsing.

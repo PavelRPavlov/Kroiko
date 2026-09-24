@@ -34,8 +34,7 @@ harness. This phase does not touch `Kroiko.Domain`.
 - **Self-host Roboto** (the weights MudBlazor uses, `.woff2`, Latin + Cyrillic subsets) under
   `wwwroot/fonts/`, with an `@font-face` stylesheet. Don't add the Google Fonts link (there must be
   no cross-origin requests at all). Roboto is SIL OFL 1.1 licensed (Roboto 3; older releases were
-  Apache-2.0); commit its licence file next to the fonts. Done with weights 300/400/500/700 from the
-  `@fontsource/roboto` npm package, in `fonts/roboto.css` + `fonts/OFL.txt`.
+  Apache-2.0); commit its licence file next to the fonts.
 - In `service-worker.published.js`, add `/\.woff2$/` to `offlineAssetsInclude`.
 - Keep ICU globalization: **no `InvariantGlobalization`**. MudBlazor's number and date display
   follows the operator's culture (ADR-0004 alternatives).
