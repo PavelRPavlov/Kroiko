@@ -68,10 +68,7 @@ public sealed class GoldenTests
     }
 
     // 01 step 4 (ADR-0004 §8): a bg-BG host must produce the same order files as the invariant recording.
-    // Today it does not: MegaTradingFileGenerator interpolates doubles with the ambient culture, so the
-    // .cut_mt of every fixture with a fractional size gets "609,18" for "609.18" (CONTEXT.md §7). The row
-    // providers' ToString() is ambient too, but ExcelFileGenerator parses it back with the same culture,
-    // so the .xlsx files match. Checked when recorded: only those decimal commas differ.
+    // Today only the MegaTrading .cut_mt differs, by decimal commas ("609,18"); see CONTEXT.md §7.
     [Theory(Skip = "Un-skipped in phase 02 step 4 — invariant culture")]
     [MemberData(nameof(EveryValidFixtureAndManufacturer))]
     public async Task Order_files_under_bg_BG_match_the_golden_files(string fixture, string manufacturer)
@@ -99,10 +96,11 @@ public sealed class GoldenTests
         string fixture, string manufacturer, string? differentEdgeColor = null, CultureInfo? culture = null)
     {
         // The host's culture for this run: invariant unless a test says otherwise (the bg-BG test).
+        var hostCulture = culture ?? CultureInfo.InvariantCulture;
         var previousCulture = CultureInfo.CurrentCulture;
         var previousUiCulture = CultureInfo.CurrentUICulture;
-        CultureInfo.CurrentCulture = culture ?? CultureInfo.InvariantCulture;
-        CultureInfo.CurrentUICulture = culture ?? CultureInfo.InvariantCulture;
+        CultureInfo.CurrentCulture = hostCulture;
+        CultureInfo.CurrentUICulture = hostCulture;
         try
         {
             // FileUploadComponent.razor: parse the uploaded file into ConverterContext.Details.
