@@ -71,6 +71,17 @@ empty numeric field is `0`, a flag is true only when `1`), except that integers 
 logs each error and returns an empty list when there are any. `Kroiko.Domain.Tests` holds
 `PolyboardParserTests`; `GoldenTests` and `GenerationSmokeTests` still go through the adapter.
 
+2b done. The parser splits on `
+`, `
+` or ``, strips a leading UTF-8 BOM and skips empty and
+whitespace-only lines; a `ParseError`'s line number is still the physical line, blank lines included. New
+fixtures in `Kroiko.Testing/TestData/polyboard/`: `wardrobes-4-materials-lf`, `cabinet-23-field-cr`,
+`wardrobes-4-materials-bom` and `cabinet-23-field-whitespace-lines` (each its CRLF original with only that
+changed; `.gitattributes` marks them `-text` so git keeps their bytes), and `bad-lines-12` (12 bad lines of
+both kinds among 20, for phase 04's "…и още N"). `PolyboardParserTests` proves each variant parses to its
+original's Details. `DetailsExtractorServiceTests` (Server) pins a bad-line file → empty list + one error
+log entry, and that an LF-only file now parses.
+
 ### 3. Embedded templates
 
 - The three `template.json` files become `EmbeddedResource`s of `Kroiko.Domain` (drop the
@@ -154,7 +165,7 @@ Its own PR, once steps 1–8 are merged.
 - [ ] Templates are embedded resources read through a source-generated JSON context.
 - [ ] `Kroiko.Domain` builds with the trim/AOT analyzers as errors and the banned-API list, with no suppressions.
 - [ ] The golden tests pass under invariant **and** `bg-BG` culture, and live in `Kroiko.Domain.Tests`.
-- [ ] LF, CR, BOM and whitespace-line fixtures parse to the same Details as their CRLF originals.
+- [x] LF, CR, BOM and whitespace-line fixtures parse to the same Details as their CRLF originals.
 - [ ] `Check` and `FileNameSanitizer` are covered by domain tests; the 6-material limit is one constant.
 - [ ] `ATAFurniture.Server` is rewired, and its UI was smoke-checked once per manufacturer against the golden files.
 - [ ] `ATAFurniture.Server.Tests` holds only the Server-only tests; `GenerationSmokeTests` is gone.

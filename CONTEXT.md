@@ -114,10 +114,11 @@ These were found in a code review; several are naturally fixed by the migration.
 - 🟠 **No optimistic concurrency** on `User` → lost updates under concurrent use.
 - 🟠 **Silent whole-file discard** when one Polyboard line has a bad field count.
   `DetailsExtractorService.cs`, now an adapter that keeps the discard on purpose; the domain's `PolyboardParser`
-  reports every bad line instead (phase 02 step 2). Also splits on CRLF only (LF-only files fail) and
-  chokes on a UTF-8 BOM.
-  → [ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md): the domain parser accepts any line ending
-  and a BOM (both apps); the PWA rejects bad files listing the bad lines; the Server keeps the discard.
+  reports every bad line instead (phase 02 step 2). Also split on CRLF only (LF-only files failed) and
+  choked on a UTF-8 BOM.
+  → [ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md): ✅ the domain parser accepts any line ending,
+  a BOM and whitespace-only lines, in both apps (phase 02 step 2); the PWA rejects bad files listing the bad
+  lines (phase 04); the Server keeps the discard.
 - 🟠 **MegaTrading `.cut_mt`:** materials beyond 6 are silently dropped; doubles are
   formatted with ambient culture (comma decimal on `bg-BG` corrupts the file — pin to
   `InvariantCulture`). `MegaTradingFileGenerator.cs`. The skipped `bg-BG` golden test pins it: under `bg-BG`
