@@ -138,3 +138,4 @@ LF, BOM and whitespace-line fixtures. What those tests cannot see:
   [ADR-0003](0003-save-order-files-to-picked-folder.md) — the intended differences.
 - [ADR-0001](0001-host-pwa-on-azure-static-web-apps.md), [ADR-0002](0002-pwa-updates-reload-prompt.md) — host and update flow the release checklist covers.
 - Informs: [Phases and order of the PWA implementation guides](https://github.com/PavelRPavlov/Kroiko/issues/31)
+- Implemented by: [01 — Golden baseline](../implementation/01-golden-baseline.md), [02 — Shared domain](../implementation/02-shared-domain.md), [03 — Client shell](../implementation/03-client-shell.md), [04 — Conversion flow](../implementation/04-conversion-flow.md), [07 — Hosting & go-live](../implementation/07-hosting-and-go-live.md) (release checklist)

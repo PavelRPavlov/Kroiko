@@ -108,3 +108,4 @@ as the fallback. No zip.
 - Research: [`docs/research/browser-multi-file-saving.md`](../research/browser-multi-file-saving.md)
 - Sources: [Blazor file downloads](https://learn.microsoft.com/en-us/aspnet/core/blazor/file-downloads?view=aspnetcore-10.0),
   [`showDirectoryPicker` (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker)
+- Implemented by: [02 — Shared domain](../implementation/02-shared-domain.md) (`FileNameSanitizer`), [04 — Conversion flow](../implementation/04-conversion-flow.md) ("Изтегли всички"), [05 — Saving](../implementation/05-saving.md)

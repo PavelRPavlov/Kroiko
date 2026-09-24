@@ -76,3 +76,4 @@ Web Apps, Free plan**, in ATA's existing Azure subscription.
 - Sources: [Azure Static Web Apps configuration](https://learn.microsoft.com/en-us/azure/static-web-apps/configuration),
   [plans](https://learn.microsoft.com/en-us/azure/static-web-apps/plans),
   [FAQ (pre-compressed files)](https://learn.microsoft.com/en-us/azure/static-web-apps/faq)
+- Implemented by: [07 — Hosting & go-live](../implementation/07-hosting-and-go-live.md)

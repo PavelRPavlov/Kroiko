@@ -109,3 +109,4 @@ no longer developed. Other forces found in the code:
 - [ADR-0004](0004-shared-browser-safe-conversion-domain.md) — `Parse`, `CreateFiles`, `Generate` that this UI calls.
 - Informs: [Fix or replicate the known conversion bugs in the PWA](https://github.com/PavelRPavlov/Kroiko/issues/23),
   [What proves parity, and how it's tested](https://github.com/PavelRPavlov/Kroiko/issues/24)
+- Implemented by: [03 — Client shell](../implementation/03-client-shell.md), [04 — Conversion flow](../implementation/04-conversion-flow.md)

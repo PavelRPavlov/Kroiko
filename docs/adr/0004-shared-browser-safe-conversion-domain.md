@@ -135,3 +135,4 @@ behaviour, not its source: the Server is rewired onto the domain and proven unch
 - Informs: [Share or copy the Server's conversion UI into the PWA](https://github.com/PavelRPavlov/Kroiko/issues/22),
   [Fix or replicate the known conversion bugs in the PWA](https://github.com/PavelRPavlov/Kroiko/issues/23),
   [What proves parity, and how it's tested](https://github.com/PavelRPavlov/Kroiko/issues/24)
+- Implemented by: [01 — Golden baseline](../implementation/01-golden-baseline.md), [02 — Shared domain](../implementation/02-shared-domain.md)

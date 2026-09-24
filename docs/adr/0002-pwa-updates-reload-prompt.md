@@ -99,3 +99,4 @@ early, plus rules for version display and stored-data compatibility.
 - Research: [`docs/research/dotnet10-blazor-wasm-pwa.md`](../research/dotnet10-blazor-wasm-pwa.md)
 - Sources: [Blazor PWA — background updates](https://learn.microsoft.com/en-us/aspnet/core/blazor/progressive-web-app/?view=aspnetcore-10.0#background-updates),
   [service worker lifecycle](https://web.dev/articles/service-worker-lifecycle)
+- Implemented by: [04 — Conversion flow](../implementation/04-conversion-flow.md) (stored settings), [06 — Updates & About](../implementation/06-updates-and-about.md), [07 — Hosting & go-live](../implementation/07-hosting-and-go-live.md) (release procedure)
