@@ -240,24 +240,29 @@ public sealed class ConverterState(
     public void NotifyInputEdited() => InputChanged();
 
     /// <summary>
-    /// The MegaTrading material rename (ADR-0005 §3): rewrites <c>Material</c> on every detail in
-    /// <see cref="Files"/> whose material is a key of <paramref name="newNames"/> (old → new name). Every detail
-    /// is matched by its name before the rename, so two materials can swap; a new name is trimmed, and a blank or
-    /// unchanged one renames nothing. Renaming anything is an input edit.
+    /// The MegaTrading material rename (ADR-0005 §3): rewrites <c>Material</c> on the details of
+    /// <paramref name="file"/> whose material is a key of <paramref name="newNames"/> (old → new name), as typed,
+    /// as on the Server. Each detail is matched by its material before the rename, so renames never chain and two
+    /// materials can swap. Renaming anything is an input edit; a file no longer in <see cref="Files"/> (a tab of an
+    /// older Order) is left alone.
     /// </summary>
-    public void RenameMaterials(IReadOnlyDictionary<string, string> newNames)
+    public void RenameMaterials(KroikoFile file, IReadOnlyDictionary<string, string> newNames)
     {
+        ArgumentNullException.ThrowIfNull(file);
         ArgumentNullException.ThrowIfNull(newNames);
+        if (!Files.Contains(file))
+        {
+            return;
+        }
 
         var renamed = false;
-        foreach (var detail in Files.SelectMany(f => f.Details))
+        foreach (var detail in file.Details)
         {
             if (detail.Material is not null
                 && newNames.TryGetValue(detail.Material, out var newName)
-                && !string.IsNullOrWhiteSpace(newName)
-                && newName.Trim() != detail.Material)
+                && newName != detail.Material)
             {
-                detail.Material = newName.Trim();
+                detail.Material = newName;
                 renamed = true;
             }
         }

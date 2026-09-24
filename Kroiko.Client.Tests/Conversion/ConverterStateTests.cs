@@ -261,42 +261,48 @@ public sealed class ConverterStateTests
     {
         await LoadAsync(SupportedCompanies.MegaTrading, "kitchen-8-materials");
         FillContacts();
+        var parts = Materials().GroupBy(m => m).ToDictionary(g => g.Key, g => g.Count());
 
-        _state.RenameMaterials(new Dictionary<string, string> { ["Mirror"] = "Lemon sorbet", ["Med"] = "Lemon sorbet" });
+        _state.RenameMaterials(_state.Files[0], new Dictionary<string, string> { ["Mirror"] = "Lemon sorbet", ["Med"] = "Lemon sorbet" });
 
-        var materials = _state.Files.SelectMany(f => f.Details).Select(d => d.Material).ToList();
-        materials.Should().NotContain(["Mirror", "Med"]);
-        materials.Count(m => m == "Lemon sorbet").Should().Be(2 + 8 + 1);
+        Materials().Should().NotContain(["Mirror", "Med"]);
+        Materials().Count(m => m == "Lemon sorbet").Should().Be(parts["Lemon sorbet"] + parts["Mirror"] + parts["Med"]);
         _state.Problems.Should().BeEmpty();
         _state.CanGenerate.Should().BeTrue();
     }
 
     [Fact]
-    public async Task A_rename_maps_from_the_names_before_it_so_two_materials_can_swap()
+    public async Task A_rename_matches_the_names_before_it_so_two_materials_can_swap()
     {
         await LoadAsync(SupportedCompanies.MegaTrading, "kitchen-8-materials");
+        var parts = Materials().GroupBy(m => m).ToDictionary(g => g.Key, g => g.Count());
 
-        _state.RenameMaterials(new Dictionary<string, string> { ["Mirror"] = "Med", ["Med"] = "Mirror" });
+        _state.RenameMaterials(_state.Files[0], new Dictionary<string, string> { ["Mirror"] = "Med", ["Med"] = "Mirror" });
 
-        var materials = _state.Files.SelectMany(f => f.Details).Select(d => d.Material).ToList();
-        materials.Count(m => m == "Mirror").Should().Be(8);
-        materials.Count(m => m == "Med").Should().Be(1);
+        Materials().Count(m => m == "Mirror").Should().Be(parts["Med"]);
+        Materials().Count(m => m == "Med").Should().Be(parts["Mirror"]);
     }
 
     [Fact]
-    public async Task A_new_name_is_trimmed_and_a_blank_or_unchanged_one_renames_nothing()
+    public async Task A_rename_to_the_same_name_is_no_edit()
     {
         await GenerateAsync(SupportedCompanies.MegaTrading, "wardrobes-4-materials");
 
-        _state.RenameMaterials(new Dictionary<string, string> { ["AGT White"] = "  ", ["HDF 3 mm"] = " HDF 3 mm " });
+        _state.RenameMaterials(_state.Files[0], new Dictionary<string, string> { ["AGT White"] = "AGT White" });
 
-        _state.Files.SelectMany(f => f.Details).Select(d => d.Material).Should().Contain(["AGT White", "HDF 3 mm"]);
-        _state.GeneratedFiles.Should().NotBeEmpty("renaming nothing is no edit");
+        _state.GeneratedFiles.Should().NotBeEmpty();
+    }
 
-        _state.RenameMaterials(new Dictionary<string, string> { ["AGT White"] = " Бяло " });
+    [Fact]
+    public async Task A_rename_of_a_file_that_is_no_longer_in_the_Order_does_nothing()
+    {
+        await LoadAsync(SupportedCompanies.MegaTrading, "kitchen-8-materials");
+        var oldFile = _state.Files[0];
+        await _state.UploadAsync(Fixture("wardrobes-4-materials"));
 
-        _state.Files.SelectMany(f => f.Details).Select(d => d.Material).Should().Contain("Бяло").And.NotContain("AGT White");
-        _state.GeneratedFiles.Should().BeEmpty();
+        _state.RenameMaterials(oldFile, new Dictionary<string, string> { ["Basic white W908 ST2"] = "Бяло" });
+
+        Materials().Should().Contain("Basic white W908 ST2").And.NotContain("Бяло");
     }
 
     [Fact]
@@ -727,6 +733,8 @@ public sealed class ConverterStateTests
         await _state.SelectManufacturerAsync(manufacturer);
         (await _state.UploadAsync(Fixture(fixture))).Should().BeTrue();
     }
+
+    private List<string> Materials() => _state.Files.SelectMany(f => f.Details).Select(d => d.Material).ToList();
 
     private static Stream Fixture(string name) => new MemoryStream(File.ReadAllBytes(TestData.Polyboard(name)));
 }

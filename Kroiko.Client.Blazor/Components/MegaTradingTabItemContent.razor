@@ -77,7 +77,7 @@
 
     private void RenameMaterials()
     {
-        ConverterState.RenameMaterials(_renames.ToDictionary(r => r.OldName, r => r.NewName ?? string.Empty));
+        ConverterState.RenameMaterials(File, _renames.ToDictionary(r => r.OldName, r => r.NewName ?? string.Empty));
         _renames = RenameRows();
     }
 
