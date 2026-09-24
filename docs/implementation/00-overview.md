@@ -22,7 +22,7 @@ the phase cut was decided in
 | 04 | [Conversion flow](04-conversion-flow.md) | `ConverterState`, the copied UI, "Изтегли всички"; parity proven in a trimmed build under `bg-BG` and `en-US`, and offline | [0005](../adr/0005-copy-conversion-ui-into-pwa.md), [0006](../adr/0006-known-conversion-bugs-in-pwa.md), [0003](../adr/0003-save-order-files-to-picked-folder.md) §5, §7, §8, [0002](../adr/0002-pwa-updates-reload-prompt.md) §7, [0007](../adr/0007-parity-and-test-strategy.md) | Done |
 | 05 | [Saving](05-saving.md) | "Запази в папка…", per-file downloads, ` (n)` clash naming | [0003](../adr/0003-save-order-files-to-picked-folder.md) | In progress |
 | 06 | [Updates & About](06-updates-and-about.md) | Reload snackbar, update checks, version in About | [0002](../adr/0002-pwa-updates-reload-prompt.md) | In progress |
-| 07 | [Hosting & go-live](07-hosting-and-go-live.md) | 07a: SWA + first manual deploy of the shell; 07b: release checklist, go-live sign-off | [0001](../adr/0001-host-pwa-on-azure-static-web-apps.md), [0007](../adr/0007-parity-and-test-strategy.md) §9 | In progress |
+| 07 | [Hosting & go-live](07-hosting-and-go-live.md) | 07a: S3 + CloudFront (Free plan) + first manual deploy; 07b: release checklist, go-live sign-off | [0010](../adr/0010-host-pwa-on-s3-and-cloudfront.md), [0007](../adr/0007-parity-and-test-strategy.md) §9 | In progress |
 
 The **Status** column mirrors each guide's own `Status:` line. The guide is the source of truth;
 update both in the same PR.
@@ -84,6 +84,6 @@ flowchart LR
 ## Not in these guides
 
 - **CI/CD.** Deploys are manual through `scripts/publish-pwa.ps1` (phase 07), which enforces
-  ADR-0001's branch model. A CI workflow is a later improvement outside this plan.
+  ADR-0010's branch model (from ADR-0001). A CI workflow is a later improvement outside this plan.
 - Anything that changes, retires or decommissions `ATAFurniture.Server` or its Azure resources.
 - Email or share-sheet sending, licensing or credits, OS file handlers (`file_handlers`).

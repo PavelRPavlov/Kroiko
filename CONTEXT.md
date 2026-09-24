@@ -73,7 +73,7 @@ first visit. It has no backend, login, credits or email. `ATAFurniture.Server` s
 deployed and shares the conversion domain with it.
 
 ```
-app.kroiko.com (Azure Static Web Apps, static files only)  ── first load + updates ──►  Browser
+app.kroiko.com (CloudFront + S3, static files only)  ───── first load + updates ─────►  Browser
                                                                                          │
   Kroiko.Client.Blazor (WASM, installable, service worker)                               │
    ├─ ConverterState (one app-wide Order)                                                │
@@ -87,7 +87,7 @@ ATAFurniture.Server (unchanged behaviour) ──► the same Kroiko.Domain
 **Projects:** `Kroiko.Client.Blazor` (PWA), `Kroiko.Domain` (shared, **must stay
 browser-safe**), `ATAFurniture.Server` (maintained), and the test projects `Kroiko.Testing`,
 `Kroiko.Domain.Tests`, `Kroiko.Client.Tests`, `ATAFurniture.Server.Tests`
-([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0009](docs/adr/README.md).
+([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0010](docs/adr/README.md).
 Build order: [docs/implementation/00-overview.md](docs/implementation/00-overview.md).
 
 **`Kroiko.Client.Tests`** (xUnit, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §5) tests the shipped

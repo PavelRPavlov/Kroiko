@@ -1,6 +1,6 @@
 # ADR-0001: Host the PWA on Azure Static Web Apps at `app.kroiko.com`
 
-- Status: Accepted
+- Status: Superseded by [ADR-0010](0010-host-pwa-on-s3-and-cloudfront.md)
 - Date: 2026-09-23
 - Deciders: Pavel Pavlov
 

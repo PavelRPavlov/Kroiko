@@ -75,4 +75,4 @@ harness. This phase does not touch `Kroiko.Domain`.
 
 - Anything that calls `Kroiko.Domain`, and `ConverterState` → [04](04-conversion-flow.md).
 - Version display and update handling → [06](06-updates-and-about.md).
-- `staticwebapp.config.json` and deployment → [07](07-hosting-and-go-live.md) (07a may start once this phase is Done).
+- The host configuration and deployment → [07](07-hosting-and-go-live.md) (07a may start once this phase is Done).
