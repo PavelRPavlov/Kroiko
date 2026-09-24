@@ -35,7 +35,7 @@ ATATextConverter/
 ├── ATAFurniture.Server/      ← Blazor Server web app (deployed; maintained, not developed)
 ├── Kroiko.Client.Blazor/     ← Blazor WASM PWA (being built)
 ├── Kroiko.Domain/            ← conversion domain shared by both apps (must stay browser-safe)
-└── ATAFurniture.Server.Tests/← xUnit generation smoke tests
+└── ATAFurniture.Server.Tests/← xUnit Server-only tests (DI wiring, bad-line policy)
 ```
 
 Test projects added by the build plan ([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)):

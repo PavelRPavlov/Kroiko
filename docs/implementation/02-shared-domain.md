@@ -214,6 +214,19 @@ Separate commits, in this order (ADR-0004 §9, refined by ADR-0007 §2):
    `IOrderFormat` for every `SupportedCompanies` key; a bad-line file yields an empty list and a log
    entry; Kuklensko resolves to the Suliver format with its own email.
 
+Done. `GoldenTests` (31 cases before and after: 15 invariant, 15 `bg-BG`, the Suliver edge-colour case) and
+`OrderFilesAssertTests`, the tests of the comparison they use, live in `Kroiko.Domain.Tests`; `RunPipelineAsync`
+resolves its format through `FormatTestData.FormatNamed`, and `Kroiko.Testing`'s internals are visible to
+`Kroiko.Domain.Tests` only. `UPDATE_GOLDEN=1` still records into `Kroiko.Testing/TestData/golden/` in the source
+tree, as `OrderFilesAssertTests` checks from the new project. `GenerationSmokeTests` is gone: its Detail and material
+counts are in `PolyboardParserTests`, its bad line in `DetailsExtractorServiceTests`, its files in the golden tests.
+`ATAFurniture.Server.Tests` keeps four tests: `OrderFormatRegistrationTests` (every `SupportedCompanies` key resolves
+its `IOrderFormat`; every dropdown branch keeps its label and order email and resolves a format, which absorbs
+`ManufacturerBranchesTests`; Kuklensko resolves to the Suliver format with its own email) and
+`DetailsExtractorServiceTests` (a bad-line file → no Details and one error log entry). The adapter's LF-only test is
+gone (the parser's line-ending tests cover it), and so is `UserModelTests`, a step 1 guard: the EF model no longer
+references any domain type. The golden files are unchanged.
+
 ### 9. LargeXlsx 2.0.2 (ADR-0008)
 
 Its own PR, once steps 1–8 are merged.
@@ -231,11 +244,11 @@ Its own PR, once steps 1–8 are merged.
 - [x] The domain has no `User`, no email, no INPC; `SupportedCompany` has three manufacturers.
 - [x] Templates are embedded resources read through a source-generated JSON context.
 - [x] `Kroiko.Domain` builds with the trim/AOT analyzers as errors and the banned-API list, with no suppressions.
-- [ ] The golden tests pass under invariant **and** `bg-BG` culture, and live in `Kroiko.Domain.Tests`.
+- [x] The golden tests pass under invariant **and** `bg-BG` culture, and live in `Kroiko.Domain.Tests`.
 - [x] LF, CR, BOM and whitespace-line fixtures parse to the same Details as their CRLF originals.
 - [x] `Check` and `FileNameSanitizer` are covered by domain tests; the 6-material limit is one constant.
 - [ ] `ATAFurniture.Server` is rewired, and its UI was smoke-checked once per manufacturer against the golden files.
-- [ ] `ATAFurniture.Server.Tests` holds only the Server-only tests; `GenerationSmokeTests` is gone.
+- [x] `ATAFurniture.Server.Tests` holds only the Server-only tests; `GenerationSmokeTests` is gone.
 - [ ] LargeXlsx is 2.0.2 and SharpCompress is gone from the domain's dependency graph; any golden change is explained in its PR.
 - [ ] [CONTEXT.md](../../CONTEXT.md) §4/§7 updated: the "not yet implemented" notes for ADR-0004 are removed, and the fixed known issues are marked fixed.
 
