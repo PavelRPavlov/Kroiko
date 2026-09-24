@@ -25,7 +25,7 @@
 | Option | Chrome/Edge (Windows) | Firefox / Safari | Several files in one click | Cyrillic names | Offline | Notes |
 |---|---|---|---|---|---|---|
 | **A. N plain downloads** (`Blob` + `<a download>`, fed by `DotNetStreamReference`) | Yes | Yes | The first file downloads silently. The 2nd and later files show the **"download multiple files"** prompt once per origin. After the user allows it, the choice is stored. | Yes. Illegal characters are replaced with `_`. | Yes (`blob:` URL) | Files go to the Downloads folder, or one Save-As dialog per file if the user turned on "Ask where to save". |
-| **B. One `.zip`** (`System.IO.Compression.ZipArchive`, or SharpCompress, which LargeXlsx already uses) plus one download | Yes | Yes | One download, no prompt | Yes. `ZipArchive` sets the UTF-8 flag, and Explorer reads the names correctly [L]. | Yes | Adds about 108 KB of trimmed IL (about 40 KB Brotli). The user has to extract the zip. |
+| **B. One `.zip`** (`System.IO.Compression.ZipArchive`, or SharpCompress, which LargeXlsx 1.12 used; see the [L] update) plus one download | Yes | Yes | One download, no prompt | Yes. `ZipArchive` sets the UTF-8 flag, and Explorer reads the names correctly [L]. | Yes | Adds about 108 KB of trimmed IL (about 40 KB Brotli). The user has to extract the zip. |
 | **C. `showDirectoryPicker({mode:'readwrite'})`, then write N files** | Yes, since 86 | **No** | One folder pick per click, then any number of writes without further prompts | Yes, but **illegal names throw an error instead of being sanitized** | Yes | The handle can be stored in IndexedDB. An installed PWA keeps the permission automatically. A browser tab can offer "Allow on every visit" (Chrome 122+). |
 | **D. `showSaveFilePicker` per file** | Yes, since 86 | **No** | One dialog per file | Yes | Yes | Only practical for a single file, for example the MegaTrading pair or a single zip. |
 
@@ -104,6 +104,9 @@
   (its `ZipWriter` and managed Deflate), not on `System.IO.Compression`. A spike in commit `3fb1efe`
   already validated LargeXlsx in trimmed WASM. Zipping with SharpCompress therefore adds no new
   assembly, while `System.IO.Compression` adds about 108 KB.
+  *Update (phase 02 step 9, [ADR-0008](../adr/0008-upgrade-largexlsx-to-2.md)):* the domain now uses LargeXlsx 2.0.2,
+  which writes through `System.IO.Compression` and no longer depends on SharpCompress. The facts are now reversed:
+  `ZipArchive` is already in the bundle, and SharpCompress would be a new assembly.
 - **[I]** Drawbacks: the user gets one `.zip` and must extract it before uploading files to the
   manufacturer. That is an extra step compared with loose files.
 
@@ -198,7 +201,7 @@
 ## Implications for #20 (inferences)
 
 - **The only option that works everywhere with one gesture and no prompt is B (one zip).** It
-  costs about 40 KB Brotli, or nothing extra with SharpCompress, which is already in the bundle.
+  costs about 40 KB Brotli, or nothing extra with SharpCompress, which was in the bundle until LargeXlsx 2 (see the [L] update).
   The cost is an extraction step for the user.
 - **A (N downloads)** works everywhere, but the *first* multi-file save shows Chrome/Edge's
   "download multiple files" prompt. After the user allows it once per origin, it is smooth. Files

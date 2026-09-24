@@ -53,7 +53,7 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 Browser ──SignalR circuit──► ATAFurniture.Server (Blazor Server, .NET 8)
                                  ├─ Razer UI (Radzen + Syncfusion components)
                                  ├─ DetailsExtractorService  (adapter over the domain's PolyboardParser)
-                                 ├─ Kroiko.Domain            (map + group + template build + LargeXlsx, behind IOrderFormat)
+                                 ├─ Kroiko.Domain            (map + group + template build + LargeXlsx 2, behind IOrderFormat)
                                  ├─ EF Core 9 ──► SQL Server  (users + credits)
                                  ├─ Azure AD B2C auth (Microsoft.Identity.Web, cookie/OIDC)
                                  ├─ Azure Blob Storage (download links)
@@ -176,6 +176,11 @@ These were found in a code review; several are naturally fixed by the migration.
   `System.IO.File`, `System.IO.Directory`, `Assembly.Location` and `Environment.CurrentDirectory`; no suppressions.
   → Decided in [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md): embedded
   templates + source-generated JSON (done), explicit column mappings (done), trim analyzers as errors (done).
+- 🟠 **Vulnerable transitive dependency:** LargeXlsx 1.12.0 pulled in SharpCompress 0.39.0, which has a moderate
+  advisory (GHSA-6c8g-7p36-r338, NuGet NU1902).
+  → ✅ Fixed by LargeXlsx 2.0.2 ([ADR-0008](docs/adr/0008-upgrade-largexlsx-to-2.md), phase 02 step 9): it writes the
+  zip with `System.IO.Compression`, so SharpCompress is gone from both apps; the golden files did not change, and a
+  trimmed publish of the domain reports no IL warnings.
 
 ## 8. Cross-cutting invariants (do not break)
 
