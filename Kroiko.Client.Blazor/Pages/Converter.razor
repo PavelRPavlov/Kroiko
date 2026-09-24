@@ -1,5 +1,31 @@
 @page "/"
+@inherits ConverterStateComponentBase
+@inject ISnackbar Snackbar
 
 <PageTitle>Kroiko</PageTitle>
 
-@* Placeholder: phase 04 adds the conversion flow (ADR-0005). *@
+<MudStack Spacing="4">
+    <TargetCompanySelectionComponent />
+    <FileUploadComponent />
+</MudStack>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        ConverterState.Error += ShowError;
+        // Once per app start: fills the contacts and the manufacturer the operator has not chosen (ADR-0005 §6).
+        await ConverterState.LoadDeviceSettingsAsync();
+    }
+
+    private void ShowError(string message) => Snackbar.Add(message, Severity.Error);
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ConverterState.Error -= ShowError;
+        }
+
+        base.Dispose(disposing);
+    }
+}

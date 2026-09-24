@@ -1,0 +1,37 @@
+@using Kroiko.Domain.CellsExtracting
+@inherits ConverterStateComponentBase
+
+<MudPaper Class="pa-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudText>Изберете към коя фирма ще правите поръчка: </MudText>
+        <MudSelect T="SupportedCompany"
+                   @key="_selectKey"
+                   Value="ConverterState.Manufacturer"
+                   ValueChanged="OnUserSelectionAsync"
+                   ToStringFunc="@(c => c?.Translation)"
+                   Dense="true"
+                   Variant="Variant.Outlined">
+            @foreach (var company in Companies)
+            {
+                <MudSelectItem Value="@company">@company.Translation</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+</MudPaper>
+
+@code {
+    // The Server's order; the PWA has no Kuklensko branch (ADR-0004 §6).
+    private static readonly IReadOnlyList<SupportedCompany> Companies =
+        [SupportedCompanies.Lonira, SupportedCompanies.MegaTrading, SupportedCompanies.Suliver];
+
+    // A new key re-creates the select, so it shows ConverterState's manufacturer again after a "no".
+    private int _selectKey;
+
+    private async Task OnUserSelectionAsync(SupportedCompany company)
+    {
+        if (!await ConverterState.SelectManufacturerAsync(company))
+        {
+            _selectKey++;
+        }
+    }
+}
