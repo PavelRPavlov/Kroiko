@@ -61,10 +61,13 @@ In `Kroiko.Testing`:
 Done. Layout of `TestData/golden/<fixture>/<manufacturer>/`: `names.txt` (one name per line, LF);
 each `.xlsx` becomes a folder named after the (normalised) file, holding its worksheet entries at
 their package paths, e.g. `{date}_Тест ООД.xlsx/xl/worksheets/sheet1.xml`; any other file (the
-`.cut_mt`) is stored under its own name. Dates matching `yyyy-MM-dd` become `{date}`
-(`OrderFilesAssert.DateToken`); the `.cut_mt` has no date today. Recording deletes and rewrites the
-whole `<fixture>/<manufacturer>/` folder. A mismatch throws `GoldenFileMismatchException`.
-`.gitattributes` marks `TestData/golden/**` `-text` so git never converts line endings. The
+`.cut_mt`) is stored under its own name. Dates matching `yyyy-MM-dd` become `{date}` in file
+names and in the `.cut_mt` header line only (it has no date today; detail rows are never touched).
+Worksheet XML is compared byte for byte, which is stricter than text. Recording deletes and
+rewrites the whole `<fixture>/<manufacturer>/` folder, so both arguments must be plain folder
+names. A mismatch throws `GoldenFileMismatchException`. `.gitattributes` marks
+`TestData/golden/**` `-text` so git never converts line endings; note that the `.cut_mt` is built
+with `AppendLine`, so its golden bytes carry the recording OS's line endings (CRLF on Windows). The
 `manufacturer` argument is only a folder name, so step 3's different-edge-colour case can use its
 own (e.g. `Suliver-different-edge-color`). `OrderFilesAssertTests` (in `ATAFurniture.Server.Tests`
 for now, via `InternalsVisibleTo`) records into a temp folder; they move with the golden tests in phase 02.

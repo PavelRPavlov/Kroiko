@@ -32,37 +32,28 @@ public sealed class OrderFilesAssertTests : IDisposable
     private void Compare(params FileSaveContext[] files) =>
         OrderFilesAssert.MatchGolden(Fixture, Manufacturer, files, _root, update: false);
 
-    private static FileSaveContext Xlsx(string name, string sheetXml, string coreXml = "<core/>")
+    private static FileSaveContext Xlsx(string name, string sheetXml, string coreXml = "<core/>") =>
+        Zip(name,
+            ("[Content_Types].xml", "<Types/>"),
+            ("docProps/core.xml", coreXml),
+            ("xl/worksheets/sheet1.xml", sheetXml));
+
+    private static FileSaveContext XlsxWithSheets(string name, params string[] sheetXmls) =>
+        Zip(name, sheetXmls.Select((xml, i) => ($"xl/worksheets/sheet{i + 1}.xml", xml)).ToArray());
+
+    private static FileSaveContext Zip(string name, params (string Entry, string Content)[] entries)
     {
         using var stream = new MemoryStream();
         using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
         {
-            AddEntry(zip, "[Content_Types].xml", "<Types/>");
-            AddEntry(zip, "docProps/core.xml", coreXml);
-            AddEntry(zip, "xl/worksheets/sheet1.xml", sheetXml);
-        }
-
-        return new FileSaveContext(name, stream.ToArray());
-    }
-
-    private static FileSaveContext XlsxWithSheets(string name, params string[] sheetXmls)
-    {
-        using var stream = new MemoryStream();
-        using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
-        {
-            for (var i = 0; i < sheetXmls.Length; i++)
+            foreach (var (entry, content) in entries)
             {
-                AddEntry(zip, $"xl/worksheets/sheet{i + 1}.xml", sheetXmls[i]);
+                using var writer = new StreamWriter(zip.CreateEntry(entry).Open(), new UTF8Encoding(false));
+                writer.Write(content);
             }
         }
 
         return new FileSaveContext(name, stream.ToArray());
-    }
-
-    private static void AddEntry(ZipArchive zip, string name, string content)
-    {
-        using var writer = new StreamWriter(zip.CreateEntry(name).Open(), new UTF8Encoding(false));
-        writer.Write(content);
     }
 
     private static FileSaveContext CutMt(string name, string text) =>
@@ -148,6 +139,40 @@ public sealed class OrderFilesAssertTests : IDisposable
         Path.GetFullPath(source).Should().NotStartWith(AppContext.BaseDirectory);
 
         TestData.GoldenRoot.Should().Be(Path.Combine(AppContext.BaseDirectory, "TestData", "golden"));
+    }
+
+    [Fact]
+    public void Only_the_cut_mt_header_is_date_normalised_not_its_detail_rows()
+    {
+        Record(CutMt("Тест ООД.cut_mt", "╪╪True\r\nПДЧ╪2026-09-24╪\r\n"));
+
+        var act = () => Compare(CutMt("Тест ООД.cut_mt", "╪╪True\r\nПДЧ╪2027-01-31╪\r\n"));
+
+        act.Should().Throw<GoldenFileMismatchException>().Which.Message.Should().Contain("line 2");
+    }
+
+    [Fact]
+    public void A_line_ending_difference_is_visible_in_the_message()
+    {
+        Record(CutMt("Тест ООД.cut_mt", "╪╪True\r\n"));
+
+        var act = () => Compare(CutMt("Тест ООД.cut_mt", "╪╪True\n"));
+
+        act.Should().Throw<GoldenFileMismatchException>()
+            .Which.Message.Should().Contain(@"╪╪True\r").And.Contain("column 7");
+    }
+
+    [Theory]
+    [InlineData("", Manufacturer)]
+    [InlineData(Fixture, "")]
+    [InlineData("..", Manufacturer)]
+    [InlineData(Fixture, "../Lonira")]
+    [InlineData(Fixture, @"..\Lonira")]
+    public void Fixture_and_manufacturer_must_each_be_one_folder_name(string fixture, string manufacturer)
+    {
+        var act = () => OrderFilesAssert.MatchGolden(fixture, manufacturer, [], _root, update: true);
+
+        act.Should().Throw<ArgumentException>();
     }
 
     [Fact]

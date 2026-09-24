@@ -12,23 +12,25 @@ namespace Kroiko.Testing;
 public static class OrderFilesAssert
 {
     private const string NamesFile = "names.txt";
-
-    /// <summary>What every generation date is replaced with in the golden files.</summary>
-    public const string DateToken = "{date}";
+    private const string DateToken = "{date}";
 
     // The one place that knows the generation-date format: the file-name providers write
-    // DateTime.Now as yyyy-MM-dd (MegaTrading, Suliver). The .cut_mt carries no date today; it is
-    // normalised the same way so a date added to its header would not make the golden files flaky.
+    // DateTime.Now as yyyy-MM-dd (MegaTrading, Suliver). The .cut_mt header (its first line) carries
+    // no date today; it is normalised the same way. The .cut_mt detail rows are never normalised,
+    // because they hold free text from the Polyboard file.
     private static readonly Regex GenerationDate = new(@"(?<!\d)\d{4}-\d{2}-\d{2}(?!\d)", RegexOptions.CultureInvariant);
 
     /// <summary>
     /// Asserts that <paramref name="files"/>, in generation order, match the golden files recorded for
     /// <paramref name="fixture"/> and <paramref name="manufacturer"/>: the worksheet XML of every
     /// <c>.xlsx</c>, the bytes of every other file (a <c>.cut_mt</c>) and the file names in
-    /// <c>names.txt</c>, with generation dates replaced by <see cref="DateToken"/>.
+    /// <c>names.txt</c>, with generation dates replaced by <c>{date}</c>.
     /// With the environment variable <c>UPDATE_GOLDEN=1</c> it instead records <paramref name="files"/>
     /// as the golden files, in the source tree, and passes.
     /// </summary>
+    /// <param name="fixture">The Polyboard fixture name, e.g. <c>"cabinet-23-field"</c>; one folder name.</param>
+    /// <param name="manufacturer">The golden folder for this run, e.g. <c>"Lonira"</c>; one folder name.</param>
+    /// <param name="files">The generated order files, in generation order.</param>
     /// <exception cref="GoldenFileMismatchException">The files do not match.</exception>
     public static void MatchGolden(string fixture, string manufacturer, IReadOnlyList<FileSaveContext> files)
     {
@@ -39,16 +41,29 @@ public static class OrderFilesAssert
     internal static void MatchGolden(
         string fixture, string manufacturer, IReadOnlyList<FileSaveContext> files, string goldenRoot, bool update)
     {
-        var expected = new GoldenSet(fixture, manufacturer, Path.Combine(goldenRoot, fixture, manufacturer));
-        var actual = Normalise(files);
+        // Recording deletes this folder, so neither argument may reach outside it.
+        RequireFolderName(fixture, nameof(fixture));
+        RequireFolderName(manufacturer, nameof(manufacturer));
+
+        var golden = new GoldenSet(fixture, manufacturer, Path.Combine(goldenRoot, fixture, manufacturer));
+        var generated = Normalise(files);
 
         if (update)
         {
-            expected.Write(actual);
+            golden.Record(generated);
         }
         else
         {
-            expected.Compare(actual);
+            golden.Compare(generated);
+        }
+    }
+
+    private static void RequireFolderName(string value, string paramName)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value is "." or ".." ||
+            value.IndexOfAny(['/', '\\']) >= 0 || value.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        {
+            throw new ArgumentException($"'{value}' must be a single folder name.", paramName);
         }
     }
 
@@ -61,7 +76,10 @@ public static class OrderFilesAssert
             if (file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
             {
                 using var zip = new ZipArchive(new MemoryStream(file.Content), ZipArchiveMode.Read);
-                foreach (var entry in zip.Entries.Where(e => e.FullName.StartsWith("xl/worksheets/") && e.FullName.EndsWith(".xml")))
+                var worksheets = zip.Entries.Where(e =>
+                    e.FullName.StartsWith("xl/worksheets/", StringComparison.Ordinal) &&
+                    e.FullName.EndsWith(".xml", StringComparison.Ordinal));
+                foreach (var entry in worksheets)
                 {
                     using var content = new MemoryStream();
                     using (var entryStream = entry.Open())
@@ -74,7 +92,7 @@ public static class OrderFilesAssert
             }
             else
             {
-                result.Add(new GoldenFile(name, NormaliseDate(file.Content)));
+                result.Add(new GoldenFile(name, NormaliseHeaderDate(file.Content)));
             }
         }
 
@@ -83,13 +101,31 @@ public static class OrderFilesAssert
 
     private static string NormaliseDate(string text) => GenerationDate.Replace(text, DateToken);
 
-    // Latin-1 maps every byte to one char and back, so only the ASCII date bytes change: the
-    // rest of the file (UTF-8 Cyrillic, the ╪ separator, line endings) stays byte for byte.
-    private static byte[] NormaliseDate(byte[] content) =>
-        Encoding.Latin1.GetBytes(NormaliseDate(Encoding.Latin1.GetString(content)));
-
-    private static string FirstDifference(string expected, string actual)
+    // Only the first line (the header) is normalised. Latin-1 maps every byte to one char and back,
+    // so only the ASCII date bytes change: UTF-8 Cyrillic, the ╪ separator and line endings stay as they are.
+    private static byte[] NormaliseHeaderDate(byte[] content)
     {
+        var headerLength = Array.IndexOf(content, (byte)'\n') + 1;
+        if (headerLength == 0)
+        {
+            headerLength = content.Length;
+        }
+
+        var header = Encoding.Latin1.GetBytes(NormaliseDate(Encoding.Latin1.GetString(content, 0, headerLength)));
+        return [.. header, .. content.AsSpan(headerLength)];
+    }
+
+    private static string FirstDifference(byte[] expectedBytes, byte[] actualBytes)
+    {
+        var expected = Encoding.UTF8.GetString(expectedBytes);
+        var actual = Encoding.UTF8.GetString(actualBytes);
+        if (expected == actual)
+        {
+            // Different bytes that decode to the same text (e.g. invalid UTF-8).
+            var offset = expectedBytes.AsSpan().CommonPrefixLength(actualBytes);
+            return $"first difference at byte {offset} (the files differ only in bytes that are not valid UTF-8)";
+        }
+
         var expectedLines = expected.Split('\n');
         var actualLines = actual.Split('\n');
         var line = 0;
@@ -100,37 +136,29 @@ public static class OrderFilesAssert
 
         var expectedLine = line < expectedLines.Length ? expectedLines[line] : "<end of file>";
         var actualLine = line < actualLines.Length ? actualLines[line] : "<end of file>";
-        var column = 0;
-        while (column < expectedLine.Length && column < actualLine.Length && expectedLine[column] == actualLine[column])
-        {
-            column++;
-        }
+        var column = expectedLine.AsSpan().CommonPrefixLength(actualLine);
 
         return $"first difference at line {line + 1}, column {column + 1}" +
                $"{Environment.NewLine}  expected: {Excerpt(expectedLine, column)}" +
                $"{Environment.NewLine}  actual:   {Excerpt(actualLine, column)}";
     }
 
-    // Worksheet XML is usually one long line, so show only the part around the first difference.
+    // Worksheet XML can have very long lines, so show only the part around the first difference.
+    // A trailing CR is shown as \r, so a line-ending-only difference is visible.
     private static string Excerpt(string line, int column)
     {
         const int before = 60, length = 160;
-        line = line.TrimEnd('\r');
-        if (line.Length <= length)
-        {
-            return line;
-        }
-
-        var start = Math.Max(0, column - before);
+        var start = line.Length <= length ? 0 : Math.Max(0, column - before);
         var end = Math.Min(line.Length, start + length);
-        return (start > 0 ? "…" : "") + line[start..end] + (end < line.Length ? "…" : "");
+        var excerpt = line[start..end].Replace("\r", @"\r");
+        return (start > 0 ? "…" : "") + excerpt + (end < line.Length ? "…" : "");
     }
 
     private sealed record GoldenFile(string RelativePath, byte[] Content);
 
     private sealed class GoldenSet(string fixture, string manufacturer, string directory)
     {
-        public void Write(IEnumerable<GoldenFile> files)
+        public void Record(IEnumerable<GoldenFile> files)
         {
             // Start clean, so a file or worksheet that is no longer generated leaves no stale golden file.
             if (Directory.Exists(directory))
@@ -146,7 +174,7 @@ public static class OrderFilesAssert
             }
         }
 
-        public void Compare(IEnumerable<GoldenFile> files)
+        public void Compare(IReadOnlyList<GoldenFile> files)
         {
             foreach (var file in files)
             {
@@ -159,8 +187,7 @@ public static class OrderFilesAssert
                 var expected = File.ReadAllBytes(path);
                 if (!expected.AsSpan().SequenceEqual(file.Content))
                 {
-                    throw Mismatch(file.RelativePath,
-                        FirstDifference(Encoding.UTF8.GetString(expected), Encoding.UTF8.GetString(file.Content)));
+                    throw Mismatch(file.RelativePath, FirstDifference(expected, file.Content));
                 }
             }
 
@@ -174,7 +201,9 @@ public static class OrderFilesAssert
                     var relativePath = $"{xlsx}/{Path.GetRelativePath(xlsxDirectory, golden).Replace('\\', '/')}";
                     if (!generated.Contains(relativePath))
                     {
-                        throw Mismatch(relativePath, "the golden file exists, but this worksheet was not generated");
+                        throw Mismatch(relativePath,
+                            "the golden file exists, but this worksheet was not generated. If you just re-recorded, " +
+                            "this may be a stale copy in the test output folder: rebuild clean.");
                     }
                 }
             }
