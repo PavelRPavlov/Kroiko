@@ -1,6 +1,6 @@
 # 06 — Updates & About
 
-- **Status:** Not started
+- **Status:** In progress
 - **Depends on:** [04 Conversion flow](04-conversion-flow.md)  **Can run alongside:** [05 Saving](05-saving.md)
 - **ADRs:** [0002](../adr/0002-pwa-updates-reload-prompt.md) §1–6; research: [.NET 10 PWA facts](../research/dotnet10-blazor-wasm-pwa.md)
 
@@ -47,7 +47,7 @@ snackbar. The snackbar never reloads over an unsaved Order without asking. The A
 
 ## Done criteria
 
-- [ ] About shows `vX.Y.Z (sha)` from the assembly's informational version; the formatting is unit-tested.
+- [x] About shows `vX.Y.Z (sha)` from the assembly's informational version; the formatting is unit-tested.
 - [ ] A published build shows "Нова версия е налична" after a newer build is served; "Презареди" applies it; "По-късно" moves the offer into About.
 - [ ] "Презареди" asks first when `HasUnsavedWork` is true.
 - [ ] Update checks run hourly, on visibility and on `online`, and are silent offline; the manual check reports its three outcomes.

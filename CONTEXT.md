@@ -151,6 +151,12 @@ the manufacturer by `SupportedCompany.Name` (an unknown name loads as none). Loa
 untouched until the operator edits the settings (committed by the next successful generation, which saves them) ([ADR-0002](docs/adr/0002-pwa-updates-reload-prompt.md) §7–8). Only the two
 `localStorage` calls are interop (`IBrowserStorage`); `LocalStorageDeviceSettingsStoreTests` covers the rest.
 
+**Version** ([ADR-0002](docs/adr/0002-pwa-updates-reload-prompt.md) §5–6): the hand-maintained SemVer `<Version>` in
+`Kroiko.Client.Blazor.csproj` (`0.1.0` until go-live, then `1.0.0`; bumped in the PR that goes to `release`, and read as
+`X.Y.Z` by `scripts/publish-pwa.ps1`). The SDK's Source Link appends `+<commit sha>` to the assembly's informational version;
+`Updates/AppVersion` formats it as `v0.1.0 (a1b2c3d)` (the first 7 characters of the sha, or just `v0.1.0` without one), and
+only the About dialog shows it. `Updates/AppVersionTests` covers the formatting; `E2E/AboutDialogTests` the published app's About.
+
 ## 6. Decision log
 
 Architectural decisions are recorded as **ADRs** in [docs/adr/](docs/adr/) — that folder

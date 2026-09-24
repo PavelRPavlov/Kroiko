@@ -21,7 +21,7 @@ the phase cut was decided in
 | 03 | [Client shell](03-client-shell.md) | A MudBlazor app shell that starts offline, plus the Playwright harness | [0005](../adr/0005-copy-conversion-ui-into-pwa.md), [0007](../adr/0007-parity-and-test-strategy.md) | In progress |
 | 04 | [Conversion flow](04-conversion-flow.md) | `ConverterState`, the copied UI, "Изтегли всички"; parity proven in a trimmed build under `bg-BG` and `en-US`, and offline | [0005](../adr/0005-copy-conversion-ui-into-pwa.md), [0006](../adr/0006-known-conversion-bugs-in-pwa.md), [0003](../adr/0003-save-order-files-to-picked-folder.md) §5, §7, §8, [0002](../adr/0002-pwa-updates-reload-prompt.md) §7, [0007](../adr/0007-parity-and-test-strategy.md) | Done |
 | 05 | [Saving](05-saving.md) | "Запази в папка…", per-file downloads, ` (n)` clash naming | [0003](../adr/0003-save-order-files-to-picked-folder.md) | Not started |
-| 06 | [Updates & About](06-updates-and-about.md) | Reload snackbar, update checks, version in About | [0002](../adr/0002-pwa-updates-reload-prompt.md) | Not started |
+| 06 | [Updates & About](06-updates-and-about.md) | Reload snackbar, update checks, version in About | [0002](../adr/0002-pwa-updates-reload-prompt.md) | In progress |
 | 07 | [Hosting & go-live](07-hosting-and-go-live.md) | 07a: SWA + first manual deploy of the shell; 07b: release checklist, go-live sign-off | [0001](../adr/0001-host-pwa-on-azure-static-web-apps.md), [0007](../adr/0007-parity-and-test-strategy.md) §9 | Not started |
 
 The **Status** column mirrors each guide's own `Status:` line. The guide is the source of truth;
