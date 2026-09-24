@@ -24,8 +24,9 @@
         <ul class="py-2" data-testid="generated-files">
             @foreach (var file in ConverterState.GeneratedFiles)
             {
-                @* A link, as the Server's; the no-op href keeps it in the tab order and opens it with Enter, and the
-                   click hands the file to the download helper (ADR-0003 §5). *@
+                @* A link, as the Server's; the no-op href keeps it in the tab order and opens it with Enter, role="link"
+                   replaces the role="button" MudLink gives an OnClick, and the click hands the file to the download
+                   helper (ADR-0003 §5). A strict script-src CSP would flag the javascript: href (guide 05, step 3). *@
                 <li class="py-1">
                     <MudLink Href="javascript:void(0)" role="link" OnClick="() => ConverterState.DownloadAsync(file)"
                              Disabled="@ConverterState.IsSaving">

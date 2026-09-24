@@ -886,17 +886,19 @@ public sealed class ConverterStateTests
     {
         await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
         var busy = new List<bool>();
+        var triedOthers = false;
         Task? others = null;
         _downloader.OnDownload = () =>
         {
-            if (others is not null)
+            // Only during the first download: the others, if they wrongly ran, would call this again.
+            if (triedOthers)
             {
                 return;
             }
 
+            triedOthers = true;
             busy.Add(_state.IsDownloading);
             busy.Add(_state.CanGenerate);
-            others = Task.CompletedTask;
             others = Task.WhenAll(
                 _state.DownloadAsync(_state.GeneratedFiles[1]),
                 _state.DownloadAllAsync(),

@@ -93,8 +93,10 @@ the saved flag (ADR-0003 §8) unless an edit came meanwhile, and does nothing fo
 `IsSaving` (it runs as `IsDownloading`, so generating, "Изтегли всички" and "Запази в папка…" wait for it, and the links are
 disabled while anything saves). A download that cannot start raises „Файлът за поръчка не можа да бъде изтеглен." (new
 text; the Server's links were plain Blob Storage URLs). The link is an `<a role="link">` with a no-op `javascript:void(0)`
-href, which keeps it in the tab order and opens it with Enter (MudLink with only `OnClick` renders an `<a role="button">`
-that no key reaches). `ConverterState.MarkSaved()`, which nothing called, is gone: the links, "Изтегли всички" and the
+href, which keeps it in the tab order and opens it with Enter (MudBlazor 9.7's `MudLink` with only `OnClick` renders an
+`<a role="button">` with no href, which no key reaches; a disabled one drops the href and ignores clicks). A future
+Content-Security-Policy without `'unsafe-inline'` in `script-src` would report each click of such an href as a violation,
+which fails the E2E tests' console check: change the links then. `ConverterState.MarkSaved()`, which nothing called, is gone: the links, "Изтегли всички" and the
 folder save set the flag. Where `canSaveToFolder` is true, "Запази в папка…" is the filled (primary) button and "Изтегли
 всички" an outlined (secondary) one; elsewhere "Изтегли всички" is the only, filled, button. The real picker is on 07b step
 1's per-release items. Tests: `ConverterStateTests` (one file under its sanitised name and the saved flag, a failed

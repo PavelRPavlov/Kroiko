@@ -123,15 +123,7 @@ public sealed class GenerationTests(PublishedApp app)
         var console = ConsoleErrors(page);
         await page.GotoAsync("/");
 
-        // Lonira names each file after its material, which is free text.
-        await UploadAsync(page, new FilePayload
-        {
-            Name = "names.txt",
-            MimeType = "text/plain",
-            Buffer = Encoding.UTF8.GetBytes("214.0;247.0;1;CON;0;0;0;1;0;Model[0];1\r\n250.0;247.0;1;Egger W1000: \"бял\";0;0;0;1;0;Model[0];2\r\n"),
-        });
-        await FillContactsAsync(page, "Тест ООД", "0888123456");
-        await GenerateButton(page).ClickAsync();
+        await GenerateNamesAsync(page);
         await Expect(page.GetByRole(AriaRole.Listitem)).ToHaveTextAsync(["_CON.xlsx", "Egger W1000_ _бял_.xlsx"]);
 
         var files = await DownloadAllAsync(page, count: 2);
@@ -150,14 +142,7 @@ public sealed class GenerationTests(PublishedApp app)
         var downloads = 0;
         page.Download += (_, _) => Interlocked.Increment(ref downloads);
 
-        await UploadAsync(page, new FilePayload
-        {
-            Name = "names.txt",
-            MimeType = "text/plain",
-            Buffer = Encoding.UTF8.GetBytes("214.0;247.0;1;CON;0;0;0;1;0;Model[0];1\r\n250.0;247.0;1;Egger W1000: \"бял\";0;0;0;1;0;Model[0];2\r\n"),
-        });
-        await FillContactsAsync(page, "Тест ООД", "0888123456");
-        await GenerateButton(page).ClickAsync();
+        await GenerateNamesAsync(page);
         await Expect(FileLinks(page)).ToHaveTextAsync(["_CON.xlsx", "Egger W1000_ _бял_.xlsx"]);
 
         var download = await page.RunAndWaitForDownloadAsync(() => FileLinks(page).Nth(1).ClickAsync());
@@ -168,5 +153,18 @@ public sealed class GenerationTests(PublishedApp app)
         linked.Content.Should().Equal(all[1].Content, "the link saves the generated file");
         downloads.Should().Be(3, "the link downloaded one file and \"Изтегли всички\" two");
         console.Should().BeEmpty();
+    }
+
+    // Generates a Lonira order whose files are named after its materials, which are free text that needs sanitising.
+    private static async Task GenerateNamesAsync(IPage page)
+    {
+        await UploadAsync(page, new FilePayload
+        {
+            Name = "names.txt",
+            MimeType = "text/plain",
+            Buffer = Encoding.UTF8.GetBytes("214.0;247.0;1;CON;0;0;0;1;0;Model[0];1\r\n250.0;247.0;1;Egger W1000: \"бял\";0;0;0;1;0;Model[0];2\r\n"),
+        });
+        await FillContactsAsync(page, "Тест ООД", "0888123456");
+        await GenerateButton(page).ClickAsync();
     }
 }
