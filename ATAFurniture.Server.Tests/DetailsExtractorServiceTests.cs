@@ -8,7 +8,8 @@ namespace ATAFurniture.Server.Tests;
 
 /// <summary>
 /// The Server's adapter over <c>PolyboardParser</c> keeps today's policy (ADR-0004 §3, ADR-0007 §8):
-/// any bad line → a log entry and no Details. Only files it rejected for their line endings now parse (ADR-0006 §1).
+/// any bad line → a log entry and no Details. The parser itself, including the line-ending variants that now
+/// parse (ADR-0006 §1), is tested in <c>Kroiko.Domain.Tests</c>.
 /// </summary>
 public sealed class DetailsExtractorServiceTests
 {
@@ -30,17 +31,6 @@ public sealed class DetailsExtractorServiceTests
         _logger.Entries.Should().ContainSingle()
             .Which.Should().Match<(LogLevel Level, string Message)>(e =>
                 e.Level == LogLevel.Error && e.Message.Contains("line 10") && e.Message.Contains("FieldCount"));
-    }
-
-    [Fact]
-    public async Task An_LF_only_file_now_yields_the_same_details_as_its_CRLF_original()
-    {
-        var expected = await ExtractAsync("wardrobes-4-materials");
-
-        var details = await ExtractAsync("wardrobes-4-materials-lf");
-
-        details.Should().NotBeEmpty().And.Equal(expected);
-        _logger.Entries.Should().BeEmpty();
     }
 
     private sealed class RecordingLogger : ILogger<DetailsExtractorService>
