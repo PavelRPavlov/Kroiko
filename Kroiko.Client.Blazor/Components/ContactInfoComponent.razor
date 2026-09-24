@@ -1,0 +1,18 @@
+@inherits ConverterStateComponentBase
+
+@* The Server's per-tab contact fields (LoniraTabItemContent, …), once above the tabs and both required
+   (ADR-0005 §6). Pre-filled from the device settings; each keystroke is an input edit, so "Генерирай бланки за
+   поръчка" follows the fields as they are typed. *@
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.subtitle1">Контакти на клиента</MudText>
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="ConverterState.CompanyName" Label="Име на клиента" Immediate="true"
+                          Required="true" RequiredError="Полето е задължително" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="ConverterState.MobileNumber" Label="Телефон за връзка" Immediate="true"
+                          Required="true" RequiredError="Полето е задължително" />
+        </MudItem>
+    </MudGrid>
+</MudPaper>

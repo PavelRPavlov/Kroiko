@@ -106,11 +106,16 @@ real domain and the shared fixtures; no browser, no `Category=E2E`.
 registered scoped (once for a WASM app) by `AddConverterState()` in `Program.cs`. It depends on `IConfirmation` (a yes/no
 question before files are discarded; `MudDialogConfirmation`, a Bulgarian "Да"/"Не" MudBlazor message box, registered by `AddConfirmationDialog()`)
 and `IDeviceSettingsStore` (the last `ContactInfo` and manufacturer: loaded once per app start into whatever the
-operator has not chosen yet, saved after each successful generation). Components read it and re-render on `Changed`;
+operator has not chosen yet — a device that remembers no manufacturer starts on Lonira, as the Server does — saved
+after each successful generation) and `IFileDownloader` (hands one file to the browser as a download: `BrowserFileDownloader`
+streams it through a `DotNetStreamReference` to `wwwroot/js/files.js`, which saves it with a `Blob` and an `<a download>`, registered
+by `AddFileDownloader()`). Components read it and re-render on `Changed`;
 grids edit the domain details in `Files` in place and call `NotifyInputEdited()`; an edit made while generating
-drops that generation's output. Failures of reading, the dialog, making files, generating and device storage are
-logged and raise `Error` with a Bulgarian message instead of throwing. `HasUnsavedWork` = a file is loaded and its current input has not been generated and saved (at least
-one download triggered, `MarkSaved()`).
+drops that generation's output. `DownloadAllAsync` ("Изтегли всички") triggers the downloads one after another, each under its
+`FileNameSanitizer` name ([ADR-0003](docs/adr/0003-save-order-files-to-picked-folder.md) §5, §7); the first triggered download sets the saved flag, and an
+edit meanwhile stops the downloads of the files it discarded. Failures of reading, the dialog, making files, generating, device storage and
+downloads are logged and raise `Error` with a Bulgarian message instead of throwing. `HasUnsavedWork` = a file is loaded and its current input
+has not been generated and saved (at least one download triggered; `MarkSaved()` for phase 05's folder save).
 
 **Conversion UI** (`Kroiko.Client.Blazor/Components/`, copied from the Server and stripped, [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §1): components
 inherit `ConverterStateComponentBase` (injects `ConverterState`, re-renders on `Changed`). The Converter page (`/`) loads the device
@@ -124,8 +129,13 @@ the Server ([ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §3) — Lo
 "Кантиране с друг цвят" (`DifferentEdgeColor`) when a part has one, MegaTrading the edges, edge-banding material, note and the material rename,
 whose tab-local "old → new name" rows go to `ConverterState.RenameMaterials` for that tab's file (each detail matched by its material before
 the rename, so renames never chain and two materials can swap). The MegaTrading tab shows a `TooManyMaterials` problem with its materials and points to the rename rows. The per-tab
-contact fields are not copied. `E2E/UploadPanelTests` covers the alert, the discard confirmation and the remembered manufacturer;
-`E2E/ConversionTabsTests` the three tabs, the rename and invariant numbers under `bg-BG`.
+contact fields are not copied: once there are files, `ContactInfoComponent` ("Контакти на клиента") above the tabs edits
+`CompanyName`/`MobileNumber`, both required, each keystroke an input edit; below them `OrderHandlingComponent` (the Server's, without email,
+credits and Blob Storage) has "Генерирай бланки за поръчка", enabled by `CanGenerate`, a spinner while generating, and then the generated
+files listed under their sanitised names with "Изтегли всички". `E2E/UploadPanelTests` covers the alert, the discard confirmation, the Lonira default and the remembered manufacturer;
+`E2E/ConversionTabsTests` the three tabs, the rename and invariant numbers under `bg-BG`; `E2E/GenerationTests` the contact guard,
+the `Check` guard, an edit discarding the generated files, sanitised download names and a Lonira order downloaded under `bg-BG` that
+matches the golden files. `Conversion/FileDownloaderRegistrationTests` pins the `files.js` interop with a faked JS runtime.
 
 **Device settings** (`LocalStorageDeviceSettingsStore`, registered by `AddDeviceSettingsStore()`) are one JSON document
 in `localStorage` under `kroiko.deviceSettings`: `{"schemaVersion":1,"companyName":…,"mobileNumber":…,"manufacturer":"Lonira"}`,
@@ -182,7 +192,7 @@ These were found in a code review; several are naturally fixed by the migration.
   **`ConverterContext` never disposed** (event-handler leak).
   → PWA rule: busy flags clear in `finally`, errors show a snackbar ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)).
   ✅ `ConverterState` (phase 04 step 1) clears `IsUploading`/`IsGenerating` in `finally` and raises its `Error` event
-  with a Bulgarian message instead of throwing; the snackbar that shows it is phase 04 step 5.
+  with a Bulgarian message instead of throwing, which the Converter page shows as a snackbar; "Изтегли всички" clears `IsDownloading` the same way (phase 04 step 5).
 - 🟡 **Dead code:** `INotifyPropertyChanged` plumbing on immutable records/entities;
   empty test project; dead UWP project; stale `<Compile Remove Cosmos…>` entries.
   → ✅ The domain has no INPC left (phase 02 step 1); the Server keeps it only where its UI listens.
@@ -232,10 +242,10 @@ Server's output. The manual acceptance check (`docs/release-checklist.md`) walks
 | No login, user accounts, credits or email; nothing leaves the device | Map scope | — (absent features) |
 | A file with bad lines is rejected and the first 10 bad lines are listed (Server: generic alert, nothing loaded) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §2 | `ConverterStateTests.A_file_with_bad_lines_loads_nothing_and_lists_the_first_ten` + Playwright `UploadPanelTests.A_file_with_bad_lines_shows_the_first_ten_and_links_to_the_configuration` |
 | MegaTrading orders with more than 6 materials cannot be generated (Server: `.cut_mt` header truncated) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §3 | `Check` domain test + `ConverterStateTests.More_than_six_MegaTrading_materials_is_a_problem_that_cannot_generate` + Playwright `ConversionTabsTests.MegaTrading_names_too_many_materials_and_the_rename_can_merge_them` |
-| Both contact fields must be filled before generating; last values and manufacturer remembered per device | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §6 | `ConverterStateTests.An_empty_contact_field_cannot_generate`, `…Generating_remembers_the_contacts_and_the_manufacturer_on_the_device` + Playwright "device storage" |
+| Both contact fields must be filled before generating; last values and manufacturer remembered per device | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §6 | `ConverterStateTests.An_empty_contact_field_cannot_generate`, `…Generating_remembers_the_contacts_and_the_manufacturer_on_the_device` + Playwright `GenerationTests.Generating_needs_both_contacts_and_downloading_all_saves_the_order_files`, "device storage" |
 | The MegaTrading material rename matches each part by its material before the rename, so renames never chain and two materials can swap (Server: checks each later row against the already-renamed material, so A→B then B→C renames A to C, and a swap merges both into one) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §3 ("rewrites `Material` on the matching details") | `ConverterStateTests.A_rename_matches_the_names_before_it_so_two_materials_can_swap` |
-| Any input edit clears the generated files (Server: stale output kept) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §7 | `ConverterStateTests.Any_input_edit_clears_the_generated_files_and_the_saved_flag_without_asking` |
+| Any input edit clears the generated files (Server: stale output kept) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §7 | `ConverterStateTests.Any_input_edit_clears_the_generated_files_and_the_saved_flag_without_asking` + Playwright `GenerationTests.An_edit_after_generating_discards_the_generated_files` |
 | Switching manufacturer or re-uploading asks before discarding files (Server: silent rebuild) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §5 | `ConverterStateTests.Switching_manufacturer_when_files_exist_asks_and_no_changes_nothing`, `…Uploading_again_when_files_exist_asks_and_no_changes_nothing` + Playwright `UploadPanelTests.Switching_manufacturer_or_uploading_again_asks_first_and_no_keeps_the_Order` |
 | Order persists across in-app navigation (Server: lost when leaving the Converter page) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §4 | `ConverterStateRegistrationTests.Every_page_of_the_app_gets_the_same_Order`, `ConverterStateTests.The_device_settings_are_loaded_once_so_returning_to_the_page_keeps_the_Order` |
-| Files are saved to a picked folder or downloaded; clashes get ` (n)`; names pass through `FileNameSanitizer` (Server: Blob Storage links) | [0003](docs/adr/0003-save-order-files-to-picked-folder.md) | `FileNameSanitizer` domain test; picker manual |
-| Busy spinners always clear; errors show a snackbar (Server: generate spinner can hang) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §4 | `ConverterStateTests.A_failed_generation_raises_an_error_and_leaves_the_Order_as_it_was`, `…A_file_that_cannot_be_read_raises_an_error_and_leaves_the_Order_as_it_was` |
+| Files are saved to a picked folder or downloaded; clashes get ` (n)`; names pass through `FileNameSanitizer` (Server: Blob Storage links) | [0003](docs/adr/0003-save-order-files-to-picked-folder.md) | `FileNameSanitizer` domain test, `ConverterStateTests.Downloading_all_triggers_every_generated_file_in_order_under_its_sanitised_name` + Playwright `GenerationTests.The_files_are_listed_and_downloaded_under_their_sanitised_names`; picker manual |
+| Busy spinners always clear; errors show a snackbar (Server: generate spinner can hang) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §4 | `ConverterStateTests.A_failed_generation_raises_an_error_and_leaves_the_Order_as_it_was`, `…A_file_that_cannot_be_read_raises_an_error_and_leaves_the_Order_as_it_was`, `…A_download_that_cannot_start_raises_an_error_and_is_not_saved` |

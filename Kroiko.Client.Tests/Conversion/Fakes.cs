@@ -91,3 +91,29 @@ internal sealed class FakeBrowserStorage : IBrowserStorage
         return ValueTask.CompletedTask;
     }
 }
+
+/// <summary>Browser downloads held in memory: <see cref="Downloads"/> are the files triggered, in order.</summary>
+internal sealed class FakeFileDownloader : IFileDownloader
+{
+    public List<(string FileName, byte[] Content)> Downloads { get; } = [];
+
+    /// <summary>When set, triggering the download with this zero-based index throws <see cref="Failure"/>.</summary>
+    public int? FailAt { get; set; }
+
+    public Exception Failure { get; set; } = new InvalidOperationException("The download could not be started.");
+
+    /// <summary>Runs once each download is triggered, e.g. to check the busy flag or to edit the Order meanwhile.</summary>
+    public Action? OnDownload { get; set; }
+
+    public Task DownloadAsync(string fileName, byte[] content)
+    {
+        if (FailAt == Downloads.Count)
+        {
+            throw Failure;
+        }
+
+        Downloads.Add((fileName, content));
+        OnDownload?.Invoke();
+        return Task.CompletedTask;
+    }
+}
