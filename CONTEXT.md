@@ -23,10 +23,11 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 |---|---|---|
 | **Detail** | One cut part (panel): height, width, quantity, material, edges, thickness, etc. Parsed from one line of the Polyboard file. | `Kroiko.Domain/CellsExtracting/Detail.cs` |
 | **Old vs latest format** | Polyboard lines come in two shapes: **11 fields** (legacy) or **23 fields** (current). Field count selects the parser. | `DetailsExtractorService.cs` |
-| **Parse result** | What parsing a Polyboard file yields: the Details plus a list of **Parse errors** (line number + reason). The parser reports bad lines; the caller decides what to do with them. | [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md) |
+| **Parse result** | What parsing a Polyboard file yields: the Details plus a list of **Parse errors** (line number + reason). The parser reports bad lines; the caller decides what to do with them (the PWA rejects the file and lists them; the Server discards it). | [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md), [ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) |
 | **KroikoFile** | A logical output unit — a filename plus its details. Lonira produces one KroikoFile per material; Suliver/MegaTrading produce one. | `Kroiko.Domain/TemplateBuilding/KroikoFile.cs` |
 | **SupportedCompany** | A target manufacturer (name, translated label). The domain knows three: Lonira, Suliver, MegaTrading. Order emails and Suliver's second branch are Server-only. | `Kroiko.Domain/CellsExtracting/SupportedCompanies.cs` |
 | **Order format** | Everything one manufacturer needs to turn Details into order files: map + group Details into KroikoFiles, then generate the files. One per SupportedCompany; the only way the apps reach TemplateBuilders, TableRowProviders and FileNameProviders. | `IOrderFormat` — [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md) |
+| **Order problem** | A reason an Order format refuses to generate, found by `IOrderFormat.Check` before generating — today only MegaTrading's "more than 6 materials". The PWA blocks generation while any exist; the Server does not check. | [ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) |
 | **Order** | One conversion in progress: a parsed Polyboard file, the chosen SupportedCompany, its editable KroikoFiles, the Contact info and, once generated, the order files. Changing any of these inputs discards the generated files. Not the same as the Server's `User`/credit records. | [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) |
 | **Contact info** | The end customer's company name and phone number, written into the order files. Both must be filled before generating; the PWA remembers the last values used per device. _Avoid_: account info, profile. | [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) |
 | **Sheet / Cell** | In-memory spreadsheet model. A Cell has an Excel-style name ("A1"), a value, and alignment. | `Kroiko.Domain/TemplateBuilding/` |
@@ -42,7 +43,7 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 |---|---|---|
 | **Lonira** | One `.xlsx` **per material** (details grouped by material). | Reads `{MaterialName}` template flag; per-file sheet. |
 | **Suliver** (two branches: main + Kuklensko Shosе) | One `.xlsx`. | Both branches currently share `Name = "Suliver"` — they differ only by order email. ⚠️ see Known issues. |
-| **MegaTrading** | One `.xlsx` **and** one `.cut_mt` text file. | `.cut_mt` uses a special separator (`╪`) and always emits **exactly 6 material rows**; supports bulk material rename. |
+| **MegaTrading** | One `.xlsx` **and** one `.cut_mt` text file. | `.cut_mt` uses a special separator (`╪`) and always emits **exactly 6 material rows**; supports bulk material rename. The PWA refuses orders with more than 6 materials ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)). |
 
 ## 4. Current architecture (as of migration start)
 
@@ -102,19 +103,27 @@ These were found in a code review; several are naturally fixed by the migration.
   → Fixed by the atomic server-side credit endpoint (see [docs/implementation/04-backend-api.md](docs/implementation/04-backend-api.md)).
 - 🔴 **Null-deref crash.** Missing template builder / file-name provider is logged as
   a warning then dereferenced. `OrderHandlingComponent.razor.cs` → `FileGeneratorService.cs`.
+  → Removed by `IOrderFormat` ([ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)).
 - 🔴 **Free-credits abuse hole.** "Add credits" button grants 10 credits with no
   payment. `UserCreditsComponent.razor`.
 - 🟠 **No optimistic concurrency** on `User` → lost updates under concurrent use.
 - 🟠 **Silent whole-file discard** when one Polyboard line has a bad field count.
-  `DetailsExtractorService.cs`.
+  `DetailsExtractorService.cs`. Also splits on CRLF only (LF-only files fail) and
+  chokes on a UTF-8 BOM.
+  → [ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md): the domain parser accepts any line ending
+  and a BOM (both apps); the PWA rejects bad files listing the bad lines; the Server keeps the discard.
 - 🟠 **MegaTrading `.cut_mt`:** materials beyond 6 are silently dropped; doubles are
   formatted with ambient culture (comma decimal on `bg-BG` corrupts the file — pin to
   `InvariantCulture`). `MegaTradingFileGenerator.cs`.
+  → Culture fixed by ADR-0004; the PWA blocks MegaTrading orders with more than 6 materials
+  via `IOrderFormat.Check` ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)); the Server still truncates.
 - 🟠 **Fire-and-forget** credit consume; **spinners hang** on error paths;
   **`ConverterContext` never disposed** (event-handler leak).
+  → PWA rule: busy flags clear in `finally`, errors show a snackbar ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)).
 - 🟡 **Dead code:** `INotifyPropertyChanged` plumbing on immutable records/entities;
   empty test project; dead UWP project; stale `<Compile Remove Cosmos…>` entries.
 - 🟡 **`SupportedCompanies` key collision:** Suliver / SuliverKuklensko share `Name`.
+  → Gone from the domain (three manufacturers, ADR-0004); Kuklensko stays Server-only.
 - 🟠 **Browser-safety gaps in `Kroiko.Domain`.**
   `TemplateBuilderBase.ReadTemplateAsync` uses `File.ReadAllTextAsync` (no filesystem in WASM);
   its `JsonSerializer.Deserialize` and all three `TableRowProvider`s' `Type.GetProperty`
