@@ -1,26 +1,43 @@
 ﻿using Kroiko.Domain.ExcelFilesGeneration;
 using Kroiko.Domain.TemplateBuilding;
+using System.Globalization;
 using System.Text;
 
 namespace Kroiko.Domain.TextFileGeneration;
 
-public interface ITextFileGenerator {
-    List<FileSaveContext> CreateTextBasedFile(ContactInfo contactInfo, IEnumerable<KroikoFile> files);
-}
-public class MegaTradingFileGenerator : ITextFileGenerator {
+/// <summary>Writes MegaTrading's <c>.cut_mt</c> text file.</summary>
+internal static class MegaTradingFileGenerator {
 
     // this is a special separator symbol required by the integration destination
     private const string S = "\u256a";
-    public List<FileSaveContext> CreateTextBasedFile(ContactInfo contactInfo, IEnumerable<KroikoFile> files)
+
+    // Every .cut_mt line ends in CRLF on every host: Windows, Linux or the browser (ADR-0009).
+    // Never AppendLine / Environment.NewLine, which is LF on Linux and in WASM.
+    private const string LineEnding = "\r\n";
+
+    /// <summary>
+    /// The header lists exactly this many materials, blank rows filling the rest. A material beyond them is left
+    /// out of the header while its parts are still written, so MegaTrading's <c>Check</c> refuses more
+    /// (ADR-0006 §3); the Server does not check and keeps the truncated header.
+    /// </summary>
+    public const int MaxMaterials = 6;
+
+    /// <summary>
+    /// The parts of <paramref name="files"/> by material, in order of first use: one header row each. MegaTrading's
+    /// <c>Check</c> counts these same groups, so it and the header always agree on what a material is.
+    /// </summary>
+    public static List<IGrouping<string, MegaTradingDetail>> GroupByMaterial(IEnumerable<KroikoFile> files) =>
+        files.SelectMany(f => f.Details.Cast<MegaTradingDetail>()).GroupBy(d => d.Material).ToList();
+
+    public static List<FileSaveContext> CreateTextBasedFile(ContactInfo contactInfo, IEnumerable<KroikoFile> files)
     {
-        var materials = files.SelectMany(f => f.Details.Cast<MegaTradingDetail>())
-            .GroupBy(d => d.Material).ToList();
+        var materials = GroupByMaterial(files);
         var builder = new StringBuilder();
         
         CreateFirstRow(builder);
         
-        // there should always be exactly 6 rows, containing different materials
-        for (var i = 0; i <= 5; i++)
+        // always exactly MaxMaterials rows, one per material, blank when there are fewer
+        for (var i = 0; i < MaxMaterials; i++)
         {
             if (i >= materials.Count)
             {
@@ -47,26 +64,28 @@ public class MegaTradingFileGenerator : ITextFileGenerator {
     private static void CreateDetailRow(StringBuilder builder, MegaTradingDetail d)
     {
         var rotated = d.Rotated ? "Yes" : "No";
-        builder.AppendLine(
-        $"{d.Material}{S}{d.Height}{S}{d.Width}{S}{d.Quantity}{S}{rotated}{S}{d.LeftEdge}{S}{d.BottomEdge}{S}{d.RightEdge}{S}{d.TopEdge}{S}{d.EdgeBandingMaterial}{S}{d.Note}{S}");
+        AppendRow(builder, string.Create(CultureInfo.InvariantCulture,
+        $"{d.Material}{S}{d.Height}{S}{d.Width}{S}{d.Quantity}{S}{rotated}{S}{d.LeftEdge}{S}{d.BottomEdge}{S}{d.RightEdge}{S}{d.TopEdge}{S}{d.EdgeBandingMaterial}{S}{d.Note}{S}"));
     }
     private static void CreateColumnSizeRow(StringBuilder builder)
     {
         // the integration destination uses a GridView to visualize all details
         // this is the row defining the size of each column
-        builder.AppendLine(
+        AppendRow(builder,
         $"50{S}220{S}80{S}80{S}50{S}50{S}90{S}90{S}90{S}90{S}200{S}200{S}");
     }
     private static void CreateMaterialRow(StringBuilder builder, MegaTradingDetail? detail = null)
     {
-        // there should always be exactly 6 rows, containing different materials
         var material = detail == null ? string.Empty : detail.Material;
         var thickness = detail == null ? 18.0 : detail.Thickness;
-        builder.AppendLine($"{material}{S}{thickness}{S}True{S}True{S}2800{S}2070{S}");
+        AppendRow(builder, string.Create(CultureInfo.InvariantCulture, $"{material}{S}{thickness}{S}True{S}True{S}2800{S}2070{S}"));
     }
     private static void CreateFirstRow(StringBuilder builder)
     {
         // holds a boolean value indicating if the material of the edge banding is different from material itself
-        builder.AppendLine($"{S}{S}True");
+        AppendRow(builder, $"{S}{S}True");
     }
+
+    // The one place a .cut_mt line ends.
+    private static void AppendRow(StringBuilder builder, string row) => builder.Append(row).Append(LineEnding);
 }

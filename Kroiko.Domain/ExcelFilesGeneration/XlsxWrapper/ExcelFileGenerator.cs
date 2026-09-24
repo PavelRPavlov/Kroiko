@@ -1,15 +1,13 @@
-﻿using Kroiko.Domain.TemplateBuilding;
+﻿using System.Globalization;
+using Kroiko.Domain.TemplateBuilding;
 using LargeXlsx;
 
 namespace Kroiko.Domain.ExcelFilesGeneration.XlsxWrapper;
 
-public interface IExcelFileGenerator
+/// <summary>Writes each sheet as an <c>.xlsx</c> file named by the manufacturer's file-name provider.</summary>
+internal static class ExcelFileGenerator
 {
-    Task<List<FileSaveContext>> GenerateExcelFilesAsync(IList<ISheet> sheets, IFileNameProvider fileNameProvider);
-}
-public class ExcelFileGenerator() : IExcelFileGenerator
-{
-    public Task<List<FileSaveContext>> GenerateExcelFilesAsync(IList<ISheet> sheets, IFileNameProvider fileNameProvider)
+    public static List<FileSaveContext> GenerateExcelFiles(IEnumerable<ISheet> sheets, IFileNameProvider fileNameProvider)
     {
         var result = new List<FileSaveContext>();
         
@@ -30,10 +28,10 @@ public class ExcelFileGenerator() : IExcelFileGenerator
             result.Add(new FileSaveContext(fileName, str.ToArray()));
         }
 
-        return Task.FromResult(result);
+        return result;
     }
 
-    private int CreateAllRows(int lastFilledRow, IGrouping<int, Cell> row, XlsxWriter writer)
+    private static int CreateAllRows(int lastFilledRow, IGrouping<int, Cell> row, XlsxWriter writer)
     {
         lastFilledRow++;
 
@@ -52,7 +50,7 @@ public class ExcelFileGenerator() : IExcelFileGenerator
         return lastFilledRow;
     }
 
-    private void CreateSingleRow(XlsxWriter writer, Cell cell)
+    private static void CreateSingleRow(XlsxWriter writer, Cell cell)
     {
         if (cell.ContentAlignment == 0)
         {
@@ -66,7 +64,8 @@ public class ExcelFileGenerator() : IExcelFileGenerator
                 return;
             }
 
-            if (double.TryParse(cell.Value, out var val))
+            // Invariant, as the row providers write numbers (ADR-0004 §4): "609.5" is a number on any host.
+            if (double.TryParse(cell.Value, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var val))
             {
                 writer.Write(
                     val,

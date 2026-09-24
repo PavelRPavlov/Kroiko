@@ -5,7 +5,7 @@ using Kroiko.Domain.ExcelFilesGeneration;
 using Kroiko.Testing;
 using Xunit;
 
-namespace ATAFurniture.Server.Tests;
+namespace Kroiko.Domain.Tests;
 
 /// <summary>
 /// The golden-file comparison itself (01 step 2). Each test records into and compares against

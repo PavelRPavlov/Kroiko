@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Kroiko.Domain;
-using Kroiko.Domain.CellsExtracting;
+using ATAFurniture.Server.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace ATAFurniture.Server.DataAccess;
@@ -51,7 +50,7 @@ public class KroikoDataRepository : IKroikoDataRepository
         return dbUser;
     }
 
-    public Task<User> UpdateSelectedCompany(User dbUser, SupportedCompany targetCompany)
+    public Task<User> UpdateSelectedCompany(User dbUser, ManufacturerBranch targetCompany)
     {
         dbUser.LastSelectedCompany = targetCompany;
         return UpdateUser(dbUser);

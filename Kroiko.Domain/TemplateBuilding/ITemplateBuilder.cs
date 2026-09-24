@@ -1,6 +1,7 @@
-﻿namespace Kroiko.Domain.TemplateBuilding;
+namespace Kroiko.Domain.TemplateBuilding;
 
-public interface ITemplateBuilder
+internal interface ITemplateBuilder
 {
-    public Task<IList<ISheet>> BuildTemplateAsync(ContactInfo contactInfo, IEnumerable<KroikoFile> files);
+    /// <summary>Fills a fresh copy of the manufacturer's template for each sheet <paramref name="files"/> make.</summary>
+    IList<ISheet> BuildTemplate(ContactInfo contactInfo, IEnumerable<KroikoFile> files);
 }

@@ -1,6 +1,6 @@
 ﻿namespace Kroiko.Domain.TemplateBuilding.Lonira;
 
-public class LoniraFileNameProvider : IFileNameProvider
+internal sealed class LoniraFileNameProvider : IFileNameProvider
 {
     public string GetFileNameForSheet(ISheet sheet)
     { 

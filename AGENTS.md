@@ -35,13 +35,13 @@ ATATextConverter/
 ├── ATAFurniture.Server/      ← Blazor Server web app (deployed; maintained, not developed)
 ├── Kroiko.Client.Blazor/     ← Blazor WASM PWA (being built)
 ├── Kroiko.Domain/            ← conversion domain shared by both apps (must stay browser-safe)
-└── ATAFurniture.Server.Tests/← xUnit generation smoke tests
+└── ATAFurniture.Server.Tests/← xUnit Server-only tests (DI wiring, bad-line policy)
 ```
 
 Test projects added by the build plan ([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)):
 `Kroiko.Testing` (shared test data, golden files, `OrderFilesAssert`), `Kroiko.Domain.Tests`
 (golden + domain tests), `Kroiko.Client.Tests` (`ConverterState` unit tests + Playwright E2E);
-`ATAFurniture.Server.Tests` shrinks to Server-only tests.
+`ATAFurniture.Server.Tests` holds only Server-only tests (since phase 02 step 8).
 
 ## Build / run / test
 

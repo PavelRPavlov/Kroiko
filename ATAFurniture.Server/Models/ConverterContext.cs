@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using Kroiko.Domain;
 using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.TemplateBuilding;
 
@@ -14,8 +13,8 @@ public sealed class ConverterContext : INotifyPropertyChanged, IDisposable
 {
     private ObservableCollection<Detail> _details = new();
     private ObservableCollection<KroikoFile> _files = new();
-    private SupportedCompany? _targetCompany = null;
-    private ContactInfo _contactInfo = new();
+    private ManufacturerBranch? _targetCompany = null;
+    private ContactInfoModel _contactInfo = new();
     private string _differentEdgeColor = string.Empty;
 
     public string DifferentEdgeColor
@@ -24,13 +23,13 @@ public sealed class ConverterContext : INotifyPropertyChanged, IDisposable
         set => SetField(ref _differentEdgeColor, value);
     }
     
-    public ContactInfo ContactInfo
+    public ContactInfoModel ContactInfo
     {
         get => _contactInfo;
         set => SetField(ref _contactInfo, value);
     }
 
-    public SupportedCompany? TargetCompany 
+    public ManufacturerBranch? TargetCompany 
     {
         get => _targetCompany;
         set => SetField(ref _targetCompany, value);
@@ -55,7 +54,7 @@ public sealed class ConverterContext : INotifyPropertyChanged, IDisposable
 
     private void OnContactsChanged(object? sender, PropertyChangedEventArgs e)
     {
-        OnPropertyChanged(nameof(Kroiko.Domain.ContactInfo));
+        OnPropertyChanged(nameof(ContactInfo));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

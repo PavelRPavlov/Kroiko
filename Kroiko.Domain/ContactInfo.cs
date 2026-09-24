@@ -1,44 +1,5 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
-
 namespace Kroiko.Domain;
 
-public class ContactInfo : INotifyPropertyChanged
-{
-    private string? _companyName;
-    private string? _mobileNumber;
-    private string? _email;
-
-    public string? CompanyName
-    {
-        get => _companyName;
-        set => SetField(ref _companyName, value);
-    }
-
-    public string? MobileNumber
-    {
-        get => _mobileNumber;
-        set => SetField(ref _mobileNumber, value);
-    }
-
-    public string? Email
-    {
-        get => _email;
-        set => SetField(ref _email, value);
-    }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
-    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-        field = value;
-        OnPropertyChanged(propertyName);
-        return true;
-    }
-}
+// The end customer's contacts written into the order files. Either may be missing on the Server
+// (a user profile without them); the PWA requires both before generating (ADR-0005).
+public sealed record ContactInfo(string? CompanyName, string? MobileNumber);

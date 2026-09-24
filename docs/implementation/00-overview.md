@@ -17,7 +17,7 @@ the phase cut was decided in
 | # | Guide | Proves / delivers | ADRs | Status |
 |---|---|---|---|---|
 | 01 | [Golden baseline](01-golden-baseline.md) | Today's Server output recorded as golden files | [0004](../adr/0004-shared-browser-safe-conversion-domain.md), [0007](../adr/0007-parity-and-test-strategy.md) | In progress |
-| 02 | [Shared domain](02-shared-domain.md) | The whole pipeline in a browser-safe `Kroiko.Domain`; the Server rewired onto it, with identical output | [0004](../adr/0004-shared-browser-safe-conversion-domain.md), [0006](../adr/0006-known-conversion-bugs-in-pwa.md), [0007](../adr/0007-parity-and-test-strategy.md), [0008](../adr/0008-upgrade-largexlsx-to-2.md) | Not started |
+| 02 | [Shared domain](02-shared-domain.md) | The whole pipeline in a browser-safe `Kroiko.Domain`; the Server rewired onto it, with identical output | [0004](../adr/0004-shared-browser-safe-conversion-domain.md), [0006](../adr/0006-known-conversion-bugs-in-pwa.md), [0007](../adr/0007-parity-and-test-strategy.md), [0008](../adr/0008-upgrade-largexlsx-to-2.md), [0009](../adr/0009-cut-mt-line-endings-crlf.md) | In progress |
 | 03 | [Client shell](03-client-shell.md) | A MudBlazor app shell that starts offline, plus the Playwright harness | [0005](../adr/0005-copy-conversion-ui-into-pwa.md), [0007](../adr/0007-parity-and-test-strategy.md) | Not started |
 | 04 | [Conversion flow](04-conversion-flow.md) | `ConverterState`, the copied UI, "Изтегли всички"; parity proven in a trimmed build under `bg-BG` | [0005](../adr/0005-copy-conversion-ui-into-pwa.md), [0006](../adr/0006-known-conversion-bugs-in-pwa.md), [0003](../adr/0003-save-order-files-to-picked-folder.md) §5, §7, §8, [0002](../adr/0002-pwa-updates-reload-prompt.md) §7, [0007](../adr/0007-parity-and-test-strategy.md) | Not started |
 | 05 | [Saving](05-saving.md) | "Запази в папка…", per-file downloads, ` (n)` clash naming | [0003](../adr/0003-save-order-files-to-picked-folder.md) | Not started |
@@ -74,6 +74,7 @@ flowchart LR
 - **Intended differences.** A new PWA-vs-Server difference needs an ADR, a row in
   [CONTEXT.md §9](../../CONTEXT.md) and a test, all in the same PR (ADR-0007 §7).
 - **Invariants.** `CultureInfo.InvariantCulture` for every number↔string conversion in the domain;
+  the `.cut_mt` ends every line in CRLF on every host ([ADR-0009](../adr/0009-cut-mt-line-endings-crlf.md));
   `Kroiko.Domain` stays browser-safe; nothing secret in the client; MudBlazor only (never Syncfusion
   or Radzen); the Bulgarian UI text is kept as the Server has it.
 - **The Server is maintained, not developed.** Change `ATAFurniture.Server` only where phase 02

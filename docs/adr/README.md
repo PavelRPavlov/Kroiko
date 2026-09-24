@@ -21,6 +21,7 @@ The earlier ADRs were deliberately removed (see git history) and are not carried
 | [0006](0006-known-conversion-bugs-in-pwa.md) | Fix the known conversion bugs in the PWA, and in the shared parser for both apps | Accepted |
 | [0007](0007-parity-and-test-strategy.md) | Prove parity with shared golden files, `ConverterState` unit tests and a Playwright suite | Accepted |
 | [0008](0008-upgrade-largexlsx-to-2.md) | Upgrade LargeXlsx to 2.x behind the golden tests | Accepted |
+| [0009](0009-cut-mt-line-endings-crlf.md) | Write the `.cut_mt` with CRLF line endings on every host | Accepted |
 
 ## Format
 

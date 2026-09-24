@@ -1,0 +1,4 @@
+T:System.IO.File; Kroiko.Domain runs in the browser (ADR-0004 §7): there is no file system. Take bytes or a Stream from the caller.
+T:System.IO.Directory; Kroiko.Domain runs in the browser (ADR-0004 §7): there is no file system.
+P:System.Reflection.Assembly.Location; Kroiko.Domain runs in the browser (ADR-0004 §7): an assembly has no path there. Read embedded resources with GetManifestResourceStream.
+P:System.Environment.CurrentDirectory; Kroiko.Domain runs in the browser (ADR-0004 §7): there is no working directory.

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
 using System.Threading.Tasks;
 using Kroiko.Domain.CellsExtracting;
 using Microsoft.Extensions.Logging;
@@ -14,122 +12,27 @@ public interface IDetailsExtractorService
     Task<List<Detail>> ExtractDetails(MemoryStream stream);
 }
 
+/// <summary>
+/// The Server's adapter over the domain's <see cref="PolyboardParser"/>. It keeps today's behaviour
+/// (ADR-0004 §3): any bad line is logged and the whole file yields no Details.
+/// </summary>
 public class DetailsExtractorService(ILogger<DetailsExtractorService> logger) : IDetailsExtractorService
 {
-    private const char ParameterSplitter = ';';
-    
     public Task<List<Detail>> ExtractDetails(MemoryStream stream)
     {
-        string[] textLines;
-        try
+        var result = PolyboardParser.Parse(stream.ToArray());
+        if (result.Errors.Count == 0)
         {
-            var lin = Encoding.UTF8.GetString(stream.ToArray());
-            textLines = lin.Split("\r\n");
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Error while encoding Polybard file");
-            throw;
+            return Task.FromResult(result.Details.ToList());
         }
 
-        return ConvertLinesToDetails(textLines);
-    }
-
-    private Task<List<Detail>> ConvertLinesToDetails(string[] lines)
-    {
-        var details = new List<Detail>();
-        foreach (var line in lines)
+        foreach (var error in result.Errors)
         {
-            if (string.IsNullOrEmpty(line))
-            {
-                continue;
-            }
-
-            var separateParameters = line.Split(ParameterSplitter);
-            var detail = separateParameters.Length switch
-            {
-                11 => ExtractOldDetailFormat(separateParameters),
-                23 => ExtractLatestDetailFormat(separateParameters),
-                _ => null
-            };
-
-            if (detail is null)
-            {
-                logger.LogError("At least one line did not match the required format");
-                return Task.FromResult(new List<Detail>());
-            }
-
-            details.Add(detail);
+            logger.LogError(
+                "Polyboard line {LineNumber} did not match the required format: {Kind} (field count {FieldCount}, field {Field})",
+                error.LineNumber, error.Kind, error.FieldCount, error.Field);
         }
 
-        return Task.FromResult(details);
-    }
-
-    private Detail ExtractLatestDetailFormat(ReadOnlySpan<string> separateParameters)
-    {
-        try
-        {
-            return new Detail(
-                double.Parse(CleanupEmptyString(separateParameters[0]), CultureInfo.InvariantCulture),
-                double.Parse(CleanupEmptyString(separateParameters[1]), CultureInfo.InvariantCulture),
-                int.Parse(CleanupEmptyString(separateParameters[2])),
-                separateParameters[3],
-                int.Parse(CleanupEmptyString(separateParameters[4])) == 1,
-                int.Parse(CleanupEmptyString(separateParameters[5])) == 1,
-                int.Parse(CleanupEmptyString(separateParameters[6])) == 1,
-                int.Parse(CleanupEmptyString(separateParameters[7])) == 1,
-                int.Parse(CleanupEmptyString(separateParameters[8])) == 1,
-                separateParameters[9],
-                int.Parse(CleanupEmptyString(separateParameters[10])),
-                double.Parse(CleanupEmptyString(separateParameters[11]), CultureInfo.InvariantCulture),
-                double.Parse(CleanupEmptyString(separateParameters[12]), CultureInfo.InvariantCulture),
-                double.Parse(CleanupEmptyString(separateParameters[13]), CultureInfo.InvariantCulture),
-                double.Parse(CleanupEmptyString(separateParameters[14]), CultureInfo.InvariantCulture),
-                double.Parse(CleanupEmptyString(separateParameters[15]), CultureInfo.InvariantCulture),
-                separateParameters[16],
-                separateParameters[17],
-                separateParameters[18],
-                separateParameters[19],
-                separateParameters[20],
-            double.Parse(CleanupEmptyString(separateParameters[21]), CultureInfo.InvariantCulture),
-            double.Parse(CleanupEmptyString(separateParameters[22]), CultureInfo.InvariantCulture)
-            );
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Error while parsing latest detail format");
-            return null;
-        }
-    }
-
-    private string CleanupEmptyString(string val)
-    {
-        return string.IsNullOrEmpty(val) ? "0" : val;
-    }
-
-    private Detail ExtractOldDetailFormat(ReadOnlySpan<string> separateParameters)
-    {
-        try
-        {
-            return new Detail(
-                double.Parse(CleanupEmptyString(separateParameters[0]), CultureInfo.InvariantCulture),
-                double.Parse(CleanupEmptyString(separateParameters[1]), CultureInfo.InvariantCulture),
-                int.Parse(CleanupEmptyString(separateParameters[2])),
-                separateParameters[3],
-                int.Parse(CleanupEmptyString(separateParameters[4])) == 1,
-                int.Parse(CleanupEmptyString(separateParameters[5])) == 1,
-                int.Parse(CleanupEmptyString(separateParameters[6])) == 1,
-                int.Parse(CleanupEmptyString(separateParameters[7])) == 1,
-                int.Parse(CleanupEmptyString(separateParameters[8])) == 1,
-                separateParameters[9],
-                int.Parse(CleanupEmptyString(separateParameters[10])),
-                0, 0, 0, 0, 0, "","", "", "", "",0,0
-            );
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Error while parsing old detail format");
-            return null;
-        }
+        return Task.FromResult(new List<Detail>());
     }
 }
