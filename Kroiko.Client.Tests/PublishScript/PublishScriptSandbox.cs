@@ -222,7 +222,6 @@ internal sealed class PublishScriptSandbox : IDisposable
             $out = $args[[array]::IndexOf($args, '-o') + 1]
             New-Item -ItemType Directory -Force -Path (Join-Path $out 'wwwroot') | Out-Null
             Set-Content -LiteralPath (Join-Path $out 'wwwroot/index.html') -Value '<html></html>'
-            Set-Content -LiteralPath (Join-Path $out 'wwwroot/staticwebapp.config.json') -Value '{}'
         }
         exit 0
         """;
