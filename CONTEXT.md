@@ -197,7 +197,7 @@ false, and failures are swallowed. `applyUpdate()` posts `SKIP_WAITING` to the w
 `service-worker.published.js` is to answer it with `skipWaiting()`, and reloads once on `controllerchange` (with nothing waiting,
 because another window applied it, it just reloads; a waiting worker replaced by a newer one hands over to that one). Other open
 windows are not reloaded (ADR-0002 §1: never forced): they keep their offer, and their "Презареди" reloads into the new version.
-`checkNow()` answers `upToDate`, `downloading` (a newer worker is installing or already waits — step 3's About shows a waiting
+`checkNow()` answers `upToDate`, `downloading` (a newer worker is installing or already waits — About shows a waiting
 one as ready) or `offline` (offline, or the check failed); it reads the registration directly, because `register()` and
 `update()` queue behind an install in progress. The development `service-worker.js` stays a no-op, so the flow only
 exists in a published build. `Updates/AppUpdates` (registered by `AddAppUpdates()`, started by `MainLayout`'s first render) is the
@@ -206,6 +206,17 @@ raises `UpdateReady` once, and wraps `ApplyUpdateAsync`/`CheckNowAsync` (`Update
 `Updates/AppUpdatesTests` covers it with the JS runtime faked; `E2E/UpdatesModuleTests` the real module in the published app
 (up to date; offline: silent checks and `offline`). A new version needs a second build, so the update itself is checked by hand
 (ADR-0007 §5).
+
+**Update offer** ([ADR-0002](docs/adr/0002-pwa-updates-reload-prompt.md) §1–4): `Updates/UpdateOffer` (also registered by
+`AddAppUpdates()`, one for the app) is what the operator sees of a waiting version. `MainLayout` shows a persistent snackbar
+(`Layout/UpdateSnackbar`: "Нова версия е налична", "Презареди", "По-късно"; no timeout, no close icon) while `ShowsSnackbar`.
+"Презареди" (`ReloadAsync`) asks through `IConfirmation` first when `ConverterState.HasUnsavedWork` ("Текущата поръчка ще бъде
+изгубена. Да презаредя ли с новата версия?"); "Не" keeps the Order and the offer, otherwise it calls `ApplyUpdateAsync`, and a
+failure shows a Bulgarian error snackbar. "По-късно" (`Postpone`) hides the snackbar for the session; About then offers the same
+"Презареди" (same guard) while `IsReady`, and otherwise has "Провери за обновления", which reports `CheckNowAsync`'s three
+outcomes in Bulgarian. There is still no `beforeunload` handler: the guard is the only question. `Updates/UpdateOfferTests` covers
+it on the faked module; `E2E/UpdateOfferTests` drives the snackbar and About in the published app with a stand-in `updates.js`
+that announces a waiting version and records `applyUpdate`; `E2E/AboutDialogTests` checks the real module's "up to date".
 
 ## 6. Decision log
 
