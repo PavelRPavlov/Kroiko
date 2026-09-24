@@ -22,6 +22,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The device-settings tests run the schema migrations on an imagined history (ADR-0002 §7). -->
+    <InternalsVisibleTo Include="Kroiko.Client.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
   </ItemGroup>
 
