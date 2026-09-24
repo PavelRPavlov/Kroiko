@@ -28,9 +28,9 @@ public class LoniraTemplateBuilder(ITableRowProvider tableRowProvider) : Templat
         return Task.FromResult<IList<ISheet>>(sheets);
     }
 
-    private void PopulateMaterialName(ISheet sheet, string materialName)
+    private static void PopulateMaterialName(ISheet sheet, string materialName)
     {
-        foreach (var cell in sheet.Cells.Where(cell => cell.Value?.ToString() == MaterialNameCellFlag))
+        foreach (var cell in sheet.Cells.Where(cell => cell.Value == MaterialNameCellFlag))
         {
             cell.Value = materialName;
         }
