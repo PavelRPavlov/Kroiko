@@ -50,11 +50,11 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 **Blazor Server** monolith (`ATAFurniture.Server`) that does everything in-process:
 
 ```
-Browser ──SignalR circuit──► ATAFurniture.Server (Blazor Server, .NET 8)
-                                 ├─ Razer UI (Radzen + Syncfusion components)
+Browser ──SignalR circuit──► ATAFurniture.Server (Blazor Server, .NET 10)
+                                 ├─ Razor UI (MudBlazor components)
                                  ├─ DetailsExtractorService  (adapter over the domain's PolyboardParser)
                                  ├─ Kroiko.Domain            (map + group + template build + LargeXlsx, behind IOrderFormat)
-                                 ├─ EF Core 9 ──► SQL Server  (users + credits)
+                                 ├─ EF Core 10 ─► SQL Server  (users + credits)
                                  ├─ Azure AD B2C auth (Microsoft.Identity.Web, cookie/OIDC)
                                  ├─ Azure Blob Storage (download links)
                                  └─ SendinBlue/Brevo (email with attachments)
