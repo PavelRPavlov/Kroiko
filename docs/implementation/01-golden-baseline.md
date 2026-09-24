@@ -121,6 +121,18 @@ there is no CI yet, so this is accepted for now.
   Commit it with `[Theory(Skip = "Un-skipped in phase 02 step 4 — invariant culture")]`, after
   confirming locally that it does fail for that reason and no other.
 
+Done. `GoldenTests.Order_files_under_bg_BG_match_the_golden_files` reuses the step-3 theory data and
+golden folders; `RunPipelineAsync` takes an optional `culture` (invariant when omitted) and pins
+`CurrentCulture` and `CurrentUICulture` to it. The test always compares, even under `UPDATE_GOLDEN=1`,
+so it can never re-record the invariant golden files as bg-BG output. Un-skipped on today's code, 3 of
+its 15 cases fail: the MegaTrading `.cut_mt` of `beds-5-materials`, `kitchen-8-materials` and
+`wardrobes-4-materials` (39 lines in all). Every differing line differs only by a decimal comma
+(`609,18` for `609.18`), from `MegaTradingFileGenerator`'s interpolated doubles. The other 12 cases
+pass: the `bathroom-4-materials` and `cabinet-23-field` sizes are whole numbers, and the `.xlsx` files
+do not change, because the row providers' ambient `ToString()` is parsed back by `ExcelFileGenerator`'s
+equally ambient `double.TryParse` into the same numeric cell. Phase 02 step 4 must make **both** sides
+invariant together, or the `.xlsx` files break under bg-BG instead.
+
 ## Done criteria
 
 - [x] `Kroiko.Testing` exists in the solution; all fixtures live in `Kroiko.Testing/TestData/polyboard/` with neutral names; the old fixture folders are gone.
@@ -128,8 +140,8 @@ there is no CI yet, so this is accepted for now.
 - [x] `OrderFilesAssert` compares worksheet XML, `.cut_mt` bytes and `names.txt`, with dates normalised; `UPDATE_GOLDEN=1` rewrites the source golden files.
 - [x] `GoldenTests` covers every valid fixture × all three manufacturers, plus the Suliver different-edge-colour case, through a single `RunPipeline` helper.
 - [ ] The golden files are committed and were reviewed in Excel.
-- [ ] The `bg-BG` test exists, is skipped with a reason pointing at phase 02, and fails only because of culture when un-skipped.
-- [ ] `dotnet test` is green; no file under `ATAFurniture.Server/` or `Kroiko.Domain/` changed.
+- [x] The `bg-BG` test exists, is skipped with a reason pointing at phase 02, and fails only because of culture when un-skipped.
+- [x] `dotnet test` is green; no file under `ATAFurniture.Server/` or `Kroiko.Domain/` changed.
 
 ## Out of this phase
 

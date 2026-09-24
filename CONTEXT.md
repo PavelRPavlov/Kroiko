@@ -60,7 +60,7 @@ Browser ──SignalR circuit──► ATAFurniture.Server (Blazor Server, .NET 
                                  └─ SendinBlue/Brevo (email with attachments)
 ```
 
-- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `Kroiko.Testing` (class lib — shared test data: the synthetic Polyboard fixtures in `TestData/polyboard/`, the golden files in `TestData/golden/`, and `OrderFilesAssert.MatchGolden`, which compares generated order files with them or re-records them under `UPDATE_GOLDEN=1`), `ATAFurniture.Server.Tests` (xUnit — generation smoke tests and, for now, `GoldenTests`, which runs every valid fixture × manufacturer through one `RunPipelineAsync` helper; the golden tests move to a new `Kroiko.Domain.Tests` per [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md), and PWA tests go in `Kroiko.Client.Tests` per [ADR-0007](docs/adr/0007-parity-and-test-strategy.md)).
+- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `Kroiko.Testing` (class lib — shared test data: the synthetic Polyboard fixtures in `TestData/polyboard/`, the golden files in `TestData/golden/`, and `OrderFilesAssert.MatchGolden`, which compares generated order files with them or re-records them under `UPDATE_GOLDEN=1`), `ATAFurniture.Server.Tests` (xUnit — generation smoke tests and, for now, `GoldenTests`, which runs every valid fixture × manufacturer through one `RunPipelineAsync` helper, plus the same theory under `bg-BG`, skipped until phase 02 fixes the culture; the golden tests move to a new `Kroiko.Domain.Tests` per [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md), and PWA tests go in `Kroiko.Client.Tests` per [ADR-0007](docs/adr/0007-parity-and-test-strategy.md)).
 - **Auth:** Azure AD B2C; per-page `[Authorize]` (global filter is commented out). Claims read in `UserContextService`.
 - **Secrets:** SQL conn string, Azure Storage conn string, SendinBlue API key — all from user-secrets/env (not committed). Sentry DSN **is** committed (should be rotated/moved). *(The Syncfusion license key is gone — Syncfusion + Radzen were replaced with MudBlazor, one fewer secret.)*
 - **Observability:** Serilog (console + rolling file) + Sentry.
@@ -119,7 +119,9 @@ These were found in a code review; several are naturally fixed by the migration.
   and a BOM (both apps); the PWA rejects bad files listing the bad lines; the Server keeps the discard.
 - 🟠 **MegaTrading `.cut_mt`:** materials beyond 6 are silently dropped; doubles are
   formatted with ambient culture (comma decimal on `bg-BG` corrupts the file — pin to
-  `InvariantCulture`). `MegaTradingFileGenerator.cs`.
+  `InvariantCulture`). `MegaTradingFileGenerator.cs`. The skipped `bg-BG` golden test pins it: under `bg-BG`
+  only these `.cut_mt` decimals change; the `.xlsx` cells survive because the row providers' `ToString()` and
+  `ExcelFileGenerator`'s `double.TryParse` are both ambient, so they must become invariant together.
   → Culture fixed by ADR-0004; the PWA blocks MegaTrading orders with more than 6 materials
   via `IOrderFormat.Check` ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)); the Server still truncates.
 - 🟠 **Fire-and-forget** credit consume; **spinners hang** on error paths;
