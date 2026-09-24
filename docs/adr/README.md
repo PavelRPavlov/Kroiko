@@ -17,6 +17,7 @@ The earlier ADRs were deliberately removed (see git history) and are not carried
 | [0002](0002-pwa-updates-reload-prompt.md) | Deliver PWA updates silently, with an opt-in reload prompt | Accepted |
 | [0003](0003-save-order-files-to-picked-folder.md) | Save order files to a user-picked folder, with a download fallback | Accepted |
 | [0004](0004-shared-browser-safe-conversion-domain.md) | One browser-safe conversion domain shared by the Server and the PWA | Accepted |
+| [0005](0005-copy-conversion-ui-into-pwa.md) | Copy the conversion UI into the PWA, with an app-wide Order state | Accepted |
 
 ## Format
 
