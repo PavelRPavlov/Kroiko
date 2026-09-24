@@ -67,6 +67,43 @@ public sealed class PublishedApp : IAsyncLifetime
             Locale = locale,
         });
 
+    /// <summary>
+    /// Like <see cref="NewContextAsync"/>, but on a browser profile kept on disk, in a temp folder that disposing it
+    /// deletes. For what Chromium's off-the-record contexts cannot do: reading a file-system handle back from IndexedDB
+    /// crashes their page (found with Playwright's Chromium 1243; the folder save keeps its last folder that way).
+    /// </summary>
+    public async Task<PersistentContext> NewPersistentContextAsync(string? locale = null)
+    {
+        var profileDir = Directory.CreateTempSubdirectory("kroiko-e2e-profile-").FullName;
+        var context = await (_playwright ?? throw NotStarted()).Chromium.LaunchPersistentContextAsync(profileDir, new()
+        {
+            Headless = Chromium.IsHeadless(Environment.GetEnvironmentVariable("HEADED")),
+            BaseURL = BaseAddress.ToString(),
+            ServiceWorkers = ServiceWorkerPolicy.Allow,
+            Locale = locale,
+        });
+        return new PersistentContext(context, profileDir);
+    }
+
+    /// <summary>A browser context on its own profile folder; disposing it closes the browser and deletes the folder.</summary>
+    public sealed class PersistentContext(IBrowserContext context, string profileDir) : IAsyncDisposable
+    {
+        public IBrowserContext Context => context;
+
+        public async ValueTask DisposeAsync()
+        {
+            await context.CloseAsync();
+            try
+            {
+                Directory.Delete(profileDir, recursive: true);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                // Best effort: a temp folder left behind is harmless.
+            }
+        }
+    }
+
     private static async Task PublishAsync(string outputDir)
     {
         var project = RepoPaths.ClientProject;

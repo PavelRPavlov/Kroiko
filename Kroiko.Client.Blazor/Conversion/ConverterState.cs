@@ -23,6 +23,7 @@ public sealed class ConverterState(
     IConfirmation confirmation,
     IDeviceSettingsStore deviceSettings,
     IFileDownloader downloader,
+    IFolderPicker folderPicker,
     ILogger<ConverterState> logger)
 {
     internal const string DiscardFilesQuestion =
@@ -35,6 +36,10 @@ public sealed class ConverterState(
     internal const string SaveSettingsFailedMessage =
         "Контактите и производителят не можаха да бъдат запомнени на това устройство.";
     internal const string DownloadFailedMessage = "Файловете за поръчка не можаха да бъдат изтеглени.";
+    internal const string FolderBlockedMessage =
+        "Браузърът не позволява запис в папка. Изтеглете файловете с „Изтегли всички“.";
+    internal const string FolderSaveFailedMessage =
+        "Файловете не можаха да бъдат записани в папката. Изтеглете ги с „Изтегли всички“.";
 
     private IReadOnlyList<Detail>? _details;
     private string? _companyName;
@@ -115,10 +120,19 @@ public sealed class ConverterState(
     /// <summary>"Изтегли всички" is triggering the downloads.</summary>
     public bool IsDownloading { get; private set; }
 
+    /// <summary>"Запази в папка…" is waiting for the folder picker or writing the files.</summary>
+    public bool IsSavingToFolder { get; private set; }
+
+    /// <summary>
+    /// The generated files are being downloaded or saved to a folder: neither starts again, and nothing is generated,
+    /// until it is done.
+    /// </summary>
+    public bool IsSaving => IsDownloading || IsSavingToFolder;
+
     /// <summary>
     /// "Генерирай бланки за поръчка" is allowed: there are files, both contact fields are filled (not just
     /// whitespace) and <see cref="Problems"/> is empty (ADR-0005 §6, ADR-0006 §3), and nothing is being generated
-    /// or downloaded.
+    /// or saved.
     /// </summary>
     public bool CanGenerate =>
         Files.Count > 0
@@ -126,7 +140,7 @@ public sealed class ConverterState(
         && !string.IsNullOrWhiteSpace(MobileNumber)
         && Problems.Count == 0
         && !IsGenerating
-        && !IsDownloading;
+        && !IsSaving;
 
     /// <summary>The name <paramref name="file"/> is saved under: its <see cref="FileNameSanitizer"/> name (ADR-0003 §7).</summary>
     public static string SavedFileName(FileSaveContext file)
@@ -137,6 +151,12 @@ public sealed class ConverterState(
 
     /// <summary>The order files of the last generation; cleared by any change to the input.</summary>
     public IReadOnlyList<FileSaveContext> GeneratedFiles { get; private set; } = [];
+
+    /// <summary>
+    /// The last folder save of the generated files, for the confirmation; <c>null</c> until one succeeds, and
+    /// cleared with the generated files.
+    /// </summary>
+    public FolderSave? FolderSave { get; private set; }
 
     /// <summary>
     /// The generated files were saved since they were generated: at least one download was triggered
@@ -326,6 +346,7 @@ public sealed class ConverterState(
 
             GeneratedFiles = OrderFormats.For(manufacturer).Generate(contact, Files, DifferentEdgeColor ?? string.Empty);
             IsSaved = false;
+            FolderSave = null;
         }
         catch (Exception exception)
         {
@@ -359,7 +380,7 @@ public sealed class ConverterState(
     public async Task DownloadAllAsync()
     {
         var files = GeneratedFiles;
-        if (files.Count == 0 || IsDownloading)
+        if (files.Count == 0 || IsSaving)
         {
             return;
         }
@@ -392,8 +413,78 @@ public sealed class ConverterState(
     }
 
     /// <summary>
-    /// The generated files were saved: a download was triggered or, from phase 05, a folder save succeeded
-    /// (ADR-0003 §8); ignored when there are none.
+    /// "Запази в папка…" (ADR-0003 §2, §4, §6): opens the folder picker before awaiting anything, so it keeps the click's
+    /// user activation, and writes every generated file into the picked folder under a name that is not taken there
+    /// (<see cref="ClashNaming"/>); then marks the files saved (ADR-0003 §8) and keeps the final names in
+    /// <see cref="FolderSave"/>. A cancelled picker changes nothing. A blocked picker, or a folder that cannot be
+    /// listed or written, raises <see cref="Error"/> pointing to the downloads and clears the confirmation of an
+    /// earlier save; files already written stay. An edit meanwhile stops the writes of the files it discarded. Nothing
+    /// happens with no generated files or while <see cref="IsSaving"/>.
+    /// </summary>
+    public async Task SaveToFolderAsync()
+    {
+        var files = GeneratedFiles;
+        if (files.Count == 0 || IsSaving)
+        {
+            return;
+        }
+
+        IsSavingToFolder = true;
+        try
+        {
+            // The picker is opened first, before the busy state renders, so nothing delays it (ADR-0003 §2).
+            var picking = folderPicker.PickAsync();
+            OnChanged();
+            var pick = await picking;
+            if (pick.Outcome == FolderPickOutcome.Blocked)
+            {
+                FolderSave = null;
+                OnError(FolderBlockedMessage);
+                return;
+            }
+
+            if (pick.Folder is null)
+            {
+                // Cancelled: nothing happens.
+                return;
+            }
+
+            await using var folder = pick.Folder;
+            if (GeneratedFiles != files)
+            {
+                return;
+            }
+
+            var existingNames = await folder.ListNamesAsync();
+            var finalNames = ClashNaming.FinalNames(files.Select(SavedFileName).ToList(), existingNames);
+            for (var i = 0; i < files.Count; i++)
+            {
+                await folder.WriteFileAsync(finalNames[i], files[i].Content);
+                if (GeneratedFiles != files)
+                {
+                    return;
+                }
+            }
+
+            IsSaved = true;
+            FolderSave = new FolderSave(folder.Name, finalNames);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "The order files could not be saved to a folder.");
+            FolderSave = null;
+            OnError(FolderSaveFailedMessage);
+        }
+        finally
+        {
+            IsSavingToFolder = false;
+            OnChanged();
+        }
+    }
+
+    /// <summary>
+    /// The generated files were saved: a download was triggered or a folder save succeeded (ADR-0003 §8); ignored
+    /// when there are none.
     /// </summary>
     public void MarkSaved()
     {
@@ -457,6 +548,7 @@ public sealed class ConverterState(
         _inputVersion++;
         GeneratedFiles = [];
         IsSaved = false;
+        FolderSave = null;
         Problems = Manufacturer is null ? [] : OrderFormats.For(Manufacturer).Check(Files);
         OnChanged();
     }

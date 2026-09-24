@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using FluentAssertions;
 using Kroiko.Client.Blazor.Conversion;
@@ -19,11 +20,12 @@ public sealed class ConverterStateTests
     private readonly FakeConfirmation _confirmation = new();
     private readonly FakeDeviceSettingsStore _settings = new();
     private readonly FakeFileDownloader _downloader = new();
+    private readonly FakeFolderPicker _picker = new();
     private readonly ConverterState _state;
 
     public ConverterStateTests()
     {
-        _state = new ConverterState(_confirmation, _settings, _downloader, NullLogger<ConverterState>.Instance);
+        _state = new ConverterState(_confirmation, _settings, _downloader, _picker, NullLogger<ConverterState>.Instance);
     }
 
     [Fact]
@@ -457,11 +459,12 @@ public sealed class ConverterStateTests
     [InlineData("generate")]
     [InlineData("save")]
     [InlineData("download all")]
+    [InlineData("save to folder")]
     public async Task Every_change_raises_Changed_once_the_state_has_changed(string change)
     {
         await LoadAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
         FillContacts();
-        if (change is "save" or "download all")
+        if (change is "save" or "download all" or "save to folder")
         {
             await _state.GenerateAsync();
         }
@@ -476,6 +479,7 @@ public sealed class ConverterStateTests
             case "generate": await _state.GenerateAsync(); break;
             case "save": _state.MarkSaved(); break;
             case "download all": await _state.DownloadAllAsync(); break;
+            case "save to folder": await _state.SaveToFolderAsync(); break;
             default: Edit(change); break;
         }
 
@@ -485,7 +489,8 @@ public sealed class ConverterStateTests
 
     private string Snapshot() =>
         $"{_state.Manufacturer?.Name}|{_state.Files.Count}|{_state.Files[0].Details[0].Note}|{_state.CompanyName}" +
-        $"|{_state.GeneratedFiles.Count}|{_state.IsSaved}|{_state.IsUploading}|{_state.IsGenerating}|{_state.IsDownloading}";
+        $"|{_state.GeneratedFiles.Count}|{_state.IsSaved}|{_state.IsUploading}|{_state.IsGenerating}|{_state.IsDownloading}" +
+        $"|{_state.IsSavingToFolder}|{_state.FolderSave?.FileNames.Count}";
 
     [Fact]
     public async Task Uploading_is_busy_while_the_file_is_read_and_parsed()
@@ -850,6 +855,284 @@ public sealed class ConverterStateTests
         await second!;
 
         _downloader.Downloads.Should().HaveCount(4);
+    }
+
+    [Fact]
+    public async Task Saving_to_a_folder_writes_every_generated_file_under_its_sanitised_name_and_confirms_them()
+    {
+        await _state.SelectManufacturerAsync(SupportedCompanies.Lonira);
+        await _state.UploadAsync(Polyboard(
+            "214.0;247.0;1;Egger W1000: \"бял\";0;0;0;1;0;Model[0];1",
+            "250.0;247.0;1;HDF 3 mm;0;1;1;1;0;Model[0];2"));
+        FillContacts();
+        await _state.GenerateAsync();
+
+        await _state.SaveToFolderAsync();
+
+        _picker.Folder.Writes.Select(w => w.FileName).Should().Equal("Egger W1000_ _бял_.xlsx", "HDF 3 mm.xlsx");
+        _picker.Folder.Writes.Select(w => w.Content).Should().Equal(_state.GeneratedFiles.Select(f => f.Content));
+        _state.FolderSave.Should().BeEquivalentTo(
+            new FolderSave("Поръчки", ["Egger W1000_ _бял_.xlsx", "HDF 3 mm.xlsx"]),
+            options => options.WithStrictOrdering());
+        _state.IsSaved.Should().BeTrue();
+        _state.HasUnsavedWork.Should().BeFalse();
+        _picker.Folder.Disposed.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Saving_to_a_folder_never_overwrites_and_confirms_the_numbered_names()
+    {
+        await GenerateAsync(SupportedCompanies.MegaTrading, "wardrobes-4-materials");
+        var today = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var names = _state.GeneratedFiles.Select(ConverterState.SavedFileName).ToList();
+        names.Should().Equal("Тест ООД.cut_mt", $"{today}_Тест ООД.xlsx");
+        _picker.Folder.Names.AddRange(["Тест ООД.cut_mt", "Тест ООД (2).cut_mt", names[1].ToUpperInvariant(), "стари"]);
+
+        await _state.SaveToFolderAsync();
+
+        string[] expected = ["Тест ООД (3).cut_mt", $"{today}_Тест ООД (2).xlsx"];
+        _picker.Folder.Writes.Select(w => w.FileName).Should().Equal(expected);
+        _state.FolderSave!.FileNames.Should().Equal(expected);
+    }
+
+    [Fact]
+    public async Task Saving_the_same_order_twice_into_one_folder_numbers_the_second_copy()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        await _state.SaveToFolderAsync();
+
+        await _state.SaveToFolderAsync();
+
+        _state.FolderSave!.FileNames.Should().Equal(
+            "Basic white W908 ST2 (2).xlsx", "HDF 3 mm (2).xlsx", "AGT White (2).xlsx", "H3170 Dyb kendyl natur (2).xlsx");
+        _picker.Folder.Writes.Should().HaveCount(8);
+    }
+
+    [Fact]
+    public async Task Cancelling_the_folder_picker_does_nothing()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var errors = new List<string>();
+        _state.Error += errors.Add;
+        _picker.Outcome = FolderPickOutcome.Cancelled;
+
+        await _state.SaveToFolderAsync();
+
+        _picker.Picks.Should().Be(1);
+        _picker.Folder.Writes.Should().BeEmpty();
+        errors.Should().BeEmpty();
+        _state.FolderSave.Should().BeNull();
+        _state.IsSaved.Should().BeFalse();
+        _state.IsSavingToFolder.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task A_blocked_folder_picker_points_to_the_downloads()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var errors = new List<string>();
+        _state.Error += errors.Add;
+        _picker.Outcome = FolderPickOutcome.Blocked;
+
+        await _state.SaveToFolderAsync();
+
+        errors.Should().Equal("Браузърът не позволява запис в папка. Изтеглете файловете с „Изтегли всички“.");
+        _picker.Folder.Writes.Should().BeEmpty();
+        _state.FolderSave.Should().BeNull();
+        _state.IsSaved.Should().BeFalse();
+        _state.IsSavingToFolder.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Saving_to_a_folder_opens_the_picker_straight_from_the_click_and_is_busy_until_it_is_done()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var picked = new TaskCompletionSource();
+        _picker.PickedWhen = picked.Task;
+        var busy = new List<bool>();
+        _state.Changed += () => busy.Add(_state.IsSavingToFolder);
+
+        var save = _state.SaveToFolderAsync();
+
+        // Nothing is awaited before the picker opens, so it still has the click's user activation (ADR-0003 §2).
+        _picker.Picks.Should().Be(1);
+        _state.IsSavingToFolder.Should().BeTrue();
+        busy.Should().Equal(true);
+        _state.CanGenerate.Should().BeFalse();
+        picked.SetResult();
+        await save;
+
+        _state.IsSavingToFolder.Should().BeFalse();
+        _state.CanGenerate.Should().BeTrue();
+        busy.Should().EndWith(false);
+    }
+
+    [Fact]
+    public async Task Nothing_else_saves_while_the_folder_picker_is_open()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var picked = new TaskCompletionSource();
+        _picker.PickedWhen = picked.Task;
+
+        var save = _state.SaveToFolderAsync();
+        await _state.SaveToFolderAsync();
+        await _state.DownloadAllAsync();
+        picked.SetResult();
+        await save;
+
+        _picker.Picks.Should().Be(1);
+        _downloader.Downloads.Should().BeEmpty();
+        _picker.Folder.Writes.Should().HaveCount(4);
+    }
+
+    [Fact]
+    public async Task The_folder_picker_does_not_open_while_downloading()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        Task? save = null;
+        _downloader.OnDownload = () => save ??= _state.SaveToFolderAsync();
+
+        await _state.DownloadAllAsync();
+        await save!;
+
+        _picker.Picks.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Saving_to_a_folder_with_nothing_generated_does_not_open_the_picker()
+    {
+        await LoadAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+
+        await _state.SaveToFolderAsync();
+
+        _picker.Picks.Should().Be(0);
+        _state.IsSaved.Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData("pick")]
+    [InlineData("list")]
+    [InlineData("first write")]
+    [InlineData("later write")]
+    public async Task A_folder_save_that_fails_points_to_the_downloads_and_is_not_saved(string failure)
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var errors = new List<string>();
+        _state.Error += errors.Add;
+        var exception = new InvalidOperationException("The browser refused.");
+        switch (failure)
+        {
+            case "pick": _picker.Failure = exception; break;
+            case "list": _picker.Folder.ListFailure = exception; break;
+            case "first write": _picker.Folder.FailWriteAt = 0; break;
+            case "later write": _picker.Folder.FailWriteAt = 2; break;
+        }
+
+        await _state.SaveToFolderAsync();
+
+        errors.Should().Equal("Файловете не можаха да бъдат записани в папката. Изтеглете ги с „Изтегли всички“.");
+        _state.FolderSave.Should().BeNull();
+        _state.IsSaved.Should().BeFalse();
+        _state.IsSavingToFolder.Should().BeFalse();
+        _state.GeneratedFiles.Should().HaveCount(4);
+        _picker.Folder.Disposed.Should().Be(failure != "pick");
+    }
+
+    [Fact]
+    public async Task An_edit_while_saving_to_a_folder_stops_the_writes_of_the_old_input()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        _picker.Folder.OnWrite = () =>
+        {
+            if (_picker.Folder.Writes.Count == 1)
+            {
+                _state.CompanyName = "Друга ООД";
+            }
+        };
+
+        await _state.SaveToFolderAsync();
+
+        _picker.Folder.Writes.Should().ContainSingle();
+        _state.FolderSave.Should().BeNull();
+        _state.IsSaved.Should().BeFalse();
+        _state.HasUnsavedWork.Should().BeTrue();
+        _state.IsSavingToFolder.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task An_edit_while_the_folder_picker_is_open_writes_nothing()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var picked = new TaskCompletionSource();
+        _picker.PickedWhen = picked.Task;
+
+        var save = _state.SaveToFolderAsync();
+        _state.CompanyName = "Друга ООД";
+        picked.SetResult();
+        await save;
+
+        _picker.Folder.Writes.Should().BeEmpty();
+        _picker.Folder.Disposed.Should().BeTrue();
+        _state.IsSaved.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task An_edit_after_saving_to_a_folder_clears_the_confirmation()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        await _state.SaveToFolderAsync();
+
+        Edit("cell");
+
+        _state.FolderSave.Should().BeNull();
+        _state.HasUnsavedWork.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Generating_again_after_saving_to_a_folder_clears_the_confirmation()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        await _state.SaveToFolderAsync();
+
+        await _state.GenerateAsync();
+
+        _state.FolderSave.Should().BeNull();
+        _state.IsSaved.Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData(FolderPickOutcome.Blocked)]
+    [InlineData(null)]
+    public async Task A_folder_save_that_fails_after_one_succeeded_clears_the_old_confirmation_but_stays_saved(FolderPickOutcome? outcome)
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        await _state.SaveToFolderAsync();
+        if (outcome is { } blocked)
+        {
+            _picker.Outcome = blocked;
+        }
+        else
+        {
+            _picker.Folder.FailWriteAt = _picker.Folder.Writes.Count;
+        }
+
+        await _state.SaveToFolderAsync();
+
+        _state.FolderSave.Should().BeNull();
+        _state.IsSaved.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task A_cancelled_folder_save_after_one_succeeded_keeps_its_confirmation()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        await _state.SaveToFolderAsync();
+        var confirmation = _state.FolderSave;
+        _picker.Outcome = FolderPickOutcome.Cancelled;
+
+        await _state.SaveToFolderAsync();
+
+        _state.FolderSave.Should().BeSameAs(confirmation);
     }
 
     private void Edit(string edit)

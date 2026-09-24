@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Kroiko.Client.Blazor.Conversion;
 
@@ -7,8 +8,8 @@ public static class ConversionServiceCollectionExtensions
     /// <summary>
     /// Registers the app's one <see cref="ConverterState"/> (ADR-0005 §4). It is scoped, which in Blazor
     /// WebAssembly means once for the app, and lets it use scoped services such as MudBlazor's dialogs. The
-    /// app registers an <see cref="IConfirmation"/>, an <see cref="IDeviceSettingsStore"/> and an
-    /// <see cref="IFileDownloader"/> alongside it.
+    /// app registers an <see cref="IConfirmation"/>, an <see cref="IDeviceSettingsStore"/>, an
+    /// <see cref="IFileDownloader"/> and an <see cref="IFolderPicker"/> alongside it.
     /// </summary>
     public static IServiceCollection AddConverterState(this IServiceCollection services)
     {
@@ -45,6 +46,18 @@ public static class ConversionServiceCollectionExtensions
     public static IServiceCollection AddFileDownloader(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
+        services.TryAddScoped<FilesModule>();
         return services.AddScoped<IFileDownloader, BrowserFileDownloader>();
+    }
+
+    /// <summary>
+    /// Registers the <see cref="IFolderPicker"/> that opens the browser's folder picker and writes into the picked
+    /// folder (ADR-0003 §2–3). Scoped, like the <c>IJSRuntime</c> it calls.
+    /// </summary>
+    public static IServiceCollection AddFolderPicker(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.TryAddScoped<FilesModule>();
+        return services.AddScoped<IFolderPicker, BrowserFolderPicker>();
     }
 }
