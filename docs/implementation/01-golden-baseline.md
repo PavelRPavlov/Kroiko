@@ -21,8 +21,8 @@ measured against.
   `ATAFurniture.Server.Tests/TestFiles/*.txt` plus the root `TestFiles/Wardrobes-Niki-i-Toni.txt`.
   Mark them as content copied to the output directory so that every referencing test project gets them.
 - Rename them to **neutral, descriptive, kebab-case** names that say what the fixture exercises,
-  e.g. `Kitchen Alex.txt` → `kitchen-8-materials.txt`, `Wardrobes-Niki-i-Toni.txt` →
-  `wardrobes-23-field.txt`, `invalid format.txt` → `bad-field-count.txt`. Check each file's field
+  e.g. `Kitchen Alex.txt` → `kitchen-8-materials.txt`, `Cabinet1.txt` →
+  `cabinet-23-field.txt`, `invalid format.txt` → `bad-field-count.txt`. Check each file's field
   count and material count, and name it by what you find. Do not change any file's **content**.
   If two fixtures are byte-identical, delete one.
 - Delete the now-empty `ATAFurniture.Server.Tests/TestFiles/` and root `TestFiles/`, and point
