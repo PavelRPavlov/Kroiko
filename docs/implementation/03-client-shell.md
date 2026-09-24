@@ -66,9 +66,9 @@ harness. This phase does not touch `Kroiko.Domain`.
 - [x] `/` and `/configuration` render inside a `MudAppBar` layout; unknown routes redirect to `/`; the About dialog opens.
 - [x] Roboto is self-hosted, precached (`.woff2` in `offlineAssetsInclude`), and the app makes no cross-origin requests.
 - [x] `InvariantGlobalization` is not set.
-- [ ] `Kroiko.Client.Tests` publishes the Release build once per run and serves it from Kestrel; missing browsers fail with the install command.
-- [ ] The "offline shell" E2E scenario passes: offline reload, no failed requests, Roboto available.
-- [ ] `dotnet test` and `dotnet test --filter Category!=E2E` both work from the repo root.
+- [x] `Kroiko.Client.Tests` publishes the Release build once per run and serves it from Kestrel; missing browsers fail with the install command.
+- [x] The "offline shell" E2E scenario passes: offline reload, no failed requests, Roboto available.
+- [x] `dotnet test` and `dotnet test --filter Category!=E2E` both work from the repo root.
 - [ ] The app installs from Edge on `localhost` (manual, noted in the PR).
 
 ## Out of this phase

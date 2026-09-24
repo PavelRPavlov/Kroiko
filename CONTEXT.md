@@ -90,6 +90,15 @@ browser-safe**), `ATAFurniture.Server` (maintained), and the test projects `Kroi
 ([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0009](docs/adr/README.md).
 Build order: [docs/implementation/00-overview.md](docs/implementation/00-overview.md).
 
+**`Kroiko.Client.Tests`** (xUnit, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §5) tests the shipped
+artifact: its `PublishedApp` collection fixture runs `dotnet publish Kroiko.Client.Blazor -c Release` once per
+test run into a temp folder and serves that `wwwroot` from an in-process Kestrel (`StaticSiteHost`: loopback
+port, Blazor MIME types, precompressed `.br`/`.gz` negotiation, SPA fallback, no rewriting); the tests drive
+the Chromium pinned by `Microsoft.Playwright`, headless unless `HEADED=1`, one browser context per test. Browser
+tests are tagged `[Trait("Category", "E2E")]` and join `[Collection(E2ECollection.Name)]`; `OfflineShellTests`
+proves the offline start (service worker activated → offline reload: app bar, `/configuration`, Roboto, no failed
+and no cross-origin requests). The host and the missing-browser message have their own browser-free tests.
+
 ## 6. Decision log
 
 Architectural decisions are recorded as **ADRs** in [docs/adr/](docs/adr/) — that folder
