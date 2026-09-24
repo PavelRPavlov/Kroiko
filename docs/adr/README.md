@@ -13,7 +13,7 @@ The earlier ADRs were deliberately removed (see git history) and are not carried
 
 | ADR | Decision | Status |
 |---|---|---|
-| [0001](0001-host-pwa-on-azure-static-web-apps.md) | Host the PWA on Azure Static Web Apps at `app.kroiko.com` | Accepted |
+| [0001](0001-host-pwa-on-azure-static-web-apps.md) | Host the PWA on Azure Static Web Apps at `app.kroiko.com` | Superseded by [0010](0010-host-pwa-on-s3-and-cloudfront.md) |
 | [0002](0002-pwa-updates-reload-prompt.md) | Deliver PWA updates silently, with an opt-in reload prompt | Accepted |
 | [0003](0003-save-order-files-to-picked-folder.md) | Save order files to a user-picked folder, with a download fallback | Accepted |
 | [0004](0004-shared-browser-safe-conversion-domain.md) | One browser-safe conversion domain shared by the Server and the PWA | Accepted |
@@ -22,6 +22,7 @@ The earlier ADRs were deliberately removed (see git history) and are not carried
 | [0007](0007-parity-and-test-strategy.md) | Prove parity with shared golden files, `ConverterState` unit tests and a Playwright suite | Accepted |
 | [0008](0008-upgrade-largexlsx-to-2.md) | Upgrade LargeXlsx to 2.x behind the golden tests | Accepted |
 | [0009](0009-cut-mt-line-endings-crlf.md) | Write the `.cut_mt` with CRLF line endings on every host | Accepted |
+| [0010](0010-host-pwa-on-s3-and-cloudfront.md) | Host the PWA on Amazon S3 + CloudFront (flat-rate Free plan) at `app.kroiko.com` | Accepted |
 
 ## Format
 
