@@ -135,11 +135,12 @@ picker there, registered by `AddFolderPicker()`; both interop classes share one 
 grids edit the domain details in `Files` in place and call `NotifyInputEdited()`; an edit made while generating
 drops that generation's output. `DownloadAllAsync` ("Изтегли всички") triggers the downloads one after another, each under its
 `FileNameSanitizer` name ([ADR-0003](docs/adr/0003-save-order-files-to-picked-folder.md) §5, §7); the first triggered download sets the saved flag, and an
-edit meanwhile stops the downloads of the files it discarded. `SaveToFolderAsync` ("Запази в папка…", ADR-0003 §2–4, §6) opens the picker before
+edit meanwhile stops the downloads of the files it discarded. `DownloadAsync(file)` (a file's link) triggers that one file's download under the
+same name and sets the saved flag unless an edit came meanwhile; a file no longer generated is ignored. `SaveToFolderAsync` ("Запази в папка…", ADR-0003 §2–4, §6) opens the picker before
 it awaits anything (the click's user activation), lists the picked folder, writes every generated file under its `ClashNaming.FinalNames` name
 and then sets the saved flag and `FolderSave` (the folder's name and the final names, for the confirmation; cleared with the generated files); a
 cancel does nothing, a blocked picker or a failed list/write raises `Error` pointing to "Изтегли всички", saves nothing and clears an earlier
-save's confirmation, and an edit meanwhile stops the writes. Downloading and saving to a folder never run together (`IsSaving`). Failures of reading, the dialog, making files, generating, device storage,
+save's confirmation, and an edit meanwhile stops the writes. Downloading (all or one file) and saving to a folder never run together (`IsSaving`). Failures of reading, the dialog, making files, generating, device storage,
 downloads and folder saves are logged and raise `Error` with a Bulgarian message instead of throwing. `HasUnsavedWork` = a file is loaded and its current input
 has not been generated and saved (at least one download triggered, or a folder save succeeded).
 `ClashNaming.FinalNames` (pure) gives each sanitised name ` (2)`, ` (3)`, … before its extension when the folder
@@ -160,14 +161,16 @@ the rename, so renames never chain and two materials can swap). The MegaTrading 
 contact fields are not copied: once there are files, `ContactInfoComponent` ("Контакти на клиента") above the tabs edits
 `CompanyName`/`MobileNumber`, both required, each keystroke an input edit; below them `OrderHandlingComponent` (the Server's, without email,
 credits and Blob Storage) has "Генерирай бланки за поръчка", enabled by `CanGenerate`, a spinner while generating, and then the generated
-files listed under their sanitised names with "Изтегли всички" and, where `IFolderPicker.IsAvailableAsync` (asked on init, which also loads the
-last folder ahead of the click), "Запази в папка…", whose success shows a `MudAlert` listing the final names. `E2E/UploadPanelTests` covers the alert, the discard confirmation, the Lonira default and the remembered manufacturer;
+files listed under their sanitised names, each a `MudLink` that downloads it (`DownloadAsync`; disabled while `IsSaving`), with "Изтегли всички" and, where `IFolderPicker.IsAvailableAsync` (asked on init, which also loads the
+last folder ahead of the click), "Запази в папка…" as the primary (filled) action and "Изтегли всички" as the secondary (outlined) one; elsewhere
+"Изтегли всички" is the primary one. A folder save's success shows a `MudAlert` listing the final names. `E2E/UploadPanelTests` covers the alert, the discard confirmation, the Lonira default and the remembered manufacturer;
 `E2E/ConversionTabsTests` the three tabs, the rename and invariant numbers under `bg-BG`; `E2E/GenerationTests` the contact guard,
-the `Check` guard, an edit discarding the generated files, sanitised download names, a Lonira order downloaded under `bg-BG` that
+the `Check` guard, an edit discarding the generated files, sanitised download names, a file link downloading only its file, a Lonira order downloaded under `bg-BG` that
 matches the golden files, and the contacts and manufacturer pre-filled after a reload (device storage). `Conversion/FileDownloaderRegistrationTests` and `Conversion/FolderPickerRegistrationTests` pin the `files.js` interop with a faked JS runtime.
 `E2E/FolderSaveTests` replaces `showDirectoryPicker` with a stub returning an origin-private (OPFS) folder, so the rest runs for real: the
 saved files match the golden files, a second save after a reload gets ` (2)` names and opens at the last folder, the pick had the click's user
-activation, a cancel does nothing, a blocked picker shows the message, and a browser without the picker offers only the downloads. Its main test
+activation, a cancel does nothing, a blocked picker shows the message, "Запази в папка…" is the primary action where the picker exists, and a browser without
+the picker offers only the downloads, "Изтегли всички" as the primary action. Its main test
 uses `PublishedApp.NewPersistentContextAsync` (a profile on disk): in Playwright's off-the-record contexts, reading a file-system handle back
 from IndexedDB crashes the page (Chromium 153; [reported upstream](https://github.com/andeplane/fem-lab/issues/247) with native handles
 too, so an Edge InPrivate window is a manual check). The real picker is a manual release check.

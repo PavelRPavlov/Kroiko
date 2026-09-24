@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using Kroiko.Domain.ExcelFilesGeneration;
 using Kroiko.Testing;
@@ -113,10 +114,33 @@ public sealed class FolderSaveTests(PublishedApp app)
 
         await GenerateAsGoldenAsync(page, "wardrobes-4-materials");
 
-        await Expect(page.GetByRole(AriaRole.Button, new() { Name = "Изтегли всички" })).ToBeVisibleAsync();
+        await Expect(DownloadAllButton(page)).ToHaveClassAsync(Filled);
         await Expect(SaveButton(page)).ToHaveCountAsync(0);
         console.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task Where_the_picker_exists_saving_to_a_folder_is_the_primary_action_and_downloading_all_stays()
+    {
+        await using var context = await app.NewContextAsync();
+        await context.AddInitScriptAsync(PickerStub);
+        var page = await context.NewPageAsync();
+        var console = ConsoleErrors(page);
+        await page.GotoAsync("/");
+
+        await GenerateAsGoldenAsync(page, "wardrobes-4-materials");
+
+        await Expect(SaveButton(page)).ToHaveClassAsync(Filled);
+        await Expect(DownloadAllButton(page)).ToHaveClassAsync(Outlined);
+        await Expect(DownloadAllButton(page)).ToBeEnabledAsync();
+        console.Should().BeEmpty();
+    }
+
+    // How MudBlazor marks the primary (filled) and the secondary (outlined) button.
+    private static readonly Regex Filled = new(@"\bmud-button-filled\b");
+    private static readonly Regex Outlined = new(@"\bmud-button-outlined\b");
+
+    private static ILocator DownloadAllButton(IPage page) => page.GetByRole(AriaRole.Button, new() { Name = "Изтегли всички" });
 
     private static ILocator SaveButton(IPage page) => page.GetByRole(AriaRole.Button, new() { Name = "Запази в папка…" });
 
@@ -128,7 +152,7 @@ public sealed class FolderSaveTests(PublishedApp app)
         await UploadAsync(page, fixture);
         await FillContactsAsync(page, TestData.GoldenContact.CompanyName!, TestData.GoldenContact.MobileNumber!);
         await GenerateButton(page).ClickAsync();
-        await Expect(page.GetByRole(AriaRole.Button, new() { Name = "Изтегли всички" })).ToBeVisibleAsync();
+        await Expect(DownloadAllButton(page)).ToBeVisibleAsync();
     }
 
     private sealed record Pick(bool Activation, string? Mode, bool? StartInIsLastFolder);

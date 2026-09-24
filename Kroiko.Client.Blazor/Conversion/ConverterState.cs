@@ -36,6 +36,7 @@ public sealed class ConverterState(
     internal const string SaveSettingsFailedMessage =
         "Контактите и производителят не можаха да бъдат запомнени на това устройство.";
     internal const string DownloadFailedMessage = "Файловете за поръчка не можаха да бъдат изтеглени.";
+    internal const string FileDownloadFailedMessage = "Файлът за поръчка не можа да бъде изтеглен.";
     internal const string FolderBlockedMessage =
         "Браузърът не позволява запис в папка. Изтеглете файловете с „Изтегли всички“.";
     internal const string FolderSaveFailedMessage =
@@ -117,7 +118,7 @@ public sealed class ConverterState(
     /// <summary>The order files are being generated.</summary>
     public bool IsGenerating { get; private set; }
 
-    /// <summary>"Изтегли всички" is triggering the downloads.</summary>
+    /// <summary>"Изтегли всички" is triggering the downloads, or a file's link its download.</summary>
     public bool IsDownloading { get; private set; }
 
     /// <summary>"Запази в папка…" is waiting for the folder picker or writing the files.</summary>
@@ -159,8 +160,8 @@ public sealed class ConverterState(
     public FolderSave? FolderSave { get; private set; }
 
     /// <summary>
-    /// The generated files were saved since they were generated: at least one download was triggered
-    /// (ADR-0003 §8).
+    /// The generated files were saved since they were generated: a folder save succeeded or at least one download
+    /// was triggered (ADR-0003 §8).
     /// </summary>
     public bool IsSaved { get; private set; }
 
@@ -377,40 +378,17 @@ public sealed class ConverterState(
     /// (ADR-0003 §8). An edit meanwhile stops the downloads of the files it discarded; a download that cannot start
     /// stops the rest and raises <see cref="Error"/>. Nothing happens with no generated files or while it runs.
     /// </summary>
-    public async Task DownloadAllAsync()
-    {
-        var files = GeneratedFiles;
-        if (files.Count == 0 || IsSaving)
-        {
-            return;
-        }
+    public Task DownloadAllAsync() =>
+        GeneratedFiles.Count == 0 || IsSaving ? Task.CompletedTask : DownloadFilesAsync(GeneratedFiles, DownloadFailedMessage);
 
-        IsDownloading = true;
-        OnChanged();
-        try
-        {
-            foreach (var file in files)
-            {
-                await downloader.DownloadAsync(SavedFileName(file), file.Content);
-                if (GeneratedFiles != files)
-                {
-                    return;
-                }
-
-                IsSaved = true;
-            }
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(exception, "The order files could not be downloaded.");
-            OnError(DownloadFailedMessage);
-        }
-        finally
-        {
-            IsDownloading = false;
-            OnChanged();
-        }
-    }
+    /// <summary>
+    /// A file's link in the generated list (ADR-0003 §5): triggers the download of <paramref name="file"/> under
+    /// <see cref="SavedFileName"/>, which marks the files saved (ADR-0003 §8). A download that cannot start raises
+    /// <see cref="Error"/>; an edit meanwhile leaves the new input unsaved. Nothing happens for a file that is not
+    /// one of <see cref="GeneratedFiles"/> (a link of discarded files) or while <see cref="IsSaving"/>.
+    /// </summary>
+    public Task DownloadAsync(FileSaveContext file) =>
+        !GeneratedFiles.Contains(file) || IsSaving ? Task.CompletedTask : DownloadFilesAsync([file], FileDownloadFailedMessage);
 
     /// <summary>
     /// "Запази в папка…" (ADR-0003 §2, §4, §6): opens the folder picker before awaiting anything, so it keeps the click's
@@ -482,14 +460,37 @@ public sealed class ConverterState(
         }
     }
 
-    /// <summary>
-    /// The generated files were saved: a download was triggered or a folder save succeeded (ADR-0003 §8); ignored
-    /// when there are none.
-    /// </summary>
-    public void MarkSaved()
+    // Triggers the downloads of some of the generated files, one after another, as IsDownloading: each marks the files
+    // saved (ADR-0003 §8); an edit meanwhile stops the rest, and a download that cannot start stops the rest and raises
+    // failedMessage.
+    private async Task DownloadFilesAsync(IReadOnlyList<FileSaveContext> files, string failedMessage)
     {
-        IsSaved = GeneratedFiles.Count > 0;
+        var generated = GeneratedFiles;
+        IsDownloading = true;
         OnChanged();
+        try
+        {
+            foreach (var file in files)
+            {
+                await downloader.DownloadAsync(SavedFileName(file), file.Content);
+                if (GeneratedFiles != generated)
+                {
+                    return;
+                }
+
+                IsSaved = true;
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "The order files could not be downloaded.");
+            OnError(failedMessage);
+        }
+        finally
+        {
+            IsDownloading = false;
+            OnChanged();
+        }
     }
 
     // Makes the files for a new manufacturer or new Details, asking first when that discards files.

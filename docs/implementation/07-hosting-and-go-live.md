@@ -117,8 +117,9 @@ Write it from ADR-0007 §9, with two sections:
   [CONTEXT.md §9](../../CONTEXT.md) behaves as listed. Real files stay on the local machine and are
   never committed or attached to issues.
 - **Every production release (~10 minutes)** on the installed Edge PWA: the update snackbar and
-  reload; About shows the new version; one conversion per manufacturer; "Запази в папка…" (clash
-  renaming, last folder) and "Изтегли всички"; offline start.
+  reload; About shows the new version; one conversion per manufacturer; "Запази в папка…" with the
+  real folder picker, which no test drives ([ADR-0007](../adr/0007-parity-and-test-strategy.md) §5;
+  clash renaming, last folder, the final names listed); "Изтегли всички" and one file's link; offline start.
 - **Release procedure.** Bump `<Version>` in a PR to `main`, merge `main` into `release`, tag
   `vX.Y.Z` on `release`, run `scripts/publish-pwa.ps1 -Environment production`, then open the
   sign-off issue. A bad release is fixed forward: revert, bump, deploy. **Never** redeploy an older

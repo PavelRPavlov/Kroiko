@@ -123,7 +123,41 @@ public sealed class GenerationTests(PublishedApp app)
         var console = ConsoleErrors(page);
         await page.GotoAsync("/");
 
-        // Lonira names each file after its material, which is free text.
+        await GenerateNamesAsync(page);
+        await Expect(page.GetByRole(AriaRole.Listitem)).ToHaveTextAsync(["_CON.xlsx", "Egger W1000_ _бял_.xlsx"]);
+
+        var files = await DownloadAllAsync(page, count: 2);
+
+        files.Select(f => f.FileName).Should().Equal("_CON.xlsx", "Egger W1000_ _бял_.xlsx");
+        console.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task A_file_link_downloads_only_that_file_under_its_sanitised_name()
+    {
+        await using var context = await app.NewContextAsync();
+        var page = await context.NewPageAsync();
+        var console = ConsoleErrors(page);
+        await page.GotoAsync("/");
+        var downloads = 0;
+        page.Download += (_, _) => Interlocked.Increment(ref downloads);
+
+        await GenerateNamesAsync(page);
+        await Expect(FileLinks(page)).ToHaveTextAsync(["_CON.xlsx", "Egger W1000_ _бял_.xlsx"]);
+
+        var download = await page.RunAndWaitForDownloadAsync(() => FileLinks(page).Nth(1).ClickAsync());
+        var linked = await ReadAsync(download);
+
+        linked.FileName.Should().Be("Egger W1000_ _бял_.xlsx");
+        var all = await DownloadAllAsync(page, count: 2);
+        linked.Content.Should().Equal(all[1].Content, "the link saves the generated file");
+        downloads.Should().Be(3, "the link downloaded one file and \"Изтегли всички\" two");
+        console.Should().BeEmpty();
+    }
+
+    // Generates a Lonira order whose files are named after its materials, which are free text that needs sanitising.
+    private static async Task GenerateNamesAsync(IPage page)
+    {
         await UploadAsync(page, new FilePayload
         {
             Name = "names.txt",
@@ -132,11 +166,5 @@ public sealed class GenerationTests(PublishedApp app)
         });
         await FillContactsAsync(page, "Тест ООД", "0888123456");
         await GenerateButton(page).ClickAsync();
-        await Expect(page.GetByRole(AriaRole.Listitem)).ToHaveTextAsync(["_CON.xlsx", "Egger W1000_ _бял_.xlsx"]);
-
-        var files = await DownloadAllAsync(page, count: 2);
-
-        files.Select(f => f.FileName).Should().Equal("_CON.xlsx", "Egger W1000_ _бял_.xlsx");
-        console.Should().BeEmpty();
     }
 }

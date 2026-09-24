@@ -38,6 +38,18 @@ internal static class ConverterPage
     public static ILocator GenerateButton(IPage page) =>
         page.GetByRole(AriaRole.Button, new() { Name = "Генерирай бланки за поръчка" });
 
+    /// <summary>The generated files' download links, one per file, in the order of the list.</summary>
+    public static ILocator FileLinks(IPage page) => page.GetByTestId("generated-files").GetByRole(AriaRole.Link);
+
+    /// <summary>A download as the order file it saved: the browser's suggested name and the downloaded bytes.</summary>
+    public static async Task<FileSaveContext> ReadAsync(IDownload download)
+    {
+        await using var content = await download.CreateReadStreamAsync();
+        using var bytes = new MemoryStream();
+        await content.CopyToAsync(bytes);
+        return new FileSaveContext(download.SuggestedFilename, bytes.ToArray());
+    }
+
     /// <summary>
     /// Clicks "Изтегли всички" and collects the <paramref name="count"/> downloads it triggers, in the order they
     /// started, as the order files they saved: the browser's suggested name and the downloaded bytes.
@@ -71,10 +83,7 @@ internal static class ConverterPage
         var files = new List<FileSaveContext>();
         foreach (var download in downloads)
         {
-            await using var content = await download.CreateReadStreamAsync();
-            using var bytes = new MemoryStream();
-            await content.CopyToAsync(bytes);
-            files.Add(new FileSaveContext(download.SuggestedFilename, bytes.ToArray()));
+            files.Add(await ReadAsync(download));
         }
 
         return files;
