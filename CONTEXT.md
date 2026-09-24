@@ -121,8 +121,9 @@ drops that generation's output. `DownloadAllAsync` ("Изтегли всички
 `FileNameSanitizer` name ([ADR-0003](docs/adr/0003-save-order-files-to-picked-folder.md) §5, §7); the first triggered download sets the saved flag, and an
 edit meanwhile stops the downloads of the files it discarded. Failures of reading, the dialog, making files, generating, device storage and
 downloads are logged and raise `Error` with a Bulgarian message instead of throwing. `HasUnsavedWork` = a file is loaded and its current input
-has not been generated and saved (at least one download triggered; `MarkSaved()` for phase 05's folder save). `ClashNaming.FinalNames` (pure, for phase 05's folder save) gives each sanitised name ` (2)`, ` (3)`, … before its
-extension when the folder, ignoring case, or an earlier file of the same save already has it ([ADR-0003](docs/adr/0003-save-order-files-to-picked-folder.md) §4).
+has not been generated and saved (at least one download triggered; `MarkSaved()` for phase 05's folder save).
+`ClashNaming.FinalNames` (pure, for phase 05's folder save) gives each sanitised name ` (2)`, ` (3)`, … before its extension when the folder
+(ignoring case) or an earlier file of the same save already has it ([ADR-0003](docs/adr/0003-save-order-files-to-picked-folder.md) §4).
 
 **Conversion UI** (`Kroiko.Client.Blazor/Components/`, copied from the Server and stripped, [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §1): components
 inherit `ConverterStateComponentBase` (injects `ConverterState`, re-renders on `Changed`). The Converter page (`/`) loads the device

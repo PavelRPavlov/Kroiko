@@ -74,9 +74,9 @@ public sealed class ClashNamingTests
         finalNames.Should().Equal("ПДЧ 1_2.xlsx", "ПДЧ 1_2 (3).xlsx", "ПДЧ 1_2 (4).xlsx");
     }
 
-    // A material may itself be named like a numbered file; its number is part of its name, not a clash number.
+    // Its number is part of its name, not a clash number; still, no final name is in the folder or given twice.
     [Fact]
-    public void A_final_name_is_never_one_already_in_the_folder_or_given_to_an_earlier_file()
+    public void A_file_named_like_a_numbered_file_gets_its_own_number()
     {
         var existing = new[] { "Egger.xlsx", "Egger (2) (2).xlsx" };
 
