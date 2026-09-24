@@ -1,0 +1,28 @@
+@using Kroiko.Domain.CellsExtracting
+@inherits ConverterStateComponentBase
+
+@* The Server's FileDisplayComponent, stripped (ADR-0005 §1, §3): ConverterState has already made the files, so
+   there is no grouping here and no loading delay. One tab per KroikoFile, named after it. *@
+<MudPaper Class="pa-4">
+    <MudText Class="py-3">Прегледай информацията и редактирай при необходимост:</MudText>
+    @* New files (another upload or manufacturer) get new tabs, starting on the first one. *@
+    <MudTabs @key="ConverterState.Files" Rounded="true" Border="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-4">
+        @foreach (var file in ConverterState.Files)
+        {
+            <MudTabPanel @key="file" Text="@file.FileName">
+                @switch (ConverterState.Manufacturer?.Name)
+                {
+                    case nameof(SupportedCompanies.Lonira):
+                        <LoniraTabItemContent File="@file" />
+                        break;
+                    case nameof(SupportedCompanies.MegaTrading):
+                        <MegaTradingTabItemContent File="@file" />
+                        break;
+                    case nameof(SupportedCompanies.Suliver):
+                        <SuliverTabItemContent File="@file" />
+                        break;
+                }
+            </MudTabPanel>
+        }
+    </MudTabs>
+</MudPaper>

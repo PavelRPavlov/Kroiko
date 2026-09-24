@@ -7,7 +7,8 @@ public static class ConversionServiceCollectionExtensions
     /// <summary>
     /// Registers the app's one <see cref="ConverterState"/> (ADR-0005 §4). It is scoped, which in Blazor
     /// WebAssembly means once for the app, and lets it use scoped services such as MudBlazor's dialogs. The
-    /// app registers an <see cref="IConfirmation"/> and an <see cref="IDeviceSettingsStore"/> alongside it.
+    /// app registers an <see cref="IConfirmation"/>, an <see cref="IDeviceSettingsStore"/> and an
+    /// <see cref="IFileDownloader"/> alongside it.
     /// </summary>
     public static IServiceCollection AddConverterState(this IServiceCollection services)
     {
@@ -35,5 +36,15 @@ public static class ConversionServiceCollectionExtensions
         return services
             .AddScoped<IBrowserStorage, BrowserLocalStorage>()
             .AddScoped<IDeviceSettingsStore, LocalStorageDeviceSettingsStore>();
+    }
+
+    /// <summary>
+    /// Registers the <see cref="IFileDownloader"/> that hands files to the browser as downloads (ADR-0003 §5).
+    /// Scoped, like the <c>IJSRuntime</c> it calls.
+    /// </summary>
+    public static IServiceCollection AddFileDownloader(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        return services.AddScoped<IFileDownloader, BrowserFileDownloader>();
     }
 }

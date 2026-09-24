@@ -1,0 +1,58 @@
+@using System.Globalization
+@using Kroiko.Domain.TemplateBuilding
+@inherits ConverterStateComponentBase
+
+@* The Server's Lonira tab without its contact fields (one contact section is above the tabs, ADR-0005 §6). The
+   grid edits the file's LoniraDetails in place; editable as on the Server: the note and the file (material) name. *@
+<MudGrid Class="pa-3">
+    <MudItem xs="12" sm="6">
+        <MudTextField T="string" Value="@File.FileName" ValueChanged="OnFileNameChanged" Label="Материал" />
+    </MudItem>
+</MudGrid>
+
+@* Numbers in the invariant culture, as in the order files, whatever the browser's culture. *@
+<MudDataGrid T="LoniraDetail" Items="@_details" ReadOnly="false" Culture="CultureInfo.InvariantCulture"
+             EditMode="DataGridEditMode.Cell" EditTrigger="DataGridEditTrigger.OnRowClick"
+             CommittedItemChanged="OnDetailCommitted"
+             Bordered="true" Dense="true" Class="pa-3">
+    <Columns>
+        <PropertyColumn Property="x => x.Height" Title="Размер по фладер [мм]" Editable="false" />
+        <PropertyColumn Property="x => x.Width" Title="Размер срещу фладер [мм]" Editable="false" />
+        <PropertyColumn Property="x => x.Quantity" Title="Брой детайли" Editable="false" />
+        <PropertyColumn Property="x => x.LoniraEdges" Title="Кантиране" Editable="false" />
+        <PropertyColumn Property="x => x.Note" Title="Забележка" Editable="true" Required="false" />
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="LoniraDetail" PageSizeOptions="new[] { 25, 50, 100 }" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    [Parameter, EditorRequired] public KroikoFile File { get; set; } = default!;
+
+    private KroikoFile? _shownFile;
+    private List<LoniraDetail> _details = [];
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(File, _shownFile))
+        {
+            _shownFile = File;
+            _details = File.Details.Cast<LoniraDetail>().ToList();
+        }
+    }
+
+    private void OnFileNameChanged(string? fileName)
+    {
+        fileName ??= string.Empty;
+        if (fileName == File.FileName)
+        {
+            return;
+        }
+
+        File.FileName = fileName;
+        ConverterState.NotifyInputEdited();
+    }
+
+    private void OnDetailCommitted(LoniraDetail detail) => ConverterState.NotifyInputEdited();
+}

@@ -15,6 +15,7 @@ public sealed class ConverterStateRegistrationTests
             .AddLogging()
             .AddScoped<IConfirmation, FakeConfirmation>()
             .AddScoped<IDeviceSettingsStore, FakeDeviceSettingsStore>()
+            .AddScoped<IFileDownloader, FakeFileDownloader>()
             .AddConverterState();
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
 

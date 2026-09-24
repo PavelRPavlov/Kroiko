@@ -14,13 +14,16 @@ namespace Kroiko.Client.Blazor.Conversion;
 /// <para>
 /// Components read it directly and re-render on <see cref="Changed"/>. The grids edit the domain details in
 /// <see cref="Files"/> in place and then call <see cref="NotifyInputEdited"/>; every input edit discards the
-/// generated files without asking (ADR-0005 §7). Reading a file, the confirmation, making the files, generating
-/// and the device settings do not throw: a failure is logged, raises <see cref="Error"/> with a Bulgarian message
+/// generated files without asking (ADR-0005 §7). Reading a file, the confirmation, making the files, generating,
+/// the device settings and the downloads do not throw: a failure is logged, raises <see cref="Error"/> with a Bulgarian message
 /// where the operator must know, and leaves the Order as it was (ADR-0006 §4).
 /// </para>
 /// </summary>
 public sealed class ConverterState(
-    IConfirmation confirmation, IDeviceSettingsStore deviceSettings, ILogger<ConverterState> logger)
+    IConfirmation confirmation,
+    IDeviceSettingsStore deviceSettings,
+    IFileDownloader downloader,
+    ILogger<ConverterState> logger)
 {
     internal const string DiscardFilesQuestion =
         "Файловете за поръчка и всички редакции по тях ще бъдат изгубени. Да продължа ли?";
@@ -31,6 +34,7 @@ public sealed class ConverterState(
     internal const string GenerateFailedMessage = "Бланките за поръчка не можаха да бъдат генерирани.";
     internal const string SaveSettingsFailedMessage =
         "Контактите и производителят не можаха да бъдат запомнени на това устройство.";
+    internal const string DownloadFailedMessage = "Файловете за поръчка не можаха да бъдат изтеглени.";
 
     private IReadOnlyList<Detail>? _details;
     private string? _companyName;
@@ -47,7 +51,16 @@ public sealed class ConverterState(
     /// <summary>An operation failed; show the Bulgarian message in a snackbar.</summary>
     public event Action<string>? Error;
 
-    /// <summary>The manufacturer the files are made for, or <c>null</c> until one is picked.</summary>
+    /// <summary>
+    /// The manufacturer the picker starts on when the device remembers none: Lonira, as on the Server, so a first
+    /// visit can convert without picking one.
+    /// </summary>
+    internal static SupportedCompany DefaultManufacturer => SupportedCompanies.Lonira;
+
+    /// <summary>
+    /// The manufacturer the files are made for, or <c>null</c> until one is picked or the device settings are
+    /// loaded.
+    /// </summary>
     public SupportedCompany? Manufacturer { get; private set; }
 
     /// <summary>A Polyboard file is loaded.</summary>
@@ -99,16 +112,28 @@ public sealed class ConverterState(
     /// <summary>The order files are being generated.</summary>
     public bool IsGenerating { get; private set; }
 
+    /// <summary>"Изтегли всички" is triggering the downloads.</summary>
+    public bool IsDownloading { get; private set; }
+
     /// <summary>
     /// "Генерирай бланки за поръчка" is allowed: there are files, both contact fields are filled (not just
-    /// whitespace) and <see cref="Problems"/> is empty (ADR-0005 §6, ADR-0006 §3).
+    /// whitespace) and <see cref="Problems"/> is empty (ADR-0005 §6, ADR-0006 §3), and nothing is being generated
+    /// or downloaded.
     /// </summary>
     public bool CanGenerate =>
         Files.Count > 0
         && !string.IsNullOrWhiteSpace(CompanyName)
         && !string.IsNullOrWhiteSpace(MobileNumber)
         && Problems.Count == 0
-        && !IsGenerating;
+        && !IsGenerating
+        && !IsDownloading;
+
+    /// <summary>The name <paramref name="file"/> is saved under: its <see cref="FileNameSanitizer"/> name (ADR-0003 §7).</summary>
+    public static string SavedFileName(FileSaveContext file)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+        return FileNameSanitizer.Sanitize(file.FileName);
+    }
 
     /// <summary>The order files of the last generation; cleared by any change to the input.</summary>
     public IReadOnlyList<FileSaveContext> GeneratedFiles { get; private set; } = [];
@@ -127,8 +152,9 @@ public sealed class ConverterState(
 
     /// <summary>
     /// Fills what the operator has not chosen yet — the contact fields and the manufacturer — from the device
-    /// settings (ADR-0005 §6). Runs once per app start, so returning to the Converter page keeps the Order as
-    /// the operator left it; settings that cannot be loaded leave the Order as it is.
+    /// settings (ADR-0005 §6). A device that remembers no manufacturer starts on <see cref="DefaultManufacturer"/>.
+    /// Runs once per app start, so returning to the Converter page keeps the Order as the operator left it;
+    /// settings that cannot be loaded count as a device that remembers nothing, and are not tried again.
     /// </summary>
     public async Task LoadDeviceSettingsAsync()
     {
@@ -137,6 +163,7 @@ public sealed class ConverterState(
             return;
         }
 
+        _deviceSettingsLoaded = true;
         DeviceSettings settings;
         try
         {
@@ -145,10 +172,9 @@ public sealed class ConverterState(
         catch (Exception exception)
         {
             logger.LogWarning(exception, "The device settings could not be loaded.");
-            return;
+            settings = DeviceSettings.Default;
         }
 
-        _deviceSettingsLoaded = true;
         var changed = false;
         if (_companyName is null && settings.Contact.CompanyName is not null)
         {
@@ -163,9 +189,9 @@ public sealed class ConverterState(
         }
 
         // With no manufacturer there are no files, so making them for the remembered one discards nothing.
-        if (Manufacturer is null && settings.Manufacturer is not null)
+        if (Manufacturer is null)
         {
-            Manufacturer = settings.Manufacturer;
+            Manufacturer = settings.Manufacturer ?? DefaultManufacturer;
             Files = CreateFiles(Manufacturer, _details);
             changed = true;
         }
@@ -234,10 +260,44 @@ public sealed class ConverterState(
     }
 
     /// <summary>
-    /// A grid cell, a material rename or a file name in <see cref="Files"/> was edited in place: the generated
+    /// A grid cell or a file name in <see cref="Files"/> was edited in place: the generated
     /// files are discarded and <see cref="IOrderFormat.Check"/> runs again.
     /// </summary>
     public void NotifyInputEdited() => InputChanged();
+
+    /// <summary>
+    /// The MegaTrading material rename (ADR-0005 §3): rewrites <c>Material</c> on the details of
+    /// <paramref name="file"/> whose material is a key of <paramref name="newNames"/> (old → new name), as typed,
+    /// as on the Server. Each detail is matched by its material before the rename, so renames never chain and two
+    /// materials can swap. Renaming anything is an input edit; a file no longer in <see cref="Files"/> (a tab of an
+    /// older Order) is left alone.
+    /// </summary>
+    public void RenameMaterials(KroikoFile file, IReadOnlyDictionary<string, string> newNames)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+        ArgumentNullException.ThrowIfNull(newNames);
+        if (!Files.Contains(file))
+        {
+            return;
+        }
+
+        var renamed = false;
+        foreach (var detail in file.Details)
+        {
+            if (detail.Material is not null
+                && newNames.TryGetValue(detail.Material, out var newName)
+                && newName != detail.Material)
+            {
+                detail.Material = newName;
+                renamed = true;
+            }
+        }
+
+        if (renamed)
+        {
+            InputChanged();
+        }
+    }
 
     /// <summary>
     /// Generates the order files, if <see cref="CanGenerate"/>, and remembers the contacts and the manufacturer
@@ -290,7 +350,51 @@ public sealed class ConverterState(
         }
     }
 
-    /// <summary>A download of the generated files was triggered (ADR-0003 §8); ignored when there are none.</summary>
+    /// <summary>
+    /// "Изтегли всички" (ADR-0003 §5): triggers the download of every generated file, one after another, each under
+    /// <see cref="SavedFileName"/>. The first triggered download marks the files saved
+    /// (ADR-0003 §8). An edit meanwhile stops the downloads of the files it discarded; a download that cannot start
+    /// stops the rest and raises <see cref="Error"/>. Nothing happens with no generated files or while it runs.
+    /// </summary>
+    public async Task DownloadAllAsync()
+    {
+        var files = GeneratedFiles;
+        if (files.Count == 0 || IsDownloading)
+        {
+            return;
+        }
+
+        IsDownloading = true;
+        OnChanged();
+        try
+        {
+            foreach (var file in files)
+            {
+                await downloader.DownloadAsync(SavedFileName(file), file.Content);
+                if (GeneratedFiles != files)
+                {
+                    return;
+                }
+
+                IsSaved = true;
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "The order files could not be downloaded.");
+            OnError(DownloadFailedMessage);
+        }
+        finally
+        {
+            IsDownloading = false;
+            OnChanged();
+        }
+    }
+
+    /// <summary>
+    /// The generated files were saved: a download was triggered or, from phase 05, a folder save succeeded
+    /// (ADR-0003 §8); ignored when there are none.
+    /// </summary>
     public void MarkSaved()
     {
         IsSaved = GeneratedFiles.Count > 0;

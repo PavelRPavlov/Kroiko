@@ -1,0 +1,31 @@
+@using Kroiko.Client.Blazor.Conversion
+@inherits ConverterStateComponentBase
+
+@* The Server's OrderHandlingComponent, stripped (ADR-0005 §1): no email, credits or Blob Storage links. The files
+   are generated in the browser and listed under the names they are saved with; "Изтегли всички" downloads them
+   (ADR-0003 §1, §5, §7). Phase 05 adds the folder save and a link per file. *@
+<MudPaper Class="pa-4">
+    <MudStack Row="true" Class="py-3" Spacing="2">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.GridOn"
+                   OnClick="ConverterState.GenerateAsync" Disabled="@(!ConverterState.CanGenerate)">
+            Генерирай бланки за поръчка
+        </MudButton>
+    </MudStack>
+    @if (ConverterState.IsGenerating)
+    {
+        <Spinner />
+    }
+    else if (ConverterState.GeneratedFiles.Count > 0)
+    {
+        <ul class="py-2">
+            @foreach (var file in ConverterState.GeneratedFiles)
+            {
+                <li class="py-1">@ConverterState.SavedFileName(file)</li>
+            }
+        </ul>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
+                   OnClick="ConverterState.DownloadAllAsync" Disabled="@ConverterState.IsDownloading">
+            Изтегли всички
+        </MudButton>
+    }
+</MudPaper>
