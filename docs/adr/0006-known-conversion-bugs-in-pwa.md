@@ -98,3 +98,4 @@ Still open, found in the code:
 - [ADR-0005](0005-copy-conversion-ui-into-pwa.md) — `ConverterState`, the upload panel and the generate button this constrains.
 - Informs: [What proves parity, and how it's tested](https://github.com/PavelRPavlov/Kroiko/issues/24),
   [Phases and order of the PWA implementation guides](https://github.com/PavelRPavlov/Kroiko/issues/31)
+- Implemented by: [02 — Shared domain](../implementation/02-shared-domain.md) (parser, `Check`), [04 — Conversion flow](../implementation/04-conversion-flow.md) (alerts, busy states), [07 — Hosting & go-live](../implementation/07-hosting-and-go-live.md) (encoding check)

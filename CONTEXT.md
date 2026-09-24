@@ -3,7 +3,7 @@
 > Domain model, architecture, and decision log for the **ATATextConverter** solution.
 > Read this before making changes. For *how to work* in this repo (build, test,
 > conventions, guardrails) see [AGENTS.md](AGENTS.md). For the in-flight migration
-> see [docs/implementation/00-overview.md](docs/implementation/00-overview.md), and the
+> see [docs/implementation/00-overview.md](docs/implementation/00-overview.md) (the PWA build plan), and the
 > decisions behind it as ADRs in [docs/adr/](docs/adr/).
 
 ---
@@ -60,30 +60,35 @@ Browser ──SignalR circuit──► ATAFurniture.Server (Blazor Server, .NET 
                                  └─ SendinBlue/Brevo (email with attachments)
 ```
 
-- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `ATAFurniture.Server.Tests` (xUnit — generation smoke tests over checked-in fixtures; golden tests move to a new `Kroiko.Domain.Tests` per [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md), with shared test data in `Kroiko.Testing` and PWA tests in `Kroiko.Client.Tests` per [ADR-0007](docs/adr/0007-parity-and-test-strategy.md)), `UWPTextConverter` (**dead legacy**, to be deleted).
+- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `ATAFurniture.Server.Tests` (xUnit — generation smoke tests over checked-in fixtures; golden tests move to a new `Kroiko.Domain.Tests` per [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md), with shared test data in `Kroiko.Testing` and PWA tests in `Kroiko.Client.Tests` per [ADR-0007](docs/adr/0007-parity-and-test-strategy.md)).
 - **Auth:** Azure AD B2C; per-page `[Authorize]` (global filter is commented out). Claims read in `UserContextService`.
-- **Secrets:** SQL conn string, Azure Storage conn string, SendinBlue API key — all from user-secrets/env (not committed). Sentry DSN **is** committed (should be rotated/moved). *(The Syncfusion license key is gone — [ADR-0006](docs/adr/0006-replace-syncfusion-radzen-with-mudblazor.md) replaced Syncfusion + Radzen with MudBlazor, one fewer secret.)*
+- **Secrets:** SQL conn string, Azure Storage conn string, SendinBlue API key — all from user-secrets/env (not committed). Sentry DSN **is** committed (should be rotated/moved). *(The Syncfusion license key is gone — Syncfusion + Radzen were replaced with MudBlazor, one fewer secret.)*
 - **Observability:** Serilog (console + rolling file) + Sentry.
 
-## 5. Target architecture (what we are migrating to)
+## 5. Target architecture (the offline PWA)
 
-A **UI-only Blazor WebAssembly client** + an **ASP.NET Core Minimal API** that owns
-all backend logic *and* serves the client's static files. File parsing and Excel
-generation run **in the browser**.
+A second, standalone app: **`Kroiko.Client.Blazor`**, a Blazor WebAssembly PWA with a
+MudBlazor UI that runs the whole conversion **in the browser** and works offline after the
+first visit. It has no backend, login, credits or email. `ATAFurniture.Server` stays
+deployed and shares the conversion domain with it.
 
 ```
-Browser ── static files ──►  ATAFurniture.Api (Minimal API, .NET 10)  ◄── the only hosted server
-   │  (Blazor WASM client)      ├─ serves the WASM client (UseBlazorFrameworkFiles + MapFallbackToFile)
-   │   • MudBlazor UI           ├─ EF Core 10 ──► SQL Server (users + credits, atomic)
-   │   • Kroiko.Domain in-browser│─ Azure AD token validation (AddMicrosoftIdentityWebApi)
-   │     (parse + LargeXlsx)     ├─ Email endpoint (SendinBlue)  ◄── holds ALL secrets
-   │   • MSAL auth (bearer)      └─ (optional) Blob endpoint
-   └── HTTPS /api ──────────────►
+app.kroiko.com (Azure Static Web Apps, static files only)  ── first load + updates ──►  Browser
+                                                                                         │
+  Kroiko.Client.Blazor (WASM, installable, service worker)                               │
+   ├─ ConverterState (one app-wide Order)                                                │
+   ├─ Kroiko.Domain: PolyboardParser.Parse → IOrderFormat.CreateFiles / Check / Generate │
+   ├─ device storage: contact info + last manufacturer (schemaVersion)                   │
+   └─ save: picked folder (showDirectoryPicker) or downloads                             │
+
+ATAFurniture.Server (unchanged behaviour) ──► the same Kroiko.Domain
 ```
 
-**Target projects:** `ATAFurniture.Client` (WASM, UI only), `ATAFurniture.Api`
-(minimal API + host), `Kroiko.Domain` (shared, **must stay browser-safe**),
-`ATAFurniture.Contracts` (shared request/response DTOs), `ATAFurniture.Tests`.
+**Projects:** `Kroiko.Client.Blazor` (PWA), `Kroiko.Domain` (shared, **must stay
+browser-safe**), `ATAFurniture.Server` (maintained), and the test projects `Kroiko.Testing`,
+`Kroiko.Domain.Tests`, `Kroiko.Client.Tests`, `ATAFurniture.Server.Tests`
+([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0008](docs/adr/README.md).
+Build order: [docs/implementation/00-overview.md](docs/implementation/00-overview.md).
 
 ## 6. Decision log
 
@@ -100,7 +105,7 @@ These were found in a code review; several are naturally fixed by the migration.
 - 🔴 **Credit double-decrement / overcharge.** `ConsumeSingleCredit` decrements the
   `User` reference after `RemoveCredits` already decremented+saved it; the extra
   decrement persists on the next save. `UserContextService.cs` + `KroikoDataRepository.cs`.
-  → Fixed by the atomic server-side credit endpoint (see [docs/implementation/04-backend-api.md](docs/implementation/04-backend-api.md)).
+  → Server-only; the PWA has no credits. Not addressed by the PWA plan (the Server is maintained, not developed).
 - 🔴 **Null-deref crash.** Missing template builder / file-name provider is logged as
   a warning then dereferenced. `OrderHandlingComponent.razor.cs` → `FileGeneratorService.cs`.
   → Removed by `IOrderFormat` ([ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)).
@@ -138,7 +143,7 @@ These were found in a code review; several are naturally fixed by the migration.
   the Polyboard parse and the `.cut_mt` output.
 - **`Kroiko.Domain` must stay browser-safe** ([ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)) — no server-only APIs
   (no direct EF, no `System.Net` server calls, no file-system assumptions).
-- **Secrets never ship to the browser.** DB/email/blob credentials live only in the API.
+- **Secrets never ship to the browser.** The PWA has none; DB/email/blob credentials live only in the Server.
 - **Two Polyboard formats** (11 and 23 fields) must both keep parsing.
 
 ## 9. Intended differences from the Server (PWA)

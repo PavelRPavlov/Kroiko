@@ -3,15 +3,21 @@
 > Operating guide for AI agents (and humans) working in the **ATATextConverter** repo.
 > **Domain & architecture context:** [CONTEXT.md](CONTEXT.md).
 > **Architecture decisions (ADRs):** [docs/adr/](docs/adr/).
-> **Active migration plan:** [docs/implementation/00-overview.md](docs/implementation/00-overview.md).
+> **Build plan (PWA):** [docs/implementation/00-overview.md](docs/implementation/00-overview.md).
 > **Issue tracker (agents, incl. /wayfinder):** [docs/agents/issue-tracker.md](docs/agents/issue-tracker.md) — GitHub Issues + Project 3, this repo only.
 
 ---
 
 ## What this is
 
-A .NET web app that converts Polyboard furniture cut-list text files into
-manufacturer-specific Excel/text order files, metered by a per-user credit system.
+Two .NET 10 apps that convert Polyboard furniture cut-list text files into
+manufacturer-specific Excel/text order files, sharing one conversion domain:
+
+- **`ATAFurniture.Server`** — the deployed Blazor Server app (login, per-user credits, email).
+  Maintained, not developed.
+- **`Kroiko.Client.Blazor`** — the new offline, installable Blazor WebAssembly PWA: no backend,
+  no login, no credits, no email. Being built per [docs/implementation/](docs/implementation/00-overview.md).
+
 See [CONTEXT.md](CONTEXT.md) for the domain model and the ubiquitous language.
 
 ## Repository layout
@@ -22,31 +28,37 @@ ATATextConverter/
 ├── CONTEXT.md                ← domain model + architecture + decision log
 ├── docs/
 │   ├── adr/                  ← architecture decision records (the "why")
-│   └── implementation/       ← step-by-step migration guides (start at 00-overview.md)
+│   ├── implementation/       ← step-by-step build guides for the PWA (start at 00-overview.md)
+│   └── research/             ← research findings the ADRs rely on
 ├── TextConverter.sln
-├── ATAFurniture.Server/      ← Blazor Server web app (being migrated to Client + Api)
-├── Kroiko.Domain/            ← domain library (parsing, template building, Excel gen)
-├── ATAFurniture.Server.Tests/← xUnit generation smoke tests (domain tests move to Kroiko.Domain.Tests — ADR-0004)
-└── UWPTextConverter/         ← DEAD legacy UWP app (scheduled for deletion)
+├── global.json               ← pins the .NET 10 SDK
+├── ATAFurniture.Server/      ← Blazor Server web app (deployed; maintained, not developed)
+├── Kroiko.Client.Blazor/     ← Blazor WASM PWA (being built)
+├── Kroiko.Domain/            ← conversion domain shared by both apps (must stay browser-safe)
+└── ATAFurniture.Server.Tests/← xUnit generation smoke tests
 ```
 
-Target layout after migration: `ATAFurniture.Client` (WASM UI), `ATAFurniture.Api`
-(minimal API + host), `Kroiko.Domain` (shared, browser-safe), `ATAFurniture.Contracts`
-(DTOs), `ATAFurniture.Tests`.
+Test projects added by the build plan ([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)):
+`Kroiko.Testing` (shared test data, golden files, `OrderFilesAssert`), `Kroiko.Domain.Tests`
+(golden + domain tests), `Kroiko.Client.Tests` (`ConverterState` unit tests + Playwright E2E);
+`ATAFurniture.Server.Tests` shrinks to Server-only tests.
 
 ## Build / run / test
 
 ```bash
 dotnet restore TextConverter.sln
 dotnet build TextConverter.sln
-dotnet run --project ATAFurniture.Server      # current app (needs user-secrets configured)
-dotnet test                                   # generation smoke tests over checked-in Polyboard fixtures
+dotnet run --project ATAFurniture.Server      # Server app (needs user-secrets configured)
+dotnet run --project Kroiko.Client.Blazor     # PWA (dev server; the service worker is a no-op in dev)
+dotnet test                                   # everything, incl. Playwright E2E once it exists
+dotnet test --filter Category!=E2E            # fast loop, no browser
 ```
 
-- **SDK:** .NET 8 today; migrating to **.NET 10** (see [docs/implementation/01-dotnet-10-upgrade.md](docs/implementation/01-dotnet-10-upgrade.md)).
-  Pin the SDK with `global.json` once .NET 10 lands.
-- **Local secrets:** the app reads SQL/Storage/SendinBlue/Syncfusion values from
-  user-secrets/env. Never hardcode or commit them.
+- **SDK:** .NET 10, pinned by `global.json`. All projects target `net10.0`.
+- **E2E:** the Playwright tests need a one-time `playwright.ps1 install chromium`
+  (the failing test prints the exact command).
+- **Local secrets (Server only):** the Server reads SQL/Storage/SendinBlue values from
+  user-secrets/env. Never hardcode or commit them. The PWA has no secrets.
 
 ## Environment
 
@@ -66,9 +78,8 @@ dotnet test                                   # generation smoke tests over chec
   `nameof(SupportedCompanies.X)`.
 - **Async:** suffix async methods with `Async`; never fire-and-forget a `Task`
   (`.ConfigureAwait(false)` without `await` is a bug — see Known issues in CONTEXT.md).
-- **UI:** after the MudBlazor migration, use **MudBlazor components only**. Do **not**
-  reintroduce Syncfusion or Radzen (they are paid; we removed them deliberately —
-  [ADR-0006](docs/adr/0006-replace-syncfusion-radzen-with-mudblazor.md)).
+- **UI:** use **MudBlazor components only**, in both apps. Do **not** reintroduce
+  Syncfusion or Radzen (they are paid; we removed them deliberately).
 
 ## Commits, pushes & PRs — agents may (applies to every agent & sub-agent, THIS REPO ONLY)
 
@@ -95,19 +106,23 @@ permission is scoped to this repo only — it does not extend to any other repos
   you change things; **record an architectural decision as a new ADR** in `docs/adr/`
   (see [docs/adr/README.md](docs/adr/README.md) for the format).
 - ✅ Add tests when you touch parsing or file generation — these are the highest-risk
-  paths and have only shape-level smoke coverage today (golden tests planned in ADR-0004).
+  paths. Golden files ([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)) are the record
+  of the output; a golden diff in a PR must be explained.
 - ✅ Keep `Kroiko.Domain` **browser-safe** (no server-only APIs) — it runs in WASM.
 - ✅ Fix the relevant "Known issues" (CONTEXT.md §7) when you're already editing that code.
 - ❌ Never commit secrets. Never put secrets in the WASM client (they ship to browsers).
 - ❌ Don't reintroduce Syncfusion/Radzen, the UWP project, or the Cosmos scaffolding.
-- ❌ Don't combine the framework upgrade and the re-architecture in one step — follow
-  the phase order in `docs/implementation/`.
-- ❌ Don't commit `bin/`, `obj/`, `*.user`, `.idea/`, or `UpgradeLog*.htm` (fix
-  `.gitignore` — it is currently a Terraform template).
+- ❌ Don't share Razor components between the apps (no Razor Class Library) — the PWA's UI is a
+  copy by design ([ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md)).
+- ❌ Don't commit `bin/`, `obj/`, `*.user`, `.idea/`, or `UpgradeLog*.htm`.
 
-## Migration status
+## Build status
 
-Work is planned but **not yet started**. Execute in the order in `docs/implementation/`:
-`01` .NET 10 → `02` spikes → `03` MudBlazor → `04` API → `05` WASM client → `06` hosting.
-Each guide has its own done-criteria checklist. Update the "Status" line at the
-top of each phase doc as you progress (`Not started` → `In progress` → `Done`).
+The offline PWA (`Kroiko.Client.Blazor`) is built phase by phase from
+[docs/implementation/](docs/implementation/00-overview.md). Each guide's **Status** line is the
+source of truth (`Not started` → `In progress` → `Done`). To pick up work: read `00-overview.md`,
+take the next step of a guide that is not **Done** and whose dependencies are **Done**, and do
+**one step per PR**.
+Parallel lanes: `01 → 02` alongside `03`; then `05` alongside `06`; `07a` once `03` is done.
+`ATAFurniture.Server` is **maintained, not developed**: change it only where phase 02 rewires it
+onto the domain.
