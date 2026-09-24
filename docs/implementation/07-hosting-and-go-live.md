@@ -46,6 +46,20 @@ It replaces `staticwebapp.config.json`. That file, its entry in `service-worker.
 - `StaticSiteHost` serves a publish the way the deployed host does: the same fallback rule, `br` only when
   accepted, and a 404 for a missing file.
 
+As built:
+
+- The tests run the committed file itself in [Jint](https://github.com/sebastienros/jint) (`ViewerRequestFunction`),
+  with the viewer-request event CloudFront passes it. `StaticSiteHost` calls the same instance on every request,
+  so the E2E suite (offline start, parity) goes through the real function. It maps `br/` to a file's `.br`
+  sibling where there is one, and `raw/` to the plain file. It does not emulate CloudFront's on-the-fly gzip.
+- A wildcard `Accept-Encoding: *` is not taken as `br`, and neither is `br;q=0`. Such requests get `raw/`, which is
+  always safe.
+- The function sets no headers. `Content-Type` and `Cache-Control` are object metadata (step 2), so the test host
+  sends no `Cache-Control`, as before. A `.br` or `.gz` sibling asked for by name is a 404, because the deploy
+  uploads none.
+- `scripts/publish-pwa.ps1` no longer requires `staticwebapp.config.json` in the publish. Step 2 replaces its
+  deploy.
+
 ### 2. `scripts/publish-pwa.ps1`
 
 `scripts/publish-pwa.ps1 -Environment main|production` refuses to run unless:
@@ -198,7 +212,7 @@ Two choices go beyond this step's text:
 
 ## Done criteria
 
-- [ ] `hosting/cloudfront/viewer-request.js` is committed and tested, and `StaticSiteHost` serves like it;
+- [x] `hosting/cloudfront/viewer-request.js` is committed and tested, and `StaticSiteHost` serves like it;
       `staticwebapp.config.json` is gone.
 - [ ] `scripts/publish-pwa.ps1` uploads a new release folder with its `raw/` and `br/` trees, switches the origin
       path and invalidates. It never prints the credentials.

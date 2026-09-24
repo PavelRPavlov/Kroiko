@@ -13,6 +13,8 @@
 
     <ItemGroup>
       <PackageReference Include="FluentAssertions" Version="[7.1.0]" />
+      <!-- Runs the committed CloudFront Function, hosting/cloudfront/viewer-request.js (ADR-0010). -->
+      <PackageReference Include="Jint" Version="4.16.3" />
       <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
       <PackageReference Include="Microsoft.Playwright" Version="1.63.0" />
       <PackageReference Include="xunit" Version="2.9.3" />

@@ -27,8 +27,6 @@ public sealed class StaticSiteHostTests : IAsyncLifetime
         Write("manifest.webmanifest", "{}");
         Write("notes.unknown", "?");
         Write("notes.unknown.br", "?");
-        Write("staticwebapp.config.json", "{}");
-        Write("staticwebapp.config.json.br", "{}");
 
         _host = await StaticSiteHost.StartAsync(_webRoot);
         // No automatic decompression: the tests look at the encoding the host chose.
@@ -69,11 +67,12 @@ public sealed class StaticSiteHostTests : IAsyncLifetime
 
     [Theory]
     [InlineData("br", "br", "brotli-bytes")]
-    [InlineData("gzip", "gzip", "gzip-bytes")]
     [InlineData("gzip, deflate, br", "br", "brotli-bytes")]
-    [InlineData("br;q=0, gzip", "gzip", "gzip-bytes")]
+    // The raw/ tree: CloudFront may gzip it on the fly, which this host does not emulate.
+    [InlineData("gzip", null, "console.log('plain');")]
+    [InlineData("br;q=0, gzip", null, "console.log('plain');")]
     [InlineData("identity", null, "console.log('plain');")]
-    public async Task Negotiates_the_precompressed_file(string acceptEncoding, string? contentEncoding, string body)
+    public async Task Serves_the_br_file_only_to_a_viewer_that_accepts_br(string acceptEncoding, string? contentEncoding, string body)
     {
         using var response = await GetAsync("app.js", acceptEncoding);
 
@@ -81,7 +80,6 @@ public sealed class StaticSiteHostTests : IAsyncLifetime
         (await response.Content.ReadAsStringAsync()).Should().Be(body);
         response.Content.Headers.ContentType!.MediaType.Should().Be("text/javascript");
         response.Content.Headers.ContentEncoding.SingleOrDefault().Should().Be(contentEncoding);
-        response.Headers.Vary.Should().Contain("Accept-Encoding");
     }
 
     [Fact]
@@ -94,11 +92,12 @@ public sealed class StaticSiteHostTests : IAsyncLifetime
     }
 
     [Theory]
-    [InlineData("configuration")]
-    [InlineData("some/deep/route")]
-    public async Task Falls_back_to_index_html_for_app_routes(string route)
+    [InlineData("", "br")]
+    [InlineData("configuration", "br")]
+    [InlineData("some/deep/route", "gzip")]
+    public async Task Falls_back_to_index_html_for_app_routes(string route, string acceptEncoding)
     {
-        using var response = await _http.GetAsync(route);
+        using var response = await GetAsync(route, acceptEncoding);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         response.Content.Headers.ContentType!.MediaType.Should().Be("text/html");
@@ -124,12 +123,13 @@ public sealed class StaticSiteHostTests : IAsyncLifetime
     }
 
     [Theory]
-    [InlineData("identity")]
-    [InlineData("br")]
-    public async Task Does_not_serve_the_static_web_app_config(string acceptEncoding)
+    [InlineData("app.js.br", "br")]
+    [InlineData("app.js.br", "identity")]
+    [InlineData("app.js.gz", "gzip")]
+    public async Task A_precompressed_sibling_asked_for_by_name_is_a_404(string path, string acceptEncoding)
     {
-        // Azure Static Web Apps reads its config file but never serves it; a service worker precaching it fails to install.
-        using var response = await GetAsync("staticwebapp.config.json", acceptEncoding);
+        // The deploy uploads each .br as its plain name in br/, and no .br or .gz object at all (step 07a.2).
+        using var response = await GetAsync(path, acceptEncoding);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         response.Content.Headers.ContentEncoding.Should().BeEmpty();

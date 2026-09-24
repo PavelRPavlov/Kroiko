@@ -93,8 +93,8 @@ Build order: [docs/implementation/00-overview.md](docs/implementation/00-overvie
 **`Kroiko.Client.Tests`** (xUnit, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §5) tests the shipped
 artifact: its `PublishedApp` collection fixture runs `dotnet publish Kroiko.Client.Blazor -c Release` once per
 test run into a temp folder and serves that `wwwroot` from an in-process Kestrel (`StaticSiteHost`: loopback
-port, Blazor MIME types, precompressed `.br`/`.gz` negotiation, SPA fallback, no rewriting, and like SWA a 404
-for `staticwebapp.config.json`); the tests drive
+port, Blazor MIME types, no rewriting, and every request through the committed CloudFront Function, as deployed
+(ADR-0010): its SPA fallback, and the `.br` sibling with `Content-Encoding: br` only when `br` is accepted); the tests drive
 the Chromium pinned by `Microsoft.Playwright`, headless unless `HEADED=1`, one browser context per test. Browser
 tests are tagged `[Trait("Category", "E2E")]` and join `[Collection(E2ECollection.Name)]`; `OfflineShellTests`
 proves the offline start (service worker activated → offline reload: app bar, `/configuration`, Roboto, no failed
@@ -105,9 +105,10 @@ the golden files via `OrderFilesAssert.MatchGolden`, under the browser locales `
 different edge colour; it also checks that ICU data loaded, without which .NET ignores the browser's locale. The E2E
 tests compare with the golden files through `ConverterPage.MatchGolden`, which never records, even under `UPDATE_GOLDEN=1`:
 only the domain tests record the Server's output. The host and the missing-browser message have their own browser-free tests.
-`Hosting/` checks the Azure Static Web Apps config, `Kroiko.Client.Blazor/wwwroot/staticwebapp.config.json`
-(fallback excludes, `no-cache` routes, MIME types), and against the publish output that it is published at the
-root, that the service worker does not precache it, and that every precached asset is excluded from the fallback.
+`Hosting/` runs the CloudFront Function, `hosting/cloudfront/viewer-request.js`, in Jint (`ViewerRequestFunction`):
+app routes → `/index.html`, files keep their path (so a missing one is a 404), `br/` only for a viewer that accepts
+`br`, nothing but the URI changed; and, against the publish output, that every published and precached file keeps
+its path through it.
 `PublishScript/` runs the real `scripts/publish-pwa.ps1` (the manual deploy, phase 07) in `pwsh` against a
 throwaway git repository with a bare `origin`, with `dotnet` and `swa` replaced by logging stubs on `PATH`: the
 branch-model refusals, the exact `swa deploy` command, the dry run, and that the token is never printed.

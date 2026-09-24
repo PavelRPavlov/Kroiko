@@ -158,7 +158,7 @@ try {
     if ($LASTEXITCODE -ne 0) { Stop-Publish 'dotnet publish failed' }
 
     $webRoot = Join-Path $publishDir 'wwwroot'
-    foreach ($required in 'index.html', 'staticwebapp.config.json') {
+    foreach ($required in @('index.html')) {
         if (-not (Test-Path -LiteralPath (Join-Path $webRoot $required))) {
             Stop-Publish "the publish output has no wwwroot/$required"
         }
