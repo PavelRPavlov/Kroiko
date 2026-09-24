@@ -22,10 +22,16 @@ internal static class MegaTradingFileGenerator {
     /// </summary>
     public const int MaxMaterials = 6;
 
+    /// <summary>
+    /// The parts of <paramref name="files"/> by material, in order of first use: one header row each. MegaTrading's
+    /// <c>Check</c> counts these same groups, so it and the header always agree on what a material is.
+    /// </summary>
+    public static List<IGrouping<string, MegaTradingDetail>> GroupByMaterial(IEnumerable<KroikoFile> files) =>
+        files.SelectMany(f => f.Details.Cast<MegaTradingDetail>()).GroupBy(d => d.Material).ToList();
+
     public static List<FileSaveContext> CreateTextBasedFile(ContactInfo contactInfo, IEnumerable<KroikoFile> files)
     {
-        var materials = files.SelectMany(f => f.Details.Cast<MegaTradingDetail>())
-            .GroupBy(d => d.Material).ToList();
+        var materials = GroupByMaterial(files);
         var builder = new StringBuilder();
         
         CreateFirstRow(builder);

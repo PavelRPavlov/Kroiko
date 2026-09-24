@@ -4,6 +4,7 @@ using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.TemplateBuilding;
 using Kroiko.Testing;
 using Xunit;
+using static Kroiko.Domain.Tests.FormatTestData;
 
 namespace Kroiko.Domain.Tests;
 
@@ -14,19 +15,6 @@ namespace Kroiko.Domain.Tests;
 /// </summary>
 public sealed class OrderFormatsTests
 {
-    private static Detail Part(string material, double height = 600, double width = 300) => new(
-        Height: height, Width: width, Quantity: 1, Material: material, IsGrainDirectionReversed: false,
-        HasTopEdge: false, HasBottomEdge: false, HasRightEdge: false, HasLeftEdge: false,
-        Cabinet: "Шкаф", CuttingNumber: 1, MaterialThickness: 18,
-        TopEdgeThickness: 0, BottomEdgeThickness: 0, RightEdgeThickness: 0, LeftEdgeThickness: 0,
-        Reference: "1", TopEdgeMaterial: "", BottomEdgeMaterial: "", RightEdgeMaterial: "", LeftEdgeMaterial: "",
-        OversizingHeight: 0, OversizingWidth: 0);
-
-    // Theories name the manufacturer, as InlineData cannot hold a SupportedCompany.
-    private static IOrderFormat FormatNamed(string manufacturer) =>
-        OrderFormats.For(new[] { SupportedCompanies.Lonira, SupportedCompanies.Suliver, SupportedCompanies.MegaTrading }
-            .Single(c => c.Name == manufacturer));
-
     [Fact]
     public void There_is_one_format_per_manufacturer()
     {

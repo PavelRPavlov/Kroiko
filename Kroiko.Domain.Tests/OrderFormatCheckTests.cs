@@ -2,6 +2,7 @@ using FluentAssertions;
 using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.TemplateBuilding;
 using Xunit;
+using static Kroiko.Domain.Tests.FormatTestData;
 
 namespace Kroiko.Domain.Tests;
 
@@ -11,16 +12,6 @@ namespace Kroiko.Domain.Tests;
 /// </summary>
 public sealed class OrderFormatCheckTests
 {
-    private static Detail Part(string material) => new(
-        Height: 600, Width: 300, Quantity: 1, Material: material, IsGrainDirectionReversed: false,
-        HasTopEdge: false, HasBottomEdge: false, HasRightEdge: false, HasLeftEdge: false,
-        Cabinet: "Шкаф", CuttingNumber: 1, MaterialThickness: 18,
-        TopEdgeThickness: 0, BottomEdgeThickness: 0, RightEdgeThickness: 0, LeftEdgeThickness: 0,
-        Reference: "1", TopEdgeMaterial: "", BottomEdgeMaterial: "", RightEdgeMaterial: "", LeftEdgeMaterial: "",
-        OversizingHeight: 0, OversizingWidth: 0);
-
-    private static Detail[] PartsOf(params string[] materials) => materials.Select(Part).ToArray();
-
     private static readonly string[] SevenMaterials = ["M1", "M2", "M3", "M4", "M5", "M6", "M7"];
 
     [Fact]
@@ -76,7 +67,7 @@ public sealed class OrderFormatCheckTests
     [InlineData(nameof(SupportedCompanies.Suliver))]
     public void Lonira_and_Suliver_have_no_material_limit(string manufacturer)
     {
-        var format = OrderFormats.All.Single(f => f.Company.Name == manufacturer);
+        var format = FormatNamed(manufacturer);
         var files = format.CreateFiles(PartsOf(SevenMaterials));
 
         format.Check(files).Should().BeEmpty();

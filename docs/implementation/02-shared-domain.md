@@ -177,7 +177,7 @@ UI against the golden files, once per manufacturer.
 Done. `IOrderFormat.Check(files)` returns `IReadOnlyList<OrderProblem>`; `OrderProblem` is an abstract record and
 `TooManyMaterials(Max, Materials)` its one case (`Kroiko.Domain/OrderProblem.cs`, root namespace). `OrderFormatBase.Check`
 returns none; `MegaTradingOrderFormat.Check` counts the distinct `Material` values of the files as they are now (so after
-the operator's renames), in order of first use, and returns `TooManyMaterials` listing all of them when there are more
+the operator's renames), in order of first use, through the generator's `GroupByMaterial` that also fills the header, and returns `TooManyMaterials` listing all of them when there are more
 than `MegaTradingFileGenerator.MaxMaterials` (6), the constant whose loop now writes the `.cut_mt` header rows. The
 Server does not call `Check`. `FileNameSanitizer.Sanitize(name)` (`Kroiko.Domain/FileNameSanitizer.cs`, next to
 `OrderFormats`) replaces `\ / : * ? " < > |` and control characters (`char.IsControl`) with `_`, trims trailing dots and
