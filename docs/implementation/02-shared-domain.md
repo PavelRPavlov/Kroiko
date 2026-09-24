@@ -197,7 +197,7 @@ needed, stop: something browser-unsafe survived.
 
 Done. `Kroiko.Domain.csproj` sets `IsTrimmable` and `IsAotCompatible` and adds `IL2026;IL2067;IL2070;IL2075;IL3050`
 and `RS0030` (the banned-API diagnostic, a warning by default) to `WarningsAsErrors`. It references
-`Microsoft.CodeAnalysis.BannedApiAnalyzers` 5.6.0 (`PrivateAssets=all`, so it does not flow to the Server) with
+`Microsoft.CodeAnalysis.BannedApiAnalyzers` 5.6.0 (`PrivateAssets=all`, so it does not flow to the projects that reference the domain) with
 `Kroiko.Domain/BannedSymbols.txt` as an `AdditionalFiles` item, banning the four APIs, each with the reason shown in the
 error. The domain builds with no IL or RS diagnostics and has no suppressions (no `#pragma`, `NoWarn`,
 `SuppressMessage` or trim annotations). The guard was proven by building a temporary file that used each banned API
