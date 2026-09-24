@@ -246,9 +246,9 @@ runtime, the Server's direct 1.12.0 reference is gone (it gets 2.0.2 through the
 both `Kroiko.Domain` and `ATAFurniture.Server`, and the build no longer reports NU1902. All 31 golden cases pass
 against the phase-01 recording. Outside the golden files' scope (the worksheet XML), a full-package comparison of all
 34 `.xlsx` from 1.12 and 2.0.2 showed byte-identical worksheets and `.cut_mt` files, the same value, type and resolved
-style for every cell, and differences only in `workbook.xml` and `sharedStrings.xml` (UTF-8 BOM dropped),
-`styles.xml` and `sharedStrings.xml` (a newline after the XML declaration) and `docProps/app.xml` (`LargeXlsx/2.0.2`
-as the application). The domain still builds with its guard, and a trimmed self-contained publish of a probe calling
+style for every cell, and differences only in three other parts: `workbook.xml` (UTF-8 BOM dropped),
+`sharedStrings.xml` (BOM dropped, a newline after the XML declaration; it is empty, as every string is inline),
+`styles.xml` (a newline after the XML declaration) and `docProps/app.xml` (`LargeXlsx/2.0.2` as the application). The domain still builds with its guard, and a trimmed self-contained publish of a probe calling
 every `IOrderFormat` reported no IL warnings.
 
 ## Done criteria

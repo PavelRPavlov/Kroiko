@@ -150,11 +150,13 @@ These were found in a code review; several are naturally fixed by the migration.
   ✅ The compiler guards it (phase 02 step 7): `Kroiko.Domain` is `IsTrimmable`/`IsAotCompatible` with
   `IL2026;IL2067;IL2070;IL2075;IL3050` as errors, and `BannedSymbols.txt` (BannedApiAnalyzers, `RS0030` as an error) bans
   `System.IO.File`, `System.IO.Directory`, `Assembly.Location` and `Environment.CurrentDirectory`; no suppressions.
-  ✅ LargeXlsx 2.0.2 (phase 02 step 9, [ADR-0008](docs/adr/0008-upgrade-largexlsx-to-2.md)): it writes the zip with
-  `System.IO.Compression`, so SharpCompress and its advisory (GHSA-6c8g-7p36-r338) are gone from both apps; the golden
-  files did not change, and a trimmed publish of the domain reports no IL warnings.
   → Decided in [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md): embedded
   templates + source-generated JSON (done), explicit column mappings (done), trim analyzers as errors (done).
+- 🟠 **Vulnerable transitive dependency:** LargeXlsx 1.12.0 pulled in SharpCompress 0.39.0, which has a moderate
+  advisory (GHSA-6c8g-7p36-r338, NuGet NU1902).
+  → ✅ Fixed by LargeXlsx 2.0.2 ([ADR-0008](docs/adr/0008-upgrade-largexlsx-to-2.md), phase 02 step 9): it writes the
+  zip with `System.IO.Compression`, so SharpCompress is gone from both apps; the golden files did not change, and a
+  trimmed publish of the domain reports no IL warnings.
 
 ## 8. Cross-cutting invariants (do not break)
 
