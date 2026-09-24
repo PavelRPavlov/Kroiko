@@ -125,6 +125,31 @@ Write it from ADR-0007 §9, with two sections:
   sign-off issue. A bad release is fixed forward: revert, bump, deploy. **Never** redeploy an older
   build (ADR-0002 §8).
 
+Done. [`docs/release-checklist.md`](../release-checklist.md) has three parts, in the order they are used:
+the release procedure, every production release, and the go-live.
+
+- **Release procedure.** It covers the deploying machine's one-time setup and the git commands for the
+  version bump, merging `main` into `release`, and the tag. It runs `scripts/publish-pwa.ps1 -Environment
+  production -DryRun` as a rehearsal before the real deploy, then opens the sign-off issue, and it says how to
+  fix a bad release forward.
+- **Every production release.** It adds the update checks from phase 06, run on the installed Edge PWA while a
+  new version is deployed: the snackbar within about an hour, or on visibility or `online`; "Презареди" asking
+  over an unsaved Order; "По-късно" moving the offer into About; About's up-to-date and offline reports; a
+  second window reloading. Next come the real folder picker, cancelling it, "Изтегли всички" with Edge's
+  multiple-downloads prompt, one file's link, and an offline start.
+- **Go-live.** It repeats the step-4 host checks against `app.kroiko.com`, with a PowerShell snippet that finds
+  a `.wasm`, `.dat` and font URL in `service-worker-assets.js`. It installs from Edge and checks offline start.
+  It saves from an Edge tab and twice from an Edge InPrivate window (the Chromium 153 IndexedDB crash). It
+  checks a picker blocked by Edge's `DefaultFileSystemWriteGuardSetting`, and Firefox's downloads. It closes
+  phase 01's open Excel review and phase 02's Server smoke check (when the deployed Server includes phase 02).
+  It runs the side-by-side comparison with snippets: a strict UTF-8 check of each Polyboard file (ADR-0006 §5),
+  an `.xlsx` worksheet-hash comparison, and `fc.exe /b` for the `.cut_mt`. If only CR bytes differ, the Server
+  lacks ADR-0009. Last, it walks each row of CONTEXT.md §9 and the sign-off.
+
+The checklist marks the update items n/a for `v1.0.0`, which has no earlier production build to update from.
+It notes that `release` is also the branch of the Server's `release_kroiko.yml` workflow, whose `push`
+trigger is commented out today.
+
 ### 2. First production release and sign-off
 
 - Set `<Version>1.0.0</Version>`, follow the release procedure, and deploy to production.
@@ -138,7 +163,7 @@ Write it from ADR-0007 §9, with two sections:
 - [x] `scripts/publish-pwa.ps1` refuses dirty trees, wrong branches, unsynced `HEAD`, a missing or mismatched tag, and failing tests; it never prints the token.
 - [ ] The Static Web App exists; `app.kroiko.com` resolves to it over HTTPS.
 - [ ] The `main` staging deploy passes the step-4 checks (07a done).
-- [ ] `docs/release-checklist.md` exists with the go-live, per-release and release-procedure sections.
+- [x] `docs/release-checklist.md` exists with the go-live, per-release and release-procedure sections.
 - [ ] `v1.0.0` is tagged on `release` and deployed to production with the script.
 - [ ] "Release v1.0.0 sign-off" is closed with every box ticked.
 - [ ] The map's destination is reached: operators use the installed PWA.

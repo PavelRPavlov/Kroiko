@@ -29,6 +29,7 @@ ATATextConverter/
 ├── docs/
 │   ├── adr/                  ← architecture decision records (the "why")
 │   ├── implementation/       ← step-by-step build guides for the PWA (start at 00-overview.md)
+│   ├── release-checklist.md  ← PWA release procedure + manual release / go-live checks
 │   └── research/             ← research findings the ADRs rely on
 ├── TextConverter.sln
 ├── global.json               ← pins the .NET 10 SDK
