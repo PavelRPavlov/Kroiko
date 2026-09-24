@@ -63,6 +63,14 @@ Two PRs.
   "…и още N"). Parser tests prove that each variant yields the same Details as its CRLF original.
   Add a Server test proving that a bad-line file still yields an empty list plus a log entry.
 
+2a done. `Kroiko.Domain/CellsExtracting/PolyboardParser.Parse` returns a `ParseResult` with one
+`ParseError(LineNumber, Kind, FieldCount?, Field?)` per bad line (`FieldCount` carries the line's field
+count, `InvalidNumber` the `Detail` property name of the line's first bad field) and the Details of every
+good line. It reads numbers exactly as the Server did (invariant culture, a `,` is a thousands separator,
+an empty numeric field is `0`, a flag is `1` or "no"), now also for integers. `DetailsExtractorService`
+logs each error and returns an empty list when there are any. `Kroiko.Domain.Tests` holds
+`PolyboardParserTests`; `GoldenTests` and `GenerationSmokeTests` still go through the adapter.
+
 ### 3. Embedded templates
 
 - The three `template.json` files become `EmbeddedResource`s of `Kroiko.Domain` (drop the

@@ -22,8 +22,8 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 | Term | Meaning | Where |
 |---|---|---|
 | **Detail** | One cut part (panel): height, width, quantity, material, edges, thickness, etc. Parsed from one line of the Polyboard file. | `Kroiko.Domain/CellsExtracting/Detail.cs` |
-| **Old vs latest format** | Polyboard lines come in two shapes: **11 fields** (legacy) or **23 fields** (current). Field count selects the parser. | `DetailsExtractorService.cs` |
-| **Parse result** | What parsing a Polyboard file yields: the Details plus a list of **Parse errors** (line number + reason). The parser reports bad lines; the caller decides what to do with them (the PWA rejects the file and lists them; the Server discards it). | [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md), [ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) |
+| **Old vs latest format** | Polyboard lines come in two shapes: **11 fields** (legacy) or **23 fields** (current). Field count selects the parser. | `Kroiko.Domain/CellsExtracting/PolyboardParser.cs` |
+| **Parse result** | What parsing a Polyboard file yields: the Details of every good line plus one **Parse error** per bad line (line number, a `ParseErrorKind` — `FieldCount` or `InvalidNumber` — and the field count or the bad field's name). The parser reports bad lines; the caller decides what to do with them (the PWA rejects the file and lists them; the Server logs them and discards the file). | `Kroiko.Domain/CellsExtracting/ParseResult.cs`, [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md), [ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) |
 | **KroikoFile** | A logical output unit — a filename plus its details. Lonira produces one KroikoFile per material; Suliver/MegaTrading produce one. | `Kroiko.Domain/TemplateBuilding/KroikoFile.cs` |
 | **SupportedCompany** | A target manufacturer (name, translated label). The domain knows three: Lonira, Suliver, MegaTrading. Order emails and Suliver's second branch are Server-only: the Server's **ManufacturerBranch** (name, label, order email) has four, Kuklensko being a branch named `Suliver`. | `Kroiko.Domain/CellsExtracting/SupportedCompanies.cs`, `ATAFurniture.Server/Models/ManufacturerBranch.cs` |
 | **Order format** | Everything one manufacturer needs to turn Details into order files: map + group Details into KroikoFiles, then generate the files. One per SupportedCompany; the only way the apps reach TemplateBuilders, TableRowProviders and FileNameProviders. | `IOrderFormat` — [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md) |
@@ -52,7 +52,7 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 ```
 Browser ──SignalR circuit──► ATAFurniture.Server (Blazor Server, .NET 8)
                                  ├─ Razer UI (Radzen + Syncfusion components)
-                                 ├─ DetailsExtractorService  (parse Polyboard text)
+                                 ├─ DetailsExtractorService  (adapter over the domain's PolyboardParser)
                                  ├─ Kroiko.Domain            (template build + LargeXlsx)
                                  ├─ EF Core 9 ──► SQL Server  (users + credits)
                                  ├─ Azure AD B2C auth (Microsoft.Identity.Web, cookie/OIDC)
@@ -60,7 +60,7 @@ Browser ──SignalR circuit──► ATAFurniture.Server (Blazor Server, .NET 
                                  └─ SendinBlue/Brevo (email with attachments)
 ```
 
-- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `Kroiko.Testing` (class lib — shared test data: the synthetic Polyboard fixtures in `TestData/polyboard/`, the golden files in `TestData/golden/`, and `OrderFilesAssert.MatchGolden`, which compares generated order files with them or re-records them under `UPDATE_GOLDEN=1`), `ATAFurniture.Server.Tests` (xUnit — generation smoke tests and, for now, `GoldenTests`, which runs every valid fixture × manufacturer through one `RunPipelineAsync` helper, plus the same theory under `bg-BG`, skipped until phase 02 fixes the culture; the golden tests move to a new `Kroiko.Domain.Tests` per [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md), and PWA tests go in `Kroiko.Client.Tests` per [ADR-0007](docs/adr/0007-parity-and-test-strategy.md)).
+- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `Kroiko.Testing` (class lib — shared test data: the synthetic Polyboard fixtures in `TestData/polyboard/`, the golden files in `TestData/golden/`, and `OrderFilesAssert.MatchGolden`, which compares generated order files with them or re-records them under `UPDATE_GOLDEN=1`), `ATAFurniture.Server.Tests` (xUnit — generation smoke tests and, for now, `GoldenTests`, which runs every valid fixture × manufacturer through one `RunPipelineAsync` helper, plus the same theory under `bg-BG`, skipped until phase 02 fixes the culture), `Kroiko.Domain.Tests` (xUnit — the domain's own tests, today `PolyboardParserTests`; the golden tests move here in phase 02 step 8 per [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)). PWA tests go in `Kroiko.Client.Tests` per [ADR-0007](docs/adr/0007-parity-and-test-strategy.md).
 - **Auth:** Azure AD B2C; per-page `[Authorize]` (global filter is commented out). Claims read in `UserContextService`.
 - **Secrets:** SQL conn string, Azure Storage conn string, SendinBlue API key — all from user-secrets/env (not committed). Sentry DSN **is** committed (should be rotated/moved). *(The Syncfusion license key is gone — Syncfusion + Radzen were replaced with MudBlazor, one fewer secret.)*
 - **Observability:** Serilog (console + rolling file) + Sentry.
@@ -113,7 +113,8 @@ These were found in a code review; several are naturally fixed by the migration.
   payment. `UserCreditsComponent.razor`.
 - 🟠 **No optimistic concurrency** on `User` → lost updates under concurrent use.
 - 🟠 **Silent whole-file discard** when one Polyboard line has a bad field count.
-  `DetailsExtractorService.cs`. Also splits on CRLF only (LF-only files fail) and
+  `DetailsExtractorService.cs`, now an adapter that keeps the discard on purpose; the domain's `PolyboardParser`
+  reports every bad line instead (phase 02 step 2). Also splits on CRLF only (LF-only files fail) and
   chokes on a UTF-8 BOM.
   → [ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md): the domain parser accepts any line ending
   and a BOM (both apps); the PWA rejects bad files listing the bad lines; the Server keeps the discard.
