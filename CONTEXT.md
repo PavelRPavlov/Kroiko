@@ -23,11 +23,13 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 |---|---|---|
 | **Detail** | One cut part (panel): height, width, quantity, material, edges, thickness, etc. Parsed from one line of the Polyboard file. | `Kroiko.Domain/CellsExtracting/Detail.cs` |
 | **Old vs latest format** | Polyboard lines come in two shapes: **11 fields** (legacy) or **23 fields** (current). Field count selects the parser. | `DetailsExtractorService.cs` |
+| **Parse result** | What parsing a Polyboard file yields: the Details plus a list of **Parse errors** (line number + reason). The parser reports bad lines; the caller decides what to do with them. | [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md) |
 | **KroikoFile** | A logical output unit — a filename plus its details. Lonira produces one KroikoFile per material; Suliver/MegaTrading produce one. | `Kroiko.Domain/TemplateBuilding/KroikoFile.cs` |
-| **SupportedCompany** | A target manufacturer (name, translated label, order email). | `Kroiko.Domain/CellsExtracting/SupportedCompanies.cs` |
+| **SupportedCompany** | A target manufacturer (name, translated label). The domain knows three: Lonira, Suliver, MegaTrading. Order emails and Suliver's second branch are Server-only. | `Kroiko.Domain/CellsExtracting/SupportedCompanies.cs` |
+| **Order format** | Everything one manufacturer needs to turn Details into order files: map + group Details into KroikoFiles, then generate the files. One per SupportedCompany; the only way the apps reach TemplateBuilders, TableRowProviders and FileNameProviders. | `IOrderFormat` — [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md) |
 | **Sheet / Cell** | In-memory spreadsheet model. A Cell has an Excel-style name ("A1"), a value, and alignment. | `Kroiko.Domain/TemplateBuilding/` |
 | **TemplateBuilder** | Per-company: fills a JSON template sheet with static info + detail rows. | `*/TemplateBuilding/*TemplateBuilder.cs` |
-| **TableRowProvider** | Per-company: maps a detail into a row of Cells (currently via reflection). | `Kroiko.Domain/TemplateBuilding/*/` |
+| **TableRowProvider** | Per-company: maps a detail into a row of Cells (explicit column list; reflection is being removed). | `Kroiko.Domain/TemplateBuilding/*/` |
 | **FileNameProvider** | Per-company: names the produced file. | `Kroiko.Domain/TemplateBuilding/*/` |
 | **Credit** | Unit of metered usage. Consumed on download / successful email. Stored on the `User` row. | `UserContextService`, `KroikoDataRepository` |
 | **FALC** | A special panel operation that adjusts a detail's height/width. | `Models/SuliverExtensions.cs` |
@@ -55,7 +57,7 @@ Browser ──SignalR circuit──► ATAFurniture.Server (Blazor Server, .NET 
                                  └─ SendinBlue/Brevo (email with attachments)
 ```
 
-- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `ATAFurniture.Server.Tests` (xUnit — currently **empty**), `UWPTextConverter` (**dead legacy**, to be deleted).
+- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `ATAFurniture.Server.Tests` (xUnit — generation smoke tests over checked-in fixtures; golden tests move to a new `Kroiko.Domain.Tests` per [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)), `UWPTextConverter` (**dead legacy**, to be deleted).
 - **Auth:** Azure AD B2C; per-page `[Authorize]` (global filter is commented out). Claims read in `UserContextService`.
 - **Secrets:** SQL conn string, Azure Storage conn string, SendinBlue API key — all from user-secrets/env (not committed). Sentry DSN **is** committed (should be rotated/moved). *(The Syncfusion license key is gone — [ADR-0006](docs/adr/0006-replace-syncfusion-radzen-with-mudblazor.md) replaced Syncfusion + Radzen with MudBlazor, one fewer secret.)*
 - **Observability:** Serilog (console + rolling file) + Sentry.
@@ -84,16 +86,9 @@ Browser ── static files ──►  ATAFurniture.Api (Minimal API, .NET 10)  
 
 Architectural decisions are recorded as **ADRs** in [docs/adr/](docs/adr/) — that folder
 is the canonical source (each ADR has full context, consequences, and alternatives).
-Summary:
-
-| Decision | ADR |
-|---|---|
-| Upgrade the solution to .NET 10 (first, on the current architecture) | [ADR-0001](docs/adr/0001-upgrade-to-dotnet-10.md) |
-| Migrate the UI from Blazor Server to Blazor WebAssembly (UI only) | [ADR-0002](docs/adr/0002-blazor-server-to-webassembly.md) |
-| Dedicated ASP.NET Core Minimal API backend (all DB/secret/integration logic) | [ADR-0003](docs/adr/0003-dedicated-minimal-api-backend.md) |
-| Parse + generate order files in the browser (client-side) | [ADR-0004](docs/adr/0004-client-side-file-generation.md) |
-| The API serves the WASM client's static files (one deployable) | [ADR-0005](docs/adr/0005-api-serves-static-client.md) |
-| Replace Syncfusion + Radzen with MudBlazor | [ADR-0006](docs/adr/0006-replace-syncfusion-radzen-with-mudblazor.md) |
+The index lives in [docs/adr/README.md](docs/adr/README.md). The earlier ADR set (0001–0006
+for the Server → WASM + API migration) was deliberately removed; numbers are reused by the
+new set, so ignore old-ADR links elsewhere in this file.
 
 ## 7. Known issues / tech debt (fix opportunistically during migration)
 
@@ -118,18 +113,19 @@ These were found in a code review; several are naturally fixed by the migration.
 - 🟡 **Dead code:** `INotifyPropertyChanged` plumbing on immutable records/entities;
   empty test project; dead UWP project; stale `<Compile Remove Cosmos…>` entries.
 - 🟡 **`SupportedCompanies` key collision:** Suliver / SuliverKuklensko share `Name`.
-- 🟠 **Browser-safety gaps for [ADR-0004](docs/adr/0004-client-side-file-generation.md) (found in Spike 0.5).**
-  `TemplateBuilderBase.ReadTemplateAsync` uses `File.ReadAllTextAsync` (no filesystem in WASM →
-  fetch `template.json` via `HttpClient`); its `JsonSerializer.Deserialize` and the
-  `MegaTrading`/`Suliver` `TableRowProvider` `Type.GetProperty` reflection are trim-fragile
-  (IL2026/IL2070). LargeXlsx generation itself is WASM/trim-clean. → Phase 3 P3-T3/P3-T8.
+- 🟠 **Browser-safety gaps in `Kroiko.Domain`.**
+  `TemplateBuilderBase.ReadTemplateAsync` uses `File.ReadAllTextAsync` (no filesystem in WASM);
+  its `JsonSerializer.Deserialize` and all three `TableRowProvider`s' `Type.GetProperty`
+  reflection are trim-fragile (IL2026/IL2070). LargeXlsx generation itself is WASM/trim-clean.
+  → Decided in [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md): embedded
+  templates + source-generated JSON, explicit column mappings, trim analyzers as errors (not yet implemented).
 
 ## 8. Cross-cutting invariants (do not break)
 
 - **Culture:** all numeric parse/format must use `CultureInfo.InvariantCulture`.
   Hosts and browsers may be `bg-BG` (comma decimal) — ambient culture corrupts both
   the Polyboard parse and the `.cut_mt` output.
-- **`Kroiko.Domain` must stay browser-safe** once [ADR-0004](docs/adr/0004-client-side-file-generation.md) lands — no server-only APIs
+- **`Kroiko.Domain` must stay browser-safe** ([ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)) — no server-only APIs
   (no direct EF, no `System.Net` server calls, no file-system assumptions).
 - **Secrets never ship to the browser.** DB/email/blob credentials live only in the API.
 - **Two Polyboard formats** (11 and 23 fields) must both keep parsing.

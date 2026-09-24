@@ -26,7 +26,7 @@ ATATextConverter/
 ├── TextConverter.sln
 ├── ATAFurniture.Server/      ← Blazor Server web app (being migrated to Client + Api)
 ├── Kroiko.Domain/            ← domain library (parsing, template building, Excel gen)
-├── ATAFurniture.Server.Tests/← xUnit test project (currently no tests — add some!)
+├── ATAFurniture.Server.Tests/← xUnit generation smoke tests (domain tests move to Kroiko.Domain.Tests — ADR-0004)
 └── UWPTextConverter/         ← DEAD legacy UWP app (scheduled for deletion)
 ```
 
@@ -40,7 +40,7 @@ Target layout after migration: `ATAFurniture.Client` (WASM UI), `ATAFurniture.Ap
 dotnet restore TextConverter.sln
 dotnet build TextConverter.sln
 dotnet run --project ATAFurniture.Server      # current app (needs user-secrets configured)
-dotnet test                                   # test project exists but is currently empty
+dotnet test                                   # generation smoke tests over checked-in Polyboard fixtures
 ```
 
 - **SDK:** .NET 8 today; migrating to **.NET 10** (see [docs/implementation/01-dotnet-10-upgrade.md](docs/implementation/01-dotnet-10-upgrade.md)).
@@ -94,8 +94,8 @@ permission is scoped to this repo only — it does not extend to any other repos
 - ✅ Update [CONTEXT.md](CONTEXT.md) and the relevant `docs/implementation/` guide when
   you change things; **record an architectural decision as a new ADR** in `docs/adr/`
   (see [docs/adr/README.md](docs/adr/README.md) for the format).
-- ✅ Add tests when you touch parsing, credit accounting, or file generation — these
-  are the highest-risk paths and currently have **zero** coverage.
+- ✅ Add tests when you touch parsing or file generation — these are the highest-risk
+  paths and have only shape-level smoke coverage today (golden tests planned in ADR-0004).
 - ✅ Keep `Kroiko.Domain` **browser-safe** (no server-only APIs) — it runs in WASM.
 - ✅ Fix the relevant "Known issues" (CONTEXT.md §7) when you're already editing that code.
 - ❌ Never commit secrets. Never put secrets in the WASM client (they ship to browsers).
