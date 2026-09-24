@@ -27,6 +27,8 @@ public sealed class StaticSiteHostTests : IAsyncLifetime
         Write("manifest.webmanifest", "{}");
         Write("notes.unknown", "?");
         Write("notes.unknown.br", "?");
+        Write("staticwebapp.config.json", "{}");
+        Write("staticwebapp.config.json.br", "{}");
 
         _host = await StaticSiteHost.StartAsync(_webRoot);
         // No automatic decompression: the tests look at the encoding the host chose.
@@ -116,6 +118,18 @@ public sealed class StaticSiteHostTests : IAsyncLifetime
     public async Task A_file_of_an_unknown_type_is_a_plain_404_even_with_a_precompressed_sibling()
     {
         using var response = await GetAsync("notes.unknown", "br");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.Content.Headers.ContentEncoding.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData("identity")]
+    [InlineData("br")]
+    public async Task Does_not_serve_the_static_web_app_config(string acceptEncoding)
+    {
+        // Azure Static Web Apps reads its config file but never serves it; a service worker precaching it fails to install.
+        using var response = await GetAsync("staticwebapp.config.json", acceptEncoding);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         response.Content.Headers.ContentEncoding.Should().BeEmpty();
