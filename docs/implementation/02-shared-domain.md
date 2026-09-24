@@ -71,9 +71,7 @@ empty numeric field is `0`, a flag is true only when `1`), except that integers 
 logs each error and returns an empty list when there are any. `Kroiko.Domain.Tests` holds
 `PolyboardParserTests`; `GoldenTests` and `GenerationSmokeTests` still go through the adapter.
 
-2b done. The parser splits on `
-`, `
-` or ``, strips a leading UTF-8 BOM and skips empty and
+2b done. The parser splits on `\r\n`, `\n` or `\r`, strips a leading UTF-8 BOM and skips empty and
 whitespace-only lines; a `ParseError`'s line number is still the physical line, blank lines included. New
 fixtures in `Kroiko.Testing/TestData/polyboard/`: `wardrobes-4-materials-lf`, `cabinet-23-field-cr`,
 `wardrobes-4-materials-bom` and `cabinet-23-field-whitespace-lines` (each its CRLF original with only that

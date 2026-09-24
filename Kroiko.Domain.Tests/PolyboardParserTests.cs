@@ -13,6 +13,9 @@ namespace Kroiko.Domain.Tests;
 /// </summary>
 public sealed class PolyboardParserTests
 {
+    // A valid 11-field line, for tests that surround a bad line with good ones.
+    private const string GoodLine = "350.0;150.0;2;Basic white;0;1;1;1;1;Model[0];1";
+
     private static ParseResult Parse(string text) => PolyboardParser.Parse(Encoding.UTF8.GetBytes(text));
 
     [Fact]
@@ -98,9 +101,7 @@ public sealed class PolyboardParserTests
     [InlineData("350.0.0;abc;2;Basic white;0;1;1;1;1;Model[0];1", nameof(Detail.Height))]
     public void A_field_that_is_not_an_invariant_number_is_an_InvalidNumber_error_naming_the_field(string badLine, string field)
     {
-        var good = "350.0;150.0;2;Basic white;0;1;1;1;1;Model[0];1";
-
-        var result = Parse($"{good}\r\n{badLine}\r\n{good}\r\n");
+        var result = Parse($"{GoodLine}\r\n{badLine}\r\n{GoodLine}\r\n");
 
         result.Errors.Should().Equal(new ParseError(2, ParseErrorKind.InvalidNumber, Field: field));
         result.Details.Should().HaveCount(2);
@@ -199,10 +200,8 @@ public sealed class PolyboardParserTests
     [Fact]
     public void A_bad_lines_number_counts_every_line_ending_and_every_skipped_blank_line()
     {
-        var good = "350.0;150.0;2;Basic white;0;1;1;1;1;Model[0];1";
-
         // Lines: 1 good (LF), 2 empty (CRLF), 3 whitespace (CR), 4 bad, 5 good.
-        var result = Parse($"{good}\n\r\n \t\r350.0;150.0;2\r\n{good}");
+        var result = Parse($"{GoodLine}\n\r\n \t\r350.0;150.0;2\r\n{GoodLine}");
 
         result.Errors.Should().Equal(new ParseError(4, ParseErrorKind.FieldCount, FieldCount: 3));
         result.Details.Should().HaveCount(2);

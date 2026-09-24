@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Kroiko.Domain.CellsExtracting;
 using Kroiko.Testing;
 using Microsoft.Extensions.Logging;
 using Xunit;
@@ -13,7 +14,7 @@ public sealed class DetailsExtractorServiceTests
 {
     private readonly RecordingLogger _logger = new();
 
-    private async Task<List<Kroiko.Domain.CellsExtracting.Detail>> ExtractAsync(string fixture)
+    private async Task<List<Detail>> ExtractAsync(string fixture)
     {
         using var stream = new MemoryStream(await File.ReadAllBytesAsync(TestData.Polyboard(fixture)));
         return await new DetailsExtractorService(_logger).ExtractDetails(stream);
