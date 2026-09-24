@@ -96,6 +96,20 @@ static IReadOnlyList<FileSaveContext> RunPipeline(string fixture, string manufac
 - Generate the golden files once with `UPDATE_GOLDEN=1`, **review them** (open a few `.xlsx` files in
   Excel; check that the `.cut_mt` files hold `╪` and Cyrillic correctly), then commit them.
 
+Done, except the review in Excel (no Excel on the recording machine; still to do by hand).
+`GoldenTests` runs 5 fixtures × 3 manufacturers plus `cabinet-23-field` for Suliver with
+`differentEdgeColor: "Бял гланц"`, recorded as `Suliver-different-edge-color` (that fixture also has
+the `СДВ с краен размер …` and `Кантиране с друг цвят` notes). `RunPipeline` builds its own
+`ServiceCollection` with `Startup`'s keyed registrations, so the builders load `template.json` from
+their default path next to `ATAFurniture.Server.dll`, as in production; a `null` `differentEdgeColor`
+is passed as `string.Empty`, `ConverterContext`'s initial value. Reviewed instead of in Excel: all
+worksheet XML parses, row counts equal details plus template header rows, only Lonira's template
+carries the contact cells, and the generated `.xlsx` packages are valid. No fixture contains Cyrillic,
+so the `.cut_mt` bodies are ASCII plus `╪` (UTF-8, no BOM) and Cyrillic appears only in the
+`Тест ООД.cut_mt` file name. The `.cut_mt` golden files were recorded on Windows and carry CRLF
+(`AppendLine`), so the five MegaTrading cases fail on Linux/macOS until the line ending is pinned;
+there is no CI yet, so this is accepted for now.
+
 ### 4. The culture test (recorded, expected to fail today)
 
 - Add a test that runs the same theory with `CurrentCulture = bg-BG` and expects the **same**
@@ -109,7 +123,7 @@ static IReadOnlyList<FileSaveContext> RunPipeline(string fixture, string manufac
 - [x] `Kroiko.Testing` exists in the solution; all fixtures live in `Kroiko.Testing/TestData/polyboard/` with neutral names; the old fixture folders are gone.
 - [x] No fixture file name refers to a person or a customer.
 - [x] `OrderFilesAssert` compares worksheet XML, `.cut_mt` bytes and `names.txt`, with dates normalised; `UPDATE_GOLDEN=1` rewrites the source golden files.
-- [ ] `GoldenTests` covers every valid fixture × all three manufacturers, plus the Suliver different-edge-colour case, through a single `RunPipeline` helper.
+- [x] `GoldenTests` covers every valid fixture × all three manufacturers, plus the Suliver different-edge-colour case, through a single `RunPipeline` helper.
 - [ ] The golden files are committed and were reviewed in Excel.
 - [ ] The `bg-BG` test exists, is skipped with a reason pointing at phase 02, and fails only because of culture when un-skipped.
 - [ ] `dotnet test` is green; no file under `ATAFurniture.Server/` or `Kroiko.Domain/` changed.
