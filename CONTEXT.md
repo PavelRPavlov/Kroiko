@@ -157,6 +157,21 @@ untouched until the operator edits the settings (committed by the next successfu
 `Updates/AppVersion` formats it as `v0.1.0 (a1b2c3d)` (the first 7 characters of the sha, or just `v0.1.0` without one), and
 only the About dialog shows it. `Updates/AppVersionTests` covers the formatting; `E2E/AboutDialogTests` the published app's About.
 
+**Updates** ([ADR-0002](docs/adr/0002-pwa-updates-reload-prompt.md) §1, §3–4): `index.html` registers the service worker as the template
+does and starts `wwwroot/js/updates.js` with that registration. The module reports a new version once it **waits** behind the
+worker that controls the page (on load, or on `updatefound` → `installed`; a first install is not an update), and calls
+`registration.update()` every 60 minutes, when the window becomes visible and on `online` — never while `navigator.onLine` is
+false, and failures are swallowed. `applyUpdate()` posts `SKIP_WAITING` to the waiting worker, whose only change to the template's
+`service-worker.published.js` is to answer it with `skipWaiting()`, and reloads once on `controllerchange` (with nothing waiting,
+because another window applied it, it just reloads). `checkNow()` answers `upToDate`, `downloading` (a newer worker is installing
+or already waits) or `offline` (offline, or the check failed). The development `service-worker.js` stays a no-op, so the flow only
+exists in a published build. `Updates/AppUpdates` (registered by `AddAppUpdates()`, started by `MainLayout`'s first render) is the
+app's side: it subscribes a `DotNetObjectReference` (the module remembers a version that waited before), sets `IsUpdateReady` and
+raises `UpdateReady` once, and wraps `ApplyUpdateAsync`/`CheckNowAsync` (`UpdateCheck`), logging failures instead of throwing.
+`Updates/AppUpdatesTests` covers it with the JS runtime faked; `E2E/UpdatesModuleTests` the real module in the published app
+(up to date; offline: silent checks and `offline`). A new version needs a second build, so the update itself is checked by hand
+(ADR-0007 §5).
+
 ## 6. Decision log
 
 Architectural decisions are recorded as **ADRs** in [docs/adr/](docs/adr/) — that folder
