@@ -2,6 +2,7 @@ using Kroiko.Domain;
 using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.ExcelFilesGeneration;
 using Kroiko.Domain.TemplateBuilding;
+using Microsoft.Extensions.Logging;
 
 namespace Kroiko.Client.Blazor.Conversion;
 
@@ -13,16 +14,19 @@ namespace Kroiko.Client.Blazor.Conversion;
 /// <para>
 /// Components read it directly and re-render on <see cref="Changed"/>. The grids edit the domain details in
 /// <see cref="Files"/> in place and then call <see cref="NotifyInputEdited"/>; every input edit discards the
-/// generated files without asking (ADR-0005 §7). Operations never throw: a failure raises <see cref="Error"/>
-/// with a Bulgarian message and leaves the Order as it was (ADR-0006 §4).
+/// generated files without asking (ADR-0005 §7). Reading a file, the confirmation, making the files, generating
+/// and the device settings do not throw: a failure is logged, raises <see cref="Error"/> with a Bulgarian message
+/// where the operator must know, and leaves the Order as it was (ADR-0006 §4).
 /// </para>
 /// </summary>
-public sealed class ConverterState(IConfirmation confirmation, IDeviceSettingsStore deviceSettings)
+public sealed class ConverterState(
+    IConfirmation confirmation, IDeviceSettingsStore deviceSettings, ILogger<ConverterState> logger)
 {
     internal const string DiscardFilesQuestion =
         "Файловете за поръчка и всички редакции по тях ще бъдат изгубени. Да продължа ли?";
 
     internal const string ReadFailedMessage = "Файлът не можа да бъде прочетен.";
+    internal const string ConfirmFailedMessage = "Действието не можа да бъде потвърдено.";
     internal const string CreateFilesFailedMessage = "Файловете за поръчка не можаха да бъдат подготвени.";
     internal const string GenerateFailedMessage = "Бланките за поръчка не можаха да бъдат генерирани.";
     internal const string SaveSettingsFailedMessage =
@@ -33,6 +37,9 @@ public sealed class ConverterState(IConfirmation confirmation, IDeviceSettingsSt
     private string? _mobileNumber;
     private string? _differentEdgeColor;
     private bool _deviceSettingsLoaded;
+
+    // Counts input changes, so a generation can tell that the input changed while it ran.
+    private int _inputVersion;
 
     /// <summary>Something about the Order changed; re-render.</summary>
     public event Action? Changed;
@@ -118,8 +125,9 @@ public sealed class ConverterState(IConfirmation confirmation, IDeviceSettingsSt
     public bool HasUnsavedWork => IsFileLoaded && !(GeneratedFiles.Count > 0 && IsSaved);
 
     /// <summary>
-    /// Fills the contacts and the manufacturer from the device settings, once per app start, so returning to
-    /// the Converter page keeps the Order as the operator left it.
+    /// Fills what the operator has not chosen yet — the contact fields and the manufacturer — from the device
+    /// settings (ADR-0005 §6). Runs once per app start, so returning to the Converter page keeps the Order as
+    /// the operator left it; settings that cannot be loaded leave the Order as it is.
     /// </summary>
     public async Task LoadDeviceSettingsAsync()
     {
@@ -128,23 +136,59 @@ public sealed class ConverterState(IConfirmation confirmation, IDeviceSettingsSt
             return;
         }
 
+        DeviceSettings settings;
+        try
+        {
+            settings = await deviceSettings.LoadAsync();
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "The device settings could not be loaded.");
+            return;
+        }
+
         _deviceSettingsLoaded = true;
-        var settings = await deviceSettings.LoadAsync();
-        _companyName = settings.Contact.CompanyName;
-        _mobileNumber = settings.Contact.MobileNumber;
-        Manufacturer = settings.Manufacturer;
-        OrderChanged();
+        var changed = false;
+        if (_companyName is null && settings.Contact.CompanyName is not null)
+        {
+            _companyName = settings.Contact.CompanyName;
+            changed = true;
+        }
+
+        if (_mobileNumber is null && settings.Contact.MobileNumber is not null)
+        {
+            _mobileNumber = settings.Contact.MobileNumber;
+            changed = true;
+        }
+
+        // With no manufacturer there are no files, so making them for the remembered one discards nothing.
+        if (Manufacturer is null && settings.Manufacturer is not null)
+        {
+            Manufacturer = settings.Manufacturer;
+            Files = CreateFiles(Manufacturer, _details);
+            changed = true;
+        }
+
+        if (changed)
+        {
+            InputChanged();
+        }
     }
 
     /// <summary>
     /// Reads and parses a Polyboard file and, if it is good, makes it the Order's file. A file with bad lines
     /// or no Details is rejected into <see cref="UploadErrors"/>; when files exist the operator is asked
-    /// before they are discarded. A rejected or declined file changes nothing else.
+    /// before they are discarded. A rejected or declined file changes nothing else, and neither does an upload
+    /// started while another is being read.
     /// </summary>
     /// <returns><c>true</c> when the file was loaded.</returns>
     public async Task<bool> UploadAsync(Stream content)
     {
         ArgumentNullException.ThrowIfNull(content);
+        if (IsUploading)
+        {
+            return false;
+        }
 
         ParseResult result;
         IsUploading = true;
@@ -155,8 +199,9 @@ public sealed class ConverterState(IConfirmation confirmation, IDeviceSettingsSt
             await content.CopyToAsync(buffer);
             result = PolyboardParser.Parse(buffer.ToArray());
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            logger.LogError(exception, "The uploaded file could not be read.");
             OnError(ReadFailedMessage);
             return false;
         }
@@ -173,7 +218,14 @@ public sealed class ConverterState(IConfirmation confirmation, IDeviceSettingsSt
             return false;
         }
 
-        return await ReplaceFilesAsync(Manufacturer, result.Details, () => UploadErrors = []);
+        if (!await ReplaceFilesAsync(Manufacturer, result.Details))
+        {
+            return false;
+        }
+
+        UploadErrors = [];
+        OnChanged();
+        return true;
     }
 
     /// <summary>
@@ -183,20 +235,18 @@ public sealed class ConverterState(IConfirmation confirmation, IDeviceSettingsSt
     public Task<bool> SelectManufacturerAsync(SupportedCompany manufacturer)
     {
         ArgumentNullException.ThrowIfNull(manufacturer);
-        return manufacturer == Manufacturer
-            ? Task.FromResult(true)
-            : ReplaceFilesAsync(manufacturer, _details, () => { });
+        return manufacturer == Manufacturer ? Task.FromResult(true) : ReplaceFilesAsync(manufacturer, _details);
     }
 
     /// <summary>
     /// A grid cell, a material rename or a file name in <see cref="Files"/> was edited in place: the generated
     /// files are discarded and <see cref="IOrderFormat.Check"/> runs again.
     /// </summary>
-    public void NotifyInputEdited() => OrderChanged();
+    public void NotifyInputEdited() => InputChanged();
 
     /// <summary>
     /// Generates the order files, if <see cref="CanGenerate"/>, and remembers the contacts and the manufacturer
-    /// on this device.
+    /// on this device. An edit made while it runs wins: nothing is generated from the old input.
     /// </summary>
     public async Task GenerateAsync()
     {
@@ -207,17 +257,24 @@ public sealed class ConverterState(IConfirmation confirmation, IDeviceSettingsSt
 
         var manufacturer = Manufacturer!;
         var contact = Contact;
+        var inputVersion = _inputVersion;
         IsGenerating = true;
         OnChanged();
         try
         {
             // Let the spinner render before the synchronous generation takes the thread.
             await Task.Yield();
+            if (inputVersion != _inputVersion)
+            {
+                return;
+            }
+
             GeneratedFiles = OrderFormats.For(manufacturer).Generate(contact, Files, DifferentEdgeColor ?? string.Empty);
             IsSaved = false;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            logger.LogError(exception, "The order files could not be generated for {Manufacturer}.", manufacturer.Name);
             OnError(GenerateFailedMessage);
             return;
         }
@@ -231,8 +288,9 @@ public sealed class ConverterState(IConfirmation confirmation, IDeviceSettingsSt
         {
             await deviceSettings.SaveAsync(new DeviceSettings(contact, manufacturer));
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            logger.LogWarning(exception, "The device settings could not be saved.");
             OnError(SaveSettingsFailedMessage);
         }
     }
@@ -244,8 +302,8 @@ public sealed class ConverterState(IConfirmation confirmation, IDeviceSettingsSt
         OnChanged();
     }
 
-    // Rebuilds the files for a new manufacturer or new Details, asking first when that discards files.
-    private async Task<bool> ReplaceFilesAsync(SupportedCompany? manufacturer, IReadOnlyList<Detail>? details, Action onReplaced)
+    // Makes the files for a new manufacturer or new Details, asking first when that discards files.
+    private async Task<bool> ReplaceFilesAsync(SupportedCompany? manufacturer, IReadOnlyList<Detail>? details)
     {
         try
         {
@@ -253,22 +311,35 @@ public sealed class ConverterState(IConfirmation confirmation, IDeviceSettingsSt
             {
                 return false;
             }
-
-            var files = manufacturer is null || details is null ? [] : OrderFormats.For(manufacturer).CreateFiles(details);
-            Manufacturer = manufacturer;
-            _details = details;
-            Files = files;
-            onReplaced();
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            logger.LogError(exception, "The operator could not be asked before the files were discarded.");
+            OnError(ConfirmFailedMessage);
+            return false;
+        }
+
+        IReadOnlyList<KroikoFile> files;
+        try
+        {
+            files = CreateFiles(manufacturer, details);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "The files could not be made for {Manufacturer}.", manufacturer?.Name);
             OnError(CreateFilesFailedMessage);
             return false;
         }
 
-        OrderChanged();
+        Manufacturer = manufacturer;
+        _details = details;
+        Files = files;
+        InputChanged();
         return true;
     }
+
+    private static IReadOnlyList<KroikoFile> CreateFiles(SupportedCompany? manufacturer, IReadOnlyList<Detail>? details) =>
+        manufacturer is null || details is null ? [] : OrderFormats.For(manufacturer).CreateFiles(details);
 
     private void EditInput(ref string? field, string? value)
     {
@@ -278,12 +349,13 @@ public sealed class ConverterState(IConfirmation confirmation, IDeviceSettingsSt
         }
 
         field = value;
-        OrderChanged();
+        InputChanged();
     }
 
     // The input changed: the generated files no longer match it (ADR-0005 §7), and Check runs again (ADR-0006 §3).
-    private void OrderChanged()
+    private void InputChanged()
     {
+        _inputVersion++;
         GeneratedFiles = [];
         IsSaved = false;
         Problems = Manufacturer is null ? [] : OrderFormats.For(Manufacturer).Check(Files);

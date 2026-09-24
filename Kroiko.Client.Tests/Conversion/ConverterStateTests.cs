@@ -4,6 +4,7 @@ using Kroiko.Domain;
 using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.TemplateBuilding;
 using Kroiko.Testing;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Kroiko.Client.Tests.Conversion;
@@ -20,7 +21,7 @@ public sealed class ConverterStateTests
 
     public ConverterStateTests()
     {
-        _state = new ConverterState(_confirmation, _settings);
+        _state = new ConverterState(_confirmation, _settings, NullLogger<ConverterState>.Instance);
     }
 
     [Fact]
@@ -392,28 +393,34 @@ public sealed class ConverterStateTests
     [InlineData("company name")]
     [InlineData("generate")]
     [InlineData("save")]
-    public async Task Every_change_raises_Changed(string change)
+    public async Task Every_change_raises_Changed_once_the_state_has_changed(string change)
     {
         await LoadAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
         FillContacts();
-        var raised = 0;
-        _state.Changed += () => raised++;
+        if (change == "save")
+        {
+            await _state.GenerateAsync();
+        }
+
+        var seen = new List<string>();
+        _state.Changed += () => seen.Add(Snapshot());
 
         switch (change)
         {
             case "upload": await _state.UploadAsync(Fixture("kitchen-8-materials")); break;
             case "manufacturer": await _state.SelectManufacturerAsync(SupportedCompanies.Suliver); break;
             case "generate": await _state.GenerateAsync(); break;
-            case "save":
-                await _state.GenerateAsync();
-                raised = 0;
-                _state.MarkSaved();
-                break;
+            case "save": _state.MarkSaved(); break;
             default: Edit(change); break;
         }
 
-        raised.Should().BeGreaterThan(0);
+        // The last notification saw the final state, so a component re-rendering on it shows the change.
+        seen.Should().NotBeEmpty().And.EndWith(Snapshot());
     }
+
+    private string Snapshot() =>
+        $"{_state.Manufacturer?.Name}|{_state.Files.Count}|{_state.Files[0].Details[0].Note}|{_state.CompanyName}" +
+        $"|{_state.GeneratedFiles.Count}|{_state.IsSaved}|{_state.IsUploading}|{_state.IsGenerating}";
 
     [Fact]
     public async Task Uploading_is_busy_while_the_file_is_read_and_parsed()
@@ -468,10 +475,14 @@ public sealed class ConverterStateTests
         // A detail the Lonira template cannot write.
         _state.Files[0].Details.Add(new SuliverDetail { Material = "AGT White" });
         _state.NotifyInputEdited();
+        var files = _state.Files;
 
         await _state.GenerateAsync();
 
         errors.Should().Equal("Бланките за поръчка не можаха да бъдат генерирани.");
+        _state.Files.Should().BeSameAs(files);
+        _state.Contact.Should().Be(new ContactInfo("Тест ООД", "0888123456"));
+        _state.CanGenerate.Should().BeTrue();
         _state.GeneratedFiles.Should().BeEmpty();
         _state.IsGenerating.Should().BeFalse();
         _settings.Stored.Should().Be(DeviceSettings.Default);
@@ -517,6 +528,98 @@ public sealed class ConverterStateTests
 
         _state.CompanyName.Should().Be("Друга ООД");
         _state.Manufacturer.Should().Be(SupportedCompanies.Lonira);
+    }
+
+    [Fact]
+    public async Task An_edit_while_generating_discards_the_output_of_the_old_input()
+    {
+        await LoadAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        FillContacts();
+        _state.Changed += () =>
+        {
+            if (_state.IsGenerating)
+            {
+                _state.CompanyName = "Друга ООД";
+            }
+        };
+
+        await _state.GenerateAsync();
+
+        _state.GeneratedFiles.Should().BeEmpty();
+        _state.IsGenerating.Should().BeFalse();
+        _settings.Stored.Should().Be(DeviceSettings.Default);
+    }
+
+    [Fact]
+    public async Task A_second_upload_while_one_is_being_read_is_ignored()
+    {
+        Task<bool>? second = null;
+        _state.Changed += () =>
+        {
+            if (_state.IsUploading && second is null)
+            {
+                second = _state.UploadAsync(Fixture("kitchen-8-materials"));
+            }
+        };
+
+        await _state.UploadAsync(Fixture("wardrobes-4-materials"));
+
+        (await second!).Should().BeFalse();
+        await _state.SelectManufacturerAsync(SupportedCompanies.Lonira);
+        _state.Files.Should().HaveCount(4);
+    }
+
+    [Fact]
+    public async Task A_confirmation_that_fails_changes_nothing()
+    {
+        await LoadAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var files = _state.Files;
+        var errors = new List<string>();
+        _state.Error += errors.Add;
+        _confirmation.Failure = new InvalidOperationException("the dialog could not open");
+
+        var switched = await _state.SelectManufacturerAsync(SupportedCompanies.Suliver);
+
+        switched.Should().BeFalse();
+        errors.Should().Equal("Действието не можа да бъде потвърдено.");
+        _state.Manufacturer.Should().Be(SupportedCompanies.Lonira);
+        _state.Files.Should().BeSameAs(files);
+    }
+
+    [Fact]
+    public async Task Device_settings_that_cannot_be_loaded_leave_the_Order_empty()
+    {
+        _settings.LoadFailure = new InvalidOperationException("storage is blocked");
+
+        await _state.Invoking(s => s.LoadDeviceSettingsAsync()).Should().NotThrowAsync();
+
+        _state.CompanyName.Should().BeNull();
+        _state.Manufacturer.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Device_settings_loaded_after_an_upload_make_the_files_for_the_remembered_manufacturer()
+    {
+        _settings.Stored = new DeviceSettings(new ContactInfo("Тест ООД", "0888123456"), SupportedCompanies.Lonira);
+        await _state.UploadAsync(Fixture("wardrobes-4-materials"));
+
+        await _state.LoadDeviceSettingsAsync();
+
+        _state.Files.Should().HaveCount(4);
+    }
+
+    [Fact]
+    public async Task Device_settings_never_overwrite_what_the_operator_already_chose()
+    {
+        _settings.Stored = new DeviceSettings(new ContactInfo("Тест ООД", "0888123456"), SupportedCompanies.MegaTrading);
+        await _state.SelectManufacturerAsync(SupportedCompanies.Lonira);
+        _state.CompanyName = "Друга ООД";
+
+        await _state.LoadDeviceSettingsAsync();
+
+        _state.Manufacturer.Should().Be(SupportedCompanies.Lonira);
+        _state.CompanyName.Should().Be("Друга ООД");
+        _state.MobileNumber.Should().Be("0888123456");
     }
 
     private void Edit(string edit)

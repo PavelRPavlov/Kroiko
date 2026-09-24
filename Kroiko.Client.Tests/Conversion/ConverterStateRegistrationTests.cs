@@ -12,6 +12,7 @@ public sealed class ConverterStateRegistrationTests
     public void Every_page_of_the_app_gets_the_same_Order()
     {
         var services = new ServiceCollection()
+            .AddLogging()
             .AddScoped<IConfirmation, FakeConfirmation>()
             .AddScoped<IDeviceSettingsStore, FakeDeviceSettingsStore>()
             .AddConverterState();

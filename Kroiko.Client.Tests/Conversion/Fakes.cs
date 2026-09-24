@@ -9,9 +9,17 @@ internal sealed class FakeConfirmation : IConfirmation
 
     public List<string> Questions { get; } = [];
 
+    /// <summary>When set, asking throws it (the dialog could not open).</summary>
+    public Exception? Failure { get; set; }
+
     public Task<bool> ConfirmAsync(string question)
     {
         Questions.Add(question);
+        if (Failure is not null)
+        {
+            throw Failure;
+        }
+
         return Task.FromResult(Answer);
     }
 }
@@ -33,7 +41,10 @@ internal sealed class FakeDeviceSettingsStore : IDeviceSettingsStore
     /// <summary>When set, saving throws it (storage full, blocked, …).</summary>
     public Exception? SaveFailure { get; set; }
 
-    public Task<DeviceSettings> LoadAsync() => Task.FromResult(Stored);
+    /// <summary>When set, loading throws it (storage blocked, …).</summary>
+    public Exception? LoadFailure { get; set; }
+
+    public Task<DeviceSettings> LoadAsync() => LoadFailure is null ? Task.FromResult(Stored) : throw LoadFailure;
 
     public Task SaveAsync(DeviceSettings settings)
     {

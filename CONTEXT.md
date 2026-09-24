@@ -103,11 +103,13 @@ confirmation and the device settings faked (`Conversion/Fakes.cs`, [ADR-0007](do
 real domain and the shared fixtures; no browser, no `Category=E2E`.
 
 **`ConverterState`** (`Kroiko.Client.Blazor/Conversion/`) is the app's one Order ([ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §4),
-registered scoped (once for a WASM app) by `AddConverterState()`. It depends on `IConfirmation` (a yes/no question
-before files are discarded) and `IDeviceSettingsStore` (the last `ContactInfo` and manufacturer, loaded once per app
-start, saved after each successful generation). Components read it and re-render on `Changed`; grids edit the domain
-details in `Files` in place and call `NotifyInputEdited()`; failures raise `Error` with a Bulgarian message and
-never throw. `HasUnsavedWork` = a file is loaded and its current input has not been generated and saved (at least
+registered scoped (once for a WASM app) by `AddConverterState()`; `Program.cs` calls it once both interfaces have
+implementations (phase 04 steps 2–3). It depends on `IConfirmation` (a yes/no question before files are discarded)
+and `IDeviceSettingsStore` (the last `ContactInfo` and manufacturer: loaded once per app start into whatever the
+operator has not chosen yet, saved after each successful generation). Components read it and re-render on `Changed`;
+grids edit the domain details in `Files` in place and call `NotifyInputEdited()`; an edit made while generating
+drops that generation's output. Failures of reading, the dialog, making files, generating and device storage are
+logged and raise `Error` with a Bulgarian message instead of throwing. `HasUnsavedWork` = a file is loaded and its current input has not been generated and saved (at least
 one download triggered, `MarkSaved()`).
 
 ## 6. Decision log
@@ -205,6 +207,6 @@ Server's output. The manual acceptance check (`docs/release-checklist.md`) walks
 | Both contact fields must be filled before generating; last values and manufacturer remembered per device | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §6 | `ConverterStateTests.An_empty_contact_field_cannot_generate`, `…Generating_remembers_the_contacts_and_the_manufacturer_on_the_device` + Playwright "device storage" |
 | Any input edit clears the generated files (Server: stale output kept) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §7 | `ConverterStateTests.Any_input_edit_clears_the_generated_files_and_the_saved_flag_without_asking` |
 | Switching manufacturer or re-uploading asks before discarding files (Server: silent rebuild) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §5 | `ConverterStateTests.Switching_manufacturer_when_files_exist_asks_and_no_changes_nothing`, `…Uploading_again_when_files_exist_asks_and_no_changes_nothing` |
-| Order persists across in-app navigation (Server: lost when leaving the Converter page) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §4 | `ConverterStateRegistrationTests.Every_page_of_the_app_gets_the_same_Order` |
+| Order persists across in-app navigation (Server: lost when leaving the Converter page) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §4 | `ConverterStateRegistrationTests.Every_page_of_the_app_gets_the_same_Order`, `ConverterStateTests.The_device_settings_are_loaded_once_so_returning_to_the_page_keeps_the_Order` |
 | Files are saved to a picked folder or downloaded; clashes get ` (n)`; names pass through `FileNameSanitizer` (Server: Blob Storage links) | [0003](docs/adr/0003-save-order-files-to-picked-folder.md) | `FileNameSanitizer` domain test; picker manual |
 | Busy spinners always clear; errors show a snackbar (Server: generate spinner can hang) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §4 | `ConverterStateTests.A_failed_generation_raises_an_error_and_leaves_the_Order_as_it_was`, `…A_file_that_cannot_be_read_raises_an_error_and_leaves_the_Order_as_it_was` |
