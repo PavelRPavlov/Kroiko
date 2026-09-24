@@ -13,6 +13,7 @@ using Kroiko.Domain.TemplateBuilding.Lonira;
 using Kroiko.Domain.TemplateBuilding.MegaTrading;
 using Kroiko.Domain.TemplateBuilding.Suliver;
 using Kroiko.Domain.TextFileGeneration;
+using Kroiko.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
@@ -30,10 +31,9 @@ public class GenerationSmokeTests
     // The special column separator the MegaTrading .cut_mt integration requires.
     private const string MtSeparator = "╪";
 
-    private static async Task<List<Detail>> Parse(string testFile)
+    private static async Task<List<Detail>> Parse(string fixture)
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "TestFiles", testFile);
-        using var stream = new MemoryStream(await File.ReadAllBytesAsync(path));
+        using var stream = new MemoryStream(await File.ReadAllBytesAsync(TestData.Polyboard(fixture)));
         var extractor = new DetailsExtractorService(NullLogger<DetailsExtractorService>.Instance);
         return await extractor.ExtractDetails(stream);
     }
@@ -60,7 +60,7 @@ public class GenerationSmokeTests
     [Fact]
     public async Task Parses_the_old_11_field_format()
     {
-        var details = await Parse("file.txt");
+        var details = await Parse("wardrobes-4-materials");
 
         details.Should().HaveCount(76);
         details.Select(d => d.Material).Distinct().Should().HaveCount(4);
@@ -69,7 +69,7 @@ public class GenerationSmokeTests
     [Fact]
     public async Task Parses_the_latest_23_field_format()
     {
-        var details = await Parse("Cabinet1.txt");
+        var details = await Parse("cabinet-23-field");
 
         details.Should().HaveCount(5);
     }
@@ -79,7 +79,7 @@ public class GenerationSmokeTests
     {
         // Documents the current (known-issue) behaviour: one line with a wrong field
         // count makes the parser return nothing rather than skipping just that line.
-        var details = await Parse("invalid format.txt");
+        var details = await Parse("bad-field-count");
 
         details.Should().BeEmpty();
     }
@@ -89,7 +89,7 @@ public class GenerationSmokeTests
     [Fact]
     public async Task Lonira_produces_one_xlsx_per_material()
     {
-        var details = await Parse("file.txt");
+        var details = await Parse("wardrobes-4-materials");
         var files = details.GroupBy(d => d.Material)
             .Where(g => !string.IsNullOrEmpty(g.Key))
             .Select(g => new KroikoFile { FileName = g.Key, Details = g.ToList().ToLoniraDetails() })
@@ -106,7 +106,7 @@ public class GenerationSmokeTests
     [Fact]
     public async Task Suliver_produces_a_single_xlsx()
     {
-        var details = new ObservableCollection<Detail>(await Parse("file.txt"));
+        var details = new ObservableCollection<Detail>(await Parse("wardrobes-4-materials"));
         var files = new List<KroikoFile>
         {
             new() { FileName = "Suliver", Details = details.ToSuliverDetails() }
@@ -123,7 +123,7 @@ public class GenerationSmokeTests
     [Fact]
     public async Task MegaTrading_produces_an_xlsx_plus_a_cut_mt_with_exactly_six_material_rows()
     {
-        var details = new ObservableCollection<Detail>(await Parse("file.txt"));
+        var details = new ObservableCollection<Detail>(await Parse("wardrobes-4-materials"));
         var files = new List<KroikoFile>
         {
             new() { FileName = "MegaTrading", Details = details.ToMegaTradingDetails() }

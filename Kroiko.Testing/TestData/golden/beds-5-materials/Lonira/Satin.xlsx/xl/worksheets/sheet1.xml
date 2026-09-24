@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView showGridLines="1" showRowColHeaders="1" rightToLeft="0" workbookViewId="0">
+</sheetView></sheetViews>
+<cols><col min="1" max="1" width="25" customWidth="1"/>
+<col min="2" max="2" width="25" customWidth="1"/>
+<col min="3" max="3" width="15" customWidth="1"/>
+<col min="4" max="4" width="20" customWidth="1"/>
+<col min="5" max="5" width="20" customWidth="1"/>
+</cols>
+<sheetData>
+<row r="1">
+<c r="A1" t="inlineStr"><is><t>Име на клиента</t></is></c>
+<c r="B1" t="inlineStr"><is><t>Тест ООД</t></is></c>
+</row>
+<row r="2">
+<c r="A2" t="inlineStr"><is><t>Телефон за връзка</t></is></c>
+<c r="B2" t="inlineStr"><is><t>0888123456</t></is></c>
+</row>
+<row r="3">
+<c r="A3" t="inlineStr"><is><t>Материал</t></is></c>
+<c r="B3" t="inlineStr"><is><t>Satin</t></is></c>
+</row>
+<row r="5">
+<c r="A5" t="inlineStr"><is><t>Размер по фладер [мм]</t></is></c>
+<c r="B5" t="inlineStr"><is><t>Размер срещу фладер [мм]</t></is></c>
+<c r="C5" t="inlineStr"><is><t>Брой детайли</t></is></c>
+<c r="D5" t="inlineStr"><is><t>Кантиране</t></is></c>
+<c r="E5" t="inlineStr"><is><t>Забележка</t></is></c>
+</row>
+<row r="6">
+<c r="A6" s="1"><v>400</v></c>
+<c r="B6" s="1"><v>1928</v></c>
+<c r="C6" s="1"><v>4</v></c>
+<c r="D6" t="inlineStr"><is><t>1 k 2 d</t></is></c>
+<c r="E6" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="7">
+<c r="A7" s="1"><v>500</v></c>
+<c r="B7" s="1"><v>950</v></c>
+<c r="C7" s="1"><v>2</v></c>
+<c r="D7" t="inlineStr"><is><t>2 k 2 d</t></is></c>
+<c r="E7" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="8">
+<c r="A8" s="1"><v>400</v></c>
+<c r="B8" s="1"><v>914</v></c>
+<c r="C8" s="1"><v>2</v></c>
+<c r="D8" t="inlineStr"><is><t>2 d</t></is></c>
+<c r="E8" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="9">
+<c r="A9" s="1"><v>914</v></c>
+<c r="B9" s="1"><v>329</v></c>
+<c r="C9" s="1"><v>2</v></c>
+<c r="D9" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E9" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="10">
+<c r="A10" s="1"><v>914</v></c>
+<c r="B10" s="1"><v>329</v></c>
+<c r="C10" s="1"><v>2</v></c>
+<c r="D10" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E10" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="11">
+<c r="A11" s="1"><v>800</v></c>
+<c r="B11" s="1"><v>329</v></c>
+<c r="C11" s="1"><v>4</v></c>
+<c r="D11" t="inlineStr"><is><t>1 k 1 d</t></is></c>
+<c r="E11" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="12">
+<c r="A12" s="1"><v>914</v></c>
+<c r="B12" s="1"><v>319</v></c>
+<c r="C12" s="1"><v>2</v></c>
+<c r="D12" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E12" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="13">
+<c r="A13" s="1"><v>398</v></c>
+<c r="B13" s="1"><v>948</v></c>
+<c r="C13" s="1"><v>2</v></c>
+<c r="D13" t="inlineStr"><is><t>2 k 2 d</t></is></c>
+<c r="E13" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="14">
+<c r="A14" s="1"><v>398</v></c>
+<c r="B14" s="1"><v>948</v></c>
+<c r="C14" s="1"><v>2</v></c>
+<c r="D14" t="inlineStr"><is><t>2 k 2 d</t></is></c>
+<c r="E14" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="15">
+<c r="A15" s="1"><v>414</v></c>
+<c r="B15" s="1"><v>327</v></c>
+<c r="C15" s="1"><v>1</v></c>
+<c r="D15" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E15" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="16">
+<c r="A16" s="1"><v>414</v></c>
+<c r="B16" s="1"><v>327</v></c>
+<c r="C16" s="1"><v>1</v></c>
+<c r="D16" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E16" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="17">
+<c r="A17" s="1"><v>800</v></c>
+<c r="B17" s="1"><v>327</v></c>
+<c r="C17" s="1"><v>2</v></c>
+<c r="D17" t="inlineStr"><is><t>1 k 1 d</t></is></c>
+<c r="E17" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="18">
+<c r="A18" s="1"><v>414</v></c>
+<c r="B18" s="1"><v>317</v></c>
+<c r="C18" s="1"><v>1</v></c>
+<c r="D18" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E18" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="19">
+<c r="A19" s="1"><v>798</v></c>
+<c r="B19" s="1"><v>448</v></c>
+<c r="C19" s="1"><v>1</v></c>
+<c r="D19" t="inlineStr"><is><t>2 k 2 d</t></is></c>
+<c r="E19" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="20">
+<c r="A20" s="1"><v>964</v></c>
+<c r="B20" s="1"><v>427</v></c>
+<c r="C20" s="1"><v>1</v></c>
+<c r="D20" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E20" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="21">
+<c r="A21" s="1"><v>982</v></c>
+<c r="B21" s="1"><v>427</v></c>
+<c r="C21" s="1"><v>1</v></c>
+<c r="D21" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E21" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="22">
+<c r="A22" s="1"><v>1762</v></c>
+<c r="B22" s="1"><v>427</v></c>
+<c r="C22" s="1"><v>1</v></c>
+<c r="D22" t="inlineStr"><is><t>1 k 1 d</t></is></c>
+<c r="E22" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="23">
+<c r="A23" s="1"><v>1880</v></c>
+<c r="B23" s="1"><v>427</v></c>
+<c r="C23" s="1"><v>1</v></c>
+<c r="D23" t="inlineStr"><is><t>1 k 1 d</t></is></c>
+<c r="E23" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="24">
+<c r="A24" s="1"><v>473</v></c>
+<c r="B24" s="1"><v>417</v></c>
+<c r="C24" s="1"><v>4</v></c>
+<c r="D24" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E24" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="25">
+<c r="A25" s="1"><v>964</v></c>
+<c r="B25" s="1"><v>417</v></c>
+<c r="C25" s="1"><v>1</v></c>
+<c r="D25" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E25" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="26">
+<c r="A26" s="1"><v>609.18</v></c>
+<c r="B26" s="1"><v>387</v></c>
+<c r="C26" s="1"><v>2</v></c>
+<c r="D26" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E26" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="27">
+<c r="A27" s="1"><v>1116.82</v></c>
+<c r="B27" s="1"><v>427</v></c>
+<c r="C27" s="1"><v>1</v></c>
+<c r="D27" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E27" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="28">
+<c r="A28" s="1"><v>2479</v></c>
+<c r="B28" s="1"><v>498</v></c>
+<c r="C28" s="1"><v>2</v></c>
+<c r="D28" t="inlineStr"><is><t>2 k 2 d</t></is></c>
+<c r="E28" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="29">
+<c r="A29" s="1"><v>172.39</v></c>
+<c r="B29" s="1"><v>824</v></c>
+<c r="C29" s="1"><v>3</v></c>
+<c r="D29" t="inlineStr"><is><t>2 k 2 d</t></is></c>
+<c r="E29" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="30">
+<c r="A30" s="1"><v>350</v></c>
+<c r="B30" s="1"><v>142.39</v></c>
+<c r="C30" s="1"><v>4</v></c>
+<c r="D30" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E30" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="31">
+<c r="A31" s="1"><v>350</v></c>
+<c r="B31" s="1"><v>144.39</v></c>
+<c r="C31" s="1"><v>2</v></c>
+<c r="D31" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E31" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="32">
+<c r="A32" s="1"><v>778</v></c>
+<c r="B32" s="1"><v>350</v></c>
+<c r="C32" s="1"><v>3</v></c>
+<c r="D32" t="inlineStr"><is><t></t></is></c>
+<c r="E32" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="33">
+<c r="A33" s="1"><v>778</v></c>
+<c r="B33" s="1"><v>111.39</v></c>
+<c r="C33" s="1"><v>2</v></c>
+<c r="D33" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E33" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="34">
+<c r="A34" s="1"><v>778</v></c>
+<c r="B34" s="1"><v>113.39</v></c>
+<c r="C34" s="1"><v>1</v></c>
+<c r="D34" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E34" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="35">
+<c r="A35" s="1"><v>778</v></c>
+<c r="B35" s="1"><v>111.39</v></c>
+<c r="C35" s="1"><v>2</v></c>
+<c r="D35" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E35" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="36">
+<c r="A36" s="1"><v>778</v></c>
+<c r="B36" s="1"><v>113.39</v></c>
+<c r="C36" s="1"><v>1</v></c>
+<c r="D36" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E36" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="37">
+<c r="A37" s="1"><v>982</v></c>
+<c r="B37" s="1"><v>100</v></c>
+<c r="C37" s="1"><v>1</v></c>
+<c r="D37" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E37" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="38">
+<c r="A38" s="1"><v>964</v></c>
+<c r="B38" s="1"><v>427</v></c>
+<c r="C38" s="1"><v>1</v></c>
+<c r="D38" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E38" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="39">
+<c r="A39" s="1"><v>964</v></c>
+<c r="B39" s="1"><v>427</v></c>
+<c r="C39" s="1"><v>1</v></c>
+<c r="D39" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E39" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="40">
+<c r="A40" s="1"><v>700</v></c>
+<c r="B40" s="1"><v>427</v></c>
+<c r="C40" s="1"><v>2</v></c>
+<c r="D40" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E40" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="41">
+<c r="A41" s="1"><v>473</v></c>
+<c r="B41" s="1"><v>427</v></c>
+<c r="C41" s="1"><v>2</v></c>
+<c r="D41" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E41" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="42">
+<c r="A42" s="1"><v>664</v></c>
+<c r="B42" s="1"><v>427</v></c>
+<c r="C42" s="1"><v>1</v></c>
+<c r="D42" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E42" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="43">
+<c r="A43" s="1"><v>538</v></c>
+<c r="B43" s="1"><v>598</v></c>
+<c r="C43" s="1"><v>1</v></c>
+<c r="D43" t="inlineStr"><is><t>2 k 2 d</t></is></c>
+<c r="E43" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="44">
+<c r="A44" s="1"><v>464</v></c>
+<c r="B44" s="1"><v>313</v></c>
+<c r="C44" s="1"><v>1</v></c>
+<c r="D44" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E44" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="45">
+<c r="A45" s="1"><v>464</v></c>
+<c r="B45" s="1"><v>313</v></c>
+<c r="C45" s="1"><v>1</v></c>
+<c r="D45" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E45" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="46">
+<c r="A46" s="1"><v>540</v></c>
+<c r="B46" s="1"><v>337</v></c>
+<c r="C46" s="1"><v>1</v></c>
+<c r="D46" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E46" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="47">
+<c r="A47" s="1"><v>540</v></c>
+<c r="B47" s="1"><v>340</v></c>
+<c r="C47" s="1"><v>1</v></c>
+<c r="D47" t="inlineStr"><is><t>2 d</t></is></c>
+<c r="E47" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="48">
+<c r="A48" s="1"><v>464</v></c>
+<c r="B48" s="1"><v>309</v></c>
+<c r="C48" s="1"><v>1</v></c>
+<c r="D48" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E48" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="49">
+<c r="A49" s="1"><v>536</v></c>
+<c r="B49" s="1"><v>460</v></c>
+<c r="C49" s="1"><v>1</v></c>
+<c r="D49" t="inlineStr"><is><t>2 k 2 d</t></is></c>
+<c r="E49" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="50">
+<c r="A50" s="1"><v>284</v></c>
+<c r="B50" s="1"><v>313</v></c>
+<c r="C50" s="1"><v>1</v></c>
+<c r="D50" t="inlineStr"><is><t>1 k</t></is></c>
+<c r="E50" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="51">
+<c r="A51" s="1"><v>284</v></c>
+<c r="B51" s="1"><v>313</v></c>
+<c r="C51" s="1"><v>1</v></c>
+<c r="D51" t="inlineStr"><is><t>1 k</t></is></c>
+<c r="E51" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="52">
+<c r="A52" s="1"><v>740</v></c>
+<c r="B52" s="1"><v>337</v></c>
+<c r="C52" s="1"><v>2</v></c>
+<c r="D52" t="inlineStr"><is><t>1 d</t></is></c>
+<c r="E52" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="53">
+<c r="A53" s="1"><v>734</v></c>
+<c r="B53" s="1"><v>280</v></c>
+<c r="C53" s="1"><v>1</v></c>
+<c r="D53" t="inlineStr"><is><t>2 k 2 d</t></is></c>
+<c r="E53" t="inlineStr"><is><t></t></is></c>
+</row>
+<row r="54">
+<c r="A54" s="1"><v>242.33</v></c>
+<c r="B54" s="1"><v>598</v></c>
+<c r="C54" s="1"><v>2</v></c>
+<c r="D54" t="inlineStr"><is><t>2 k 2 d</t></is></c>
+<c r="E54" t="inlineStr"><is><t></t></is></c>
+</row>
+</sheetData>
+</worksheet>
