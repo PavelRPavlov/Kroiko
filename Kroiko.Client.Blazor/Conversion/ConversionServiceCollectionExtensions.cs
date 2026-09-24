@@ -14,4 +14,16 @@ public static class ConversionServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         return services.AddScoped<ConverterState>();
     }
+
+    /// <summary>
+    /// Registers the <see cref="IDeviceSettingsStore"/> that keeps the device settings in the browser's
+    /// <c>localStorage</c> (ADR-0002 §7–8). Scoped, like the <c>IJSRuntime</c> it calls.
+    /// </summary>
+    public static IServiceCollection AddDeviceSettingsStore(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        return services
+            .AddScoped<IBrowserStorage, BrowserLocalStorage>()
+            .AddScoped<IDeviceSettingsStore, LocalStorageDeviceSettingsStore>();
+    }
 }

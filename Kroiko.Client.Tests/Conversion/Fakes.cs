@@ -57,3 +57,37 @@ internal sealed class FakeDeviceSettingsStore : IDeviceSettingsStore
         return Task.CompletedTask;
     }
 }
+
+/// <summary>Browser storage held in memory: <see cref="Items"/> is what the browser holds.</summary>
+internal sealed class FakeBrowserStorage : IBrowserStorage
+{
+    public Dictionary<string, string> Items { get; } = [];
+
+    /// <summary>How many times something was written.</summary>
+    public int Writes { get; private set; }
+
+    /// <summary>When set, every call throws it (storage disabled, blocked, full, …).</summary>
+    public Exception? Failure { get; set; }
+
+    public ValueTask<string?> GetItemAsync(string key)
+    {
+        if (Failure is not null)
+        {
+            throw Failure;
+        }
+
+        return ValueTask.FromResult(Items.GetValueOrDefault(key));
+    }
+
+    public ValueTask SetItemAsync(string key, string value)
+    {
+        if (Failure is not null)
+        {
+            throw Failure;
+        }
+
+        Items[key] = value;
+        Writes++;
+        return ValueTask.CompletedTask;
+    }
+}

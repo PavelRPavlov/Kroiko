@@ -112,6 +112,14 @@ drops that generation's output. Failures of reading, the dialog, making files, g
 logged and raise `Error` with a Bulgarian message instead of throwing. `HasUnsavedWork` = a file is loaded and its current input has not been generated and saved (at least
 one download triggered, `MarkSaved()`).
 
+**Device settings** (`LocalStorageDeviceSettingsStore`, registered by `AddDeviceSettingsStore()`) are one JSON document
+in `localStorage` under `kroiko.deviceSettings`: `{"schemaVersion":1,"companyName":…,"mobileNumber":…,"manufacturer":"Lonira"}`,
+the manufacturer by `SupportedCompany.Name` (an unknown name loads as none). Loading runs the forward migrations
+(oldest first, one per `schemaVersion` step; none yet) before anything is read, and never throws: a newer
+`schemaVersion`, an unreadable document, or storage that is missing or throws load the defaults and leave storage
+untouched until the operator edits the settings (committed by the next successful generation, which saves them) ([ADR-0002](docs/adr/0002-pwa-updates-reload-prompt.md) §7–8). Only the two
+`localStorage` calls are interop (`IBrowserStorage`); `LocalStorageDeviceSettingsStoreTests` covers the rest.
+
 ## 6. Decision log
 
 Architectural decisions are recorded as **ADRs** in [docs/adr/](docs/adr/) — that folder
