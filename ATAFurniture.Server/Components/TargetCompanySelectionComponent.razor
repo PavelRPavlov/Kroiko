@@ -5,7 +5,7 @@
 <MudPaper Class="pa-4">
     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
         <MudText>Изберете към коя фирма ще правите поръчка: </MudText>
-        <MudSelect T="SupportedCompany"
+        <MudSelect T="ManufacturerBranch"
                    Value="Context.TargetCompany"
                    ValueChanged="OnUserSelection"
                    ToStringFunc="@(c => c?.Translation)"
@@ -23,9 +23,9 @@
     [Parameter] public UserContextService UserContextService { get; set; }
     [Parameter] public ConverterContext Context { get; set; }
 
-    readonly SupportedCompany[] _supportedCompanies = [SupportedCompanies.Lonira, SupportedCompanies.MegaTrading, SupportedCompanies.Suliver, SupportedCompanies.SuliverKuklensko];
+    readonly IReadOnlyList<ManufacturerBranch> _supportedCompanies = ManufacturerBranches.All;
 
-    private async Task OnUserSelection(SupportedCompany company)
+    private async Task OnUserSelection(ManufacturerBranch company)
     {
         Context.TargetCompany = company;
         await UserContextService.UpdateSelectedCompanyAsync(Context.TargetCompany);

@@ -138,12 +138,7 @@ public sealed class GoldenTests
             // OrderHandlingComponent.GenerateFiles.
             var fileNameProvider = serviceProvider.GetKeyedService<IFileNameProvider>(manufacturer);
             var templateBuilder = serviceProvider.GetKeyedService<ITemplateBuilder>(manufacturer);
-            var contact = new ContactInfo
-            {
-                CompanyName = "Тест ООД",
-                MobileNumber = "0888123456",
-                Email = "test@example.com",
-            };
+            var contact = new ContactInfo(CompanyName: "Тест ООД", MobileNumber: "0888123456");
             return await serviceProvider.GetRequiredService<FileGeneratorService>().CreateFiles(
                 contact,
                 files,

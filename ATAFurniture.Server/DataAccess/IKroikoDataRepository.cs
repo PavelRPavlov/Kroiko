@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Kroiko.Domain;
-using Kroiko.Domain.CellsExtracting;
+using ATAFurniture.Server.Models;
 
 namespace ATAFurniture.Server.DataAccess;
 
@@ -10,5 +9,5 @@ public interface IKroikoDataRepository
     Task<User> CreateUser(string userId, int credits);
     Task<User> UpdateUser(User dbUser);
     Task<User> RemoveCredits(User dbUser, int i);
-    Task<User> UpdateSelectedCompany(User dbUser, SupportedCompany targetCompany);
+    Task<User> UpdateSelectedCompany(User dbUser, ManufacturerBranch targetCompany);
 }

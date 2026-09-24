@@ -79,7 +79,7 @@ public partial class OrderHandlingComponent
 
         _areFilesGenerating = true;
         var alreadyGeneratedFiles = await FileGenerator.CreateFiles(
-            Context.ContactInfo,
+            Context.ContactInfo.ToContactInfo(),
             Context.Files,
             templateBuilder,
             fileNameProvider,

@@ -1,17 +1,22 @@
-﻿using System.ComponentModel;
+﻿#nullable enable
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using Kroiko.Domain.CellsExtracting;
+using ATAFurniture.Server.Models;
 
-namespace Kroiko.Domain;
+namespace ATAFurniture.Server.DataAccess;
 
+// The Server's EF entity (credits, last selected branch); not a conversion concept (ADR-0004 §6).
+// The migrations still name it "Kroiko.Domain.User": EF maps it to the same Users table and columns.
 public class User : INotifyPropertyChanged
 {
     private Guid _id;
     private string? _aadId;
     private int _creditsCount;
     private int _creditResets;
-    private SupportedCompany? _lastSelectedCompany;
+    private ManufacturerBranch? _lastSelectedCompany;
     private string? _name;
     private string? _email;
     private string? _mobileNumber;
@@ -41,7 +46,7 @@ public class User : INotifyPropertyChanged
         set => SetField(ref _creditResets, value);
     }
 
-    public SupportedCompany? LastSelectedCompany
+    public ManufacturerBranch? LastSelectedCompany
     {
         get => _lastSelectedCompany;
         set => SetField(ref _lastSelectedCompany, value);

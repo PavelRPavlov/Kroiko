@@ -4,7 +4,6 @@
 @using ATAFurniture.Server.Models
 @using ATAFurniture.Server.DataAccess
 @using ATAFurniture.Server.Components.FileDisplay
-@using Kroiko.Domain.CellsExtracting
 
 @if(_isUserContextReady)
 {
@@ -46,7 +45,7 @@ else
             // "no default" selection is preferred.
             Context.TargetCompany = lastSelection
                 ?? await UserContextService.GetPreviouslySelectedTargetCompanyAsync()
-                ?? SupportedCompanies.Lonira;
+                ?? ManufacturerBranches.Lonira;
 
             Context.ContactInfo.CompanyName = UserContextService.User.CompanyName;
             Context.ContactInfo.MobileNumber = UserContextService.User.MobileNumber;

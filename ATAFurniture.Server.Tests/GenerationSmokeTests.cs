@@ -44,12 +44,7 @@ public class GenerationSmokeTests
     private static FileGeneratorService NewGenerator() =>
         new(new ExcelFileGenerator(), new MegaTradingFileGenerator());
 
-    private static ContactInfo Contact() => new()
-    {
-        CompanyName = "Test Company",
-        MobileNumber = "0888123456",
-        Email = "test@example.com"
-    };
+    private static ContactInfo Contact() => new(CompanyName: "Test Company", MobileNumber: "0888123456");
 
     // A real .xlsx is a ZIP archive; its first two bytes are the "PK" local-file-header magic.
     private static bool IsXlsx(FileSaveContext f) =>
