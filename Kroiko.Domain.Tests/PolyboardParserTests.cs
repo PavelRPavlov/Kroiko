@@ -158,6 +158,56 @@ public sealed class PolyboardParserTests
         }
     }
 
+    // ADR-0006 §1: every variant is its CRLF original with only the line endings, a BOM or blank lines changed.
+    [Theory]
+    [InlineData("wardrobes-4-materials-lf", "wardrobes-4-materials")]
+    [InlineData("cabinet-23-field-cr", "cabinet-23-field")]
+    [InlineData("wardrobes-4-materials-bom", "wardrobes-4-materials")]
+    [InlineData("cabinet-23-field-whitespace-lines", "cabinet-23-field")]
+    public void A_line_ending_variant_parses_to_the_same_details_as_its_CRLF_original(string variant, string original)
+    {
+        var expected = ParseFixture(original).Details;
+
+        var result = ParseFixture(variant);
+
+        result.Errors.Should().BeEmpty();
+        result.Details.Should().NotBeEmpty().And.Equal(expected);
+    }
+
+    [Fact]
+    public void Every_bad_line_of_a_file_with_more_than_10_is_reported_in_file_order()
+    {
+        // Phase 04 lists the first 10 and "…и още N" for the rest (ADR-0006 §2).
+        var result = ParseFixture("bad-lines-12");
+
+        result.Errors.Should().Equal(
+            new ParseError(2, ParseErrorKind.FieldCount, FieldCount: 10),
+            new ParseError(3, ParseErrorKind.InvalidNumber, Field: nameof(Detail.Quantity)),
+            new ParseError(5, ParseErrorKind.FieldCount, FieldCount: 10),
+            new ParseError(6, ParseErrorKind.InvalidNumber, Field: nameof(Detail.Quantity)),
+            new ParseError(8, ParseErrorKind.FieldCount, FieldCount: 10),
+            new ParseError(9, ParseErrorKind.InvalidNumber, Field: nameof(Detail.Quantity)),
+            new ParseError(11, ParseErrorKind.FieldCount, FieldCount: 10),
+            new ParseError(12, ParseErrorKind.InvalidNumber, Field: nameof(Detail.Quantity)),
+            new ParseError(14, ParseErrorKind.FieldCount, FieldCount: 10),
+            new ParseError(15, ParseErrorKind.InvalidNumber, Field: nameof(Detail.Quantity)),
+            new ParseError(17, ParseErrorKind.FieldCount, FieldCount: 10),
+            new ParseError(18, ParseErrorKind.InvalidNumber, Field: nameof(Detail.Quantity)));
+        result.Details.Should().HaveCount(8);
+    }
+
+    [Fact]
+    public void A_bad_lines_number_counts_every_line_ending_and_every_skipped_blank_line()
+    {
+        var good = "350.0;150.0;2;Basic white;0;1;1;1;1;Model[0];1";
+
+        // Lines: 1 good (LF), 2 empty (CRLF), 3 whitespace (CR), 4 bad, 5 good.
+        var result = Parse($"{good}\n\r\n \t\r350.0;150.0;2\r\n{good}");
+
+        result.Errors.Should().Equal(new ParseError(4, ParseErrorKind.FieldCount, FieldCount: 3));
+        result.Details.Should().HaveCount(2);
+    }
+
     private static ParseResult ParseFixture(string fixture) =>
         PolyboardParser.Parse(File.ReadAllBytes(TestData.Polyboard(fixture)));
 }

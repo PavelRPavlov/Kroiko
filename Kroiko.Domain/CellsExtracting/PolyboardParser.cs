@@ -6,7 +6,9 @@ namespace Kroiko.Domain.CellsExtracting;
 /// <summary>
 /// Turns a Polyboard cut-list export (one <c>;</c>-separated Detail per line, 11 or 23 fields) into
 /// Details. Bad lines are reported in <see cref="ParseResult.Errors"/>, never discarded or logged:
-/// the caller decides what to do with them (ADR-0004 §3, ADR-0006 §2).
+/// the caller decides what to do with them (ADR-0004 §3, ADR-0006 §2). Lines may end in CRLF, LF or CR,
+/// a leading UTF-8 BOM is ignored, and empty or whitespace-only lines are skipped (ADR-0006 §1); a
+/// <see cref="ParseError.LineNumber"/> still counts every physical line.
 /// </summary>
 public static class PolyboardParser
 {
@@ -14,16 +16,19 @@ public static class PolyboardParser
     private const int OldFormatFieldCount = 11;
     private const int LatestFormatFieldCount = 23;
 
+    // Tried in this order at each position, so "\r\n" is one line ending, not two.
+    private static readonly string[] LineEndings = ["\r\n", "\n", "\r"];
+
     public static ParseResult Parse(byte[] content)
     {
         ArgumentNullException.ThrowIfNull(content);
 
-        var lines = Encoding.UTF8.GetString(content).Split("\r\n");
+        var lines = Decode(content).Split(LineEndings, StringSplitOptions.None);
         var details = new List<Detail>();
         var errors = new List<ParseError>();
         for (var i = 0; i < lines.Length; i++)
         {
-            if (string.IsNullOrEmpty(lines[i]))
+            if (string.IsNullOrWhiteSpace(lines[i]))
             {
                 continue;
             }
@@ -52,6 +57,15 @@ public static class PolyboardParser
         }
 
         return new ParseResult(details, errors);
+    }
+
+    // UTF-8 (ADR-0006 §5). GetString keeps a BOM as U+FEFF, which would break the first line's first number.
+    private static string Decode(byte[] content)
+    {
+        var bom = Encoding.UTF8.Preamble;
+        return content.AsSpan().StartsWith(bom)
+            ? Encoding.UTF8.GetString(content, bom.Length, content.Length - bom.Length)
+            : Encoding.UTF8.GetString(content);
     }
 
     // The latest 23-field format: the legacy 11 fields, then (initializers run in order, after them)

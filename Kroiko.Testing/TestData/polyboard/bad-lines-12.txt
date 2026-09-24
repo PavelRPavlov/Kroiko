@@ -1,0 +1,20 @@
+214.0;247.0;1;Basic white W908 ST2;0;0;0;1;0;Model[0];1
+250.0;247.0;1;Basic white W908 ST2;0;1;1;1;0;Model[0]
+2062.0;247.0;x;Basic white W908 ST2;0;1;0;1;0;Model[0];3
+2080.0;250.0;1;HDF 3 mm;0;0;0;0;0;Model[0];4
+214.0;247.0;6;Basic white W908 ST2;0;0;0;1;0;Model[0]
+1234.0;497.0;x;Basic white W908 ST2;0;0;0;1;0;Model[1];1
+1270.0;497.0;1;Basic white W908 ST2;0;1;1;1;0;Model[1];2
+1222.0;497.0;2;Basic white W908 ST2;0;0;0;1;0;Model[1]
+1240.0;1270.0;x;HDF 3 mm;0;0;0;0;0;Model[1];4
+1520.0;100.0;1;Basic white W908 ST2;0;0;0;1;0;Model[1];5
+1234.0;497.0;1;Basic white W908 ST2;0;0;0;1;0;Model[2]
+1234.0;497.0;x;Basic white W908 ST2;0;0;0;1;0;Model[2];2
+840.0;497.0;2;Basic white W908 ST2;0;1;0;1;0;Model[2];3
+840.0;1270.0;1;HDF 3 mm;0;0;0;0;0;Model[2]
+1444.0;397.0;x;Basic white W908 ST2;0;0;0;1;0;Model[3];1
+1480.0;397.0;1;Basic white W908 ST2;0;0;0;1;0;Model[3];2
+882.0;397.0;2;Basic white W908 ST2;0;0;0;1;0;Model[3]
+900.0;1480.0;x;HDF 3 mm;0;0;0;0;0;Model[3];4
+1444.0;397.0;2;Basic white W908 ST2;0;0;0;1;0;Model[3];5
+1480.0;100.0;1;Basic white W908 ST2;0;0;0;1;0;Model[3];6
