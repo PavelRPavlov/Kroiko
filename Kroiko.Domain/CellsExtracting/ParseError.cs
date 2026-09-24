@@ -15,11 +15,4 @@ public enum ParseErrorKind
 /// (ADR-0006 §2): the 1-based <paramref name="LineNumber"/>, the <paramref name="Kind"/>, and the line's
 /// <paramref name="FieldCount"/> or the <see cref="Detail"/> property name of the bad <paramref name="Field"/>.
 /// </summary>
-public sealed record ParseError(int LineNumber, ParseErrorKind Kind, int? FieldCount = null, string? Field = null)
-{
-    public static ParseError WrongFieldCount(int lineNumber, int fieldCount) =>
-        new(lineNumber, ParseErrorKind.FieldCount, FieldCount: fieldCount);
-
-    public static ParseError InvalidNumber(int lineNumber, string field) =>
-        new(lineNumber, ParseErrorKind.InvalidNumber, Field: field);
-}
+public sealed record ParseError(int LineNumber, ParseErrorKind Kind, int? FieldCount = null, string? Field = null);

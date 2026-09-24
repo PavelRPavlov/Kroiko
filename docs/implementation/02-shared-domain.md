@@ -66,8 +66,8 @@ Two PRs.
 2a done. `Kroiko.Domain/CellsExtracting/PolyboardParser.Parse` returns a `ParseResult` with one
 `ParseError(LineNumber, Kind, FieldCount?, Field?)` per bad line (`FieldCount` carries the line's field
 count, `InvalidNumber` the `Detail` property name of the line's first bad field) and the Details of every
-good line. It reads numbers exactly as the Server did (invariant culture, a `,` is a thousands separator,
-an empty numeric field is `0`, a flag is `1` or "no"), now also for integers. `DetailsExtractorService`
+good line. It reads numbers as the Server did (invariant culture, a `,` is a thousands separator, an
+empty numeric field is `0`, a flag is true only when `1`), except that integers are now invariant too. `DetailsExtractorService`
 logs each error and returns an empty list when there are any. `Kroiko.Domain.Tests` holds
 `PolyboardParserTests`; `GoldenTests` and `GenerationSmokeTests` still go through the adapter.
 

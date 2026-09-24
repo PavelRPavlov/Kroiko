@@ -30,30 +30,32 @@ public static class PolyboardParser
 
             var lineNumber = i + 1;
             var fields = new FieldReader(lines[i].Split(FieldSeparator));
-            switch (fields.Count)
+            var detail = fields.Count switch
             {
-                case OldFormatFieldCount or LatestFormatFieldCount:
-                    var detail = fields.Count == OldFormatFieldCount ? ParseOldFormat(fields) : ParseLatestFormat(fields);
-                    if (fields.InvalidField is { } invalidField)
-                    {
-                        errors.Add(ParseError.InvalidNumber(lineNumber, invalidField));
-                    }
-                    else
-                    {
-                        details.Add(detail);
-                    }
+                OldFormatFieldCount => ParseOldFormat(fields),
+                LatestFormatFieldCount => ParseLatestFormat(fields),
+                _ => null,
+            };
 
-                    break;
-                default:
-                    errors.Add(ParseError.WrongFieldCount(lineNumber, fields.Count));
-                    break;
+            if (detail is null)
+            {
+                errors.Add(new ParseError(lineNumber, ParseErrorKind.FieldCount, FieldCount: fields.Count));
+            }
+            else if (fields.InvalidField is { } invalidField)
+            {
+                errors.Add(new ParseError(lineNumber, ParseErrorKind.InvalidNumber, Field: invalidField));
+            }
+            else
+            {
+                details.Add(detail);
             }
         }
 
         return new ParseResult(details, errors);
     }
 
-    // The latest 23-field format: the legacy 11 fields, then thicknesses, reference, edge materials, oversizing.
+    // The latest 23-field format: the legacy 11 fields, then (initializers run in order, after them)
+    // thicknesses, reference, edge materials, oversizing.
     private static Detail ParseLatestFormat(FieldReader fields) => ParseOldFormat(fields) with
     {
         MaterialThickness = fields.Number(11, nameof(Detail.MaterialThickness)),
@@ -71,19 +73,31 @@ public static class PolyboardParser
     };
 
     // The legacy 11-field format: the latest format's extra fields are 0 or empty.
+    // The fields are read in column order, so FieldReader.InvalidField is the line's first bad field.
     private static Detail ParseOldFormat(FieldReader fields) => new(
-        fields.Number(0, nameof(Detail.Height)),
-        fields.Number(1, nameof(Detail.Width)),
-        fields.Integer(2, nameof(Detail.Quantity)),
-        fields.Text(3),
-        fields.Flag(4, nameof(Detail.IsGrainDirectionReversed)),
-        fields.Flag(5, nameof(Detail.HasTopEdge)),
-        fields.Flag(6, nameof(Detail.HasBottomEdge)),
-        fields.Flag(7, nameof(Detail.HasRightEdge)),
-        fields.Flag(8, nameof(Detail.HasLeftEdge)),
-        fields.Text(9),
-        fields.Integer(10, nameof(Detail.CuttingNumber)),
-        0, 0, 0, 0, 0, "", "", "", "", "", 0, 0);
+        Height: fields.Number(0, nameof(Detail.Height)),
+        Width: fields.Number(1, nameof(Detail.Width)),
+        Quantity: fields.Integer(2, nameof(Detail.Quantity)),
+        Material: fields.Text(3),
+        IsGrainDirectionReversed: fields.Flag(4, nameof(Detail.IsGrainDirectionReversed)),
+        HasTopEdge: fields.Flag(5, nameof(Detail.HasTopEdge)),
+        HasBottomEdge: fields.Flag(6, nameof(Detail.HasBottomEdge)),
+        HasRightEdge: fields.Flag(7, nameof(Detail.HasRightEdge)),
+        HasLeftEdge: fields.Flag(8, nameof(Detail.HasLeftEdge)),
+        Cabinet: fields.Text(9),
+        CuttingNumber: fields.Integer(10, nameof(Detail.CuttingNumber)),
+        MaterialThickness: 0,
+        TopEdgeThickness: 0,
+        BottomEdgeThickness: 0,
+        RightEdgeThickness: 0,
+        LeftEdgeThickness: 0,
+        Reference: "",
+        TopEdgeMaterial: "",
+        BottomEdgeMaterial: "",
+        RightEdgeMaterial: "",
+        LeftEdgeMaterial: "",
+        OversizingHeight: 0,
+        OversizingWidth: 0);
 
     /// <summary>
     /// Reads one line's fields as today's Server did: numbers in the invariant culture (a <c>,</c> is a
