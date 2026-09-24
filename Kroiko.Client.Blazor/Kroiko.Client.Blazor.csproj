@@ -6,11 +6,24 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+    <!-- Keep ICU globalization: do not set InvariantGlobalization. MudBlazor's number and date display
+         follows the operator's culture; the domain stays invariant on its own (ADR-0004). -->
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.12" PrivateAssets="all" />
+    <PackageReference Include="MudBlazor" Version="9.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The conversion runs in the browser on the shared, browser-safe domain (ADR-0004). -->
+    <ProjectReference Include="..\Kroiko.Domain\Kroiko.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The tests reach internals, e.g. the device-settings store with other schema migrations. -->
+    <InternalsVisibleTo Include="Kroiko.Client.Tests" />
   </ItemGroup>
 
   <ItemGroup>

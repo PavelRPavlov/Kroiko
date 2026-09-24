@@ -1,6 +1,6 @@
 # 03 — Client shell
 
-- **Status:** Not started
+- **Status:** In progress
 - **Depends on:** —  **Can run alongside:** [01](01-golden-baseline.md), [02](02-shared-domain.md)
 - **ADRs:** [0005](../adr/0005-copy-conversion-ui-into-pwa.md) §2, [0007](../adr/0007-parity-and-test-strategy.md) §1, §5–6; research: [.NET 10 PWA facts](../research/dotnet10-blazor-wasm-pwa.md)
 
@@ -33,7 +33,8 @@ harness. This phase does not touch `Kroiko.Domain`.
 
 - **Self-host Roboto** (the weights MudBlazor uses, `.woff2`, Latin + Cyrillic subsets) under
   `wwwroot/fonts/`, with an `@font-face` stylesheet. Don't add the Google Fonts link (there must be
-  no cross-origin requests at all). Roboto is Apache-2.0 licensed; commit its licence file next to the fonts.
+  no cross-origin requests at all). Roboto is SIL OFL 1.1 licensed (Roboto 3; older releases were
+  Apache-2.0); commit its licence file next to the fonts.
 - In `service-worker.published.js`, add `/\.woff2$/` to `offlineAssetsInclude`.
 - Keep ICU globalization: **no `InvariantGlobalization`**. MudBlazor's number and date display
   follows the operator's culture (ADR-0004 alternatives).
@@ -61,13 +62,13 @@ harness. This phase does not touch `Kroiko.Domain`.
 
 ## Done criteria
 
-- [ ] No Bootstrap, template pages or `sample-data` remain; MudBlazor is the only UI library.
-- [ ] `/` and `/configuration` render inside a `MudAppBar` layout; unknown routes redirect to `/`; the About dialog opens.
-- [ ] Roboto is self-hosted, precached (`.woff2` in `offlineAssetsInclude`), and the app makes no cross-origin requests.
-- [ ] `InvariantGlobalization` is not set.
-- [ ] `Kroiko.Client.Tests` publishes the Release build once per run and serves it from Kestrel; missing browsers fail with the install command.
-- [ ] The "offline shell" E2E scenario passes: offline reload, no failed requests, Roboto available.
-- [ ] `dotnet test` and `dotnet test --filter Category!=E2E` both work from the repo root.
+- [x] No Bootstrap, template pages or `sample-data` remain; MudBlazor is the only UI library.
+- [x] `/` and `/configuration` render inside a `MudAppBar` layout; unknown routes redirect to `/`; the About dialog opens.
+- [x] Roboto is self-hosted, precached (`.woff2` in `offlineAssetsInclude`), and the app makes no cross-origin requests.
+- [x] `InvariantGlobalization` is not set.
+- [x] `Kroiko.Client.Tests` publishes the Release build once per run and serves it from Kestrel; missing browsers fail with the install command.
+- [x] The "offline shell" E2E scenario passes: offline reload, no failed requests, Roboto available.
+- [x] `dotnet test` and `dotnet test --filter Category!=E2E` both work from the repo root.
 - [ ] The app installs from Edge on `localhost` (manual, noted in the PR).
 
 ## Out of this phase

@@ -1,0 +1,114 @@
+@using Kroiko.Client.Blazor.Conversion
+@inherits ConverterStateComponentBase
+@inject ILogger<FileUploadComponent> Logger
+@inject ISnackbar Snackbar
+
+<MudPaper Class="pa-4">
+    <MudStack Spacing="2">
+        <MudText>Избери Polyboard файл:</MudText>
+        @* Drag-and-drop: with CustomContent, MudBlazor renders no drop overlay of its own, so we
+           expose the internal <input> (Hidden="false") and stretch it transparently over the whole
+           zone. A native file <input> accepts dropped files (assign + change) instead of letting the
+           browser navigate to them. The wrapping .relative gives the absolute input its bounds. *@
+        <div class="relative mud-width-full">
+            <MudFileUpload T="IBrowserFile"
+                           @ref="_fileUpload"
+                           Accept=".txt,.csv"
+                           MaximumFileCount="1"
+                           FilesChanged="OnFileUploadAsync"
+                           Hidden="false"
+                           InputClass="absolute mud-width-full mud-height-full overflow-hidden z-10 upload-drop-input"
+                           Disabled="@ConverterState.IsUploading">
+                <CustomContent Context="fileUpload">
+                    <MudPaper Outlined="true" Class="pa-8"
+                              Style="border: 2px dashed var(--mud-palette-lines-inputs, #bdbdbd); text-align: center;">
+                        <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Color="Color.Primary" />
+                            <MudText Typo="Typo.body1">Плъзнете и пуснете Polyboard файл тук, или</MudText>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                       OnClick="@(() => fileUpload.OpenFilePickerAsync())"
+                                       Disabled="@ConverterState.IsUploading">
+                                Избери Polyboard файл
+                            </MudButton>
+                        </MudStack>
+                    </MudPaper>
+                </CustomContent>
+            </MudFileUpload>
+        </div>
+
+        @if (ConverterState.IsUploading)
+        {
+            <Spinner />
+        }
+        @if (ConverterState.UploadErrors.Count > 0)
+        {
+            @* ConverterState's lines: up to 10 "ред N: …" and "…и още N", or that the file is empty (ADR-0006 §2). *@
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
+                Каченият файл не отговаря на изискванията за формат! Моля, качете друг файл.
+                <ul>
+                    @foreach (var line in ConverterState.UploadErrors)
+                    {
+                        <li>@line</li>
+                    }
+                </ul>
+            </MudAlert>
+            <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="my-2">
+                Информация за формата може да намерите <a href="configuration">ТУК</a>
+            </MudAlert>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    // As on the Server; a Polyboard cut list is a few kilobytes.
+    private const long MaxFileSize = 10 * 1024 * 1024;
+
+    private MudFileUpload<IBrowserFile>? _fileUpload;
+
+    private async Task OnFileUploadAsync(IBrowserFile? file)
+    {
+        if (file is null)
+        {
+            return;
+        }
+
+        Stream content;
+        try
+        {
+            content = file.OpenReadStream(MaxFileSize);
+        }
+        catch (Exception exception)
+        {
+            // E.g. a file over MaxFileSize. UploadAsync reports its own failures through ConverterState.Error.
+            Logger.LogError(exception, "The uploaded file could not be opened.");
+            Snackbar.Add(ConverterState.ReadFailedMessage, Severity.Error);
+            await ForgetPickAsync();
+            return;
+        }
+
+        await using (content)
+        {
+            await ConverterState.UploadAsync(content);
+        }
+
+        await ForgetPickAsync();
+    }
+
+    // Forget the pick, so choosing the same file again (e.g. after a "no") uploads it again.
+    private async Task ForgetPickAsync()
+    {
+        try
+        {
+            if (_fileUpload is not null)
+            {
+                await _fileUpload.ClearAsync();
+            }
+        }
+        catch (Exception exception)
+        {
+            Logger.LogWarning(exception, "The file picker could not be cleared.");
+        }
+    }
+}

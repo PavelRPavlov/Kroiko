@@ -240,6 +240,17 @@ Its own PR, once steps 1–8 are merged.
   diff → regenerate with `UPDATE_GOLDEN=1`, open each changed file in Excel, and describe the diff
   in the PR; any **value** change → stop and ask.
 
+Done, with **no golden diff** (ADR-0008 rule 1): `Kroiko.Domain` references `LargeXlsx` 2.0.2 and nothing else at
+runtime, the Server's direct 1.12.0 reference is gone (it gets 2.0.2 through the domain), and the code did not change
+(the synchronous `XlsxWriter` API is the same). `SharpCompress` and `ZstdSharp` are gone from the transitive graph of
+both `Kroiko.Domain` and `ATAFurniture.Server`, and the build no longer reports NU1902. All 31 golden cases pass
+against the phase-01 recording. Outside the golden files' scope (the worksheet XML), a full-package comparison of all
+34 `.xlsx` from 1.12 and 2.0.2 showed byte-identical worksheets and `.cut_mt` files, the same value, type and resolved
+style for every cell, and differences only in three other parts: `workbook.xml` (UTF-8 BOM dropped),
+`sharedStrings.xml` (BOM dropped, a newline after the XML declaration; it is empty, as every string is inline),
+`styles.xml` (a newline after the XML declaration) and `docProps/app.xml` (`LargeXlsx/2.0.2` as the application). The domain still builds with its guard, and a trimmed self-contained publish of a probe calling
+every `IOrderFormat` reported no IL warnings.
+
 ## Done criteria
 
 - [x] `PolyboardParser.Parse`, `IOrderFormat` (`CreateFiles`, `Generate`, `Check`) and `OrderFormats` are the only public conversion entry points; builders, providers and generators are `internal`.
@@ -251,8 +262,8 @@ Its own PR, once steps 1–8 are merged.
 - [x] `Check` and `FileNameSanitizer` are covered by domain tests; the 6-material limit is one constant.
 - [ ] `ATAFurniture.Server` is rewired, and its UI was smoke-checked once per manufacturer against the golden files.
 - [x] `ATAFurniture.Server.Tests` holds only the Server-only tests; `GenerationSmokeTests` is gone.
-- [ ] LargeXlsx is 2.0.2 and SharpCompress is gone from the domain's dependency graph; any golden change is explained in its PR.
-- [ ] [CONTEXT.md](../../CONTEXT.md) §4/§7 updated: the "not yet implemented" notes for ADR-0004 are removed, and the fixed known issues are marked fixed.
+- [x] LargeXlsx is 2.0.2 and SharpCompress is gone from the domain's dependency graph; any golden change is explained in its PR.
+- [x] [CONTEXT.md](../../CONTEXT.md) §4/§7 updated: the "not yet implemented" notes for ADR-0004 are removed, and the fixed known issues are marked fixed.
 
 ## Out of this phase
 
