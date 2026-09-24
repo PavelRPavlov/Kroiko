@@ -1,6 +1,6 @@
 # 03 — Client shell
 
-- **Status:** Not started
+- **Status:** In progress
 - **Depends on:** —  **Can run alongside:** [01](01-golden-baseline.md), [02](02-shared-domain.md)
 - **ADRs:** [0005](../adr/0005-copy-conversion-ui-into-pwa.md) §2, [0007](../adr/0007-parity-and-test-strategy.md) §1, §5–6; research: [.NET 10 PWA facts](../research/dotnet10-blazor-wasm-pwa.md)
 
@@ -61,8 +61,8 @@ harness. This phase does not touch `Kroiko.Domain`.
 
 ## Done criteria
 
-- [ ] No Bootstrap, template pages or `sample-data` remain; MudBlazor is the only UI library.
-- [ ] `/` and `/configuration` render inside a `MudAppBar` layout; unknown routes redirect to `/`; the About dialog opens.
+- [x] No Bootstrap, template pages or `sample-data` remain; MudBlazor is the only UI library.
+- [x] `/` and `/configuration` render inside a `MudAppBar` layout; unknown routes redirect to `/`; the About dialog opens.
 - [ ] Roboto is self-hosted, precached (`.woff2` in `offlineAssetsInclude`), and the app makes no cross-origin requests.
 - [ ] `InvariantGlobalization` is not set.
 - [ ] `Kroiko.Client.Tests` publishes the Release build once per run and serves it from Kestrel; missing browsers fail with the install command.
