@@ -58,6 +58,17 @@ In `Kroiko.Testing`:
 - Keep date normalisation in one place: a regex for the date format the file-name providers and
   the `.cut_mt` header use today.
 
+Done. Layout of `TestData/golden/<fixture>/<manufacturer>/`: `names.txt` (one name per line, LF);
+each `.xlsx` becomes a folder named after the (normalised) file, holding its worksheet entries at
+their package paths, e.g. `{date}_Тест ООД.xlsx/xl/worksheets/sheet1.xml`; any other file (the
+`.cut_mt`) is stored under its own name. Dates matching `yyyy-MM-dd` become `{date}`
+(`OrderFilesAssert.DateToken`); the `.cut_mt` has no date today. Recording deletes and rewrites the
+whole `<fixture>/<manufacturer>/` folder. A mismatch throws `GoldenFileMismatchException`.
+`.gitattributes` marks `TestData/golden/**` `-text` so git never converts line endings. The
+`manufacturer` argument is only a folder name, so step 3's different-edge-colour case can use its
+own (e.g. `Suliver-different-edge-color`). `OrderFilesAssertTests` (in `ATAFurniture.Server.Tests`
+for now, via `InternalsVisibleTo`) records into a temp folder; they move with the golden tests in phase 02.
+
 ### 3. Golden tests on today's code
 
 In `ATAFurniture.Server.Tests`, add `GoldenTests` driven by **one helper**:
@@ -94,7 +105,7 @@ static IReadOnlyList<FileSaveContext> RunPipeline(string fixture, string manufac
 
 - [x] `Kroiko.Testing` exists in the solution; all fixtures live in `Kroiko.Testing/TestData/polyboard/` with neutral names; the old fixture folders are gone.
 - [x] No fixture file name refers to a person or a customer.
-- [ ] `OrderFilesAssert` compares worksheet XML, `.cut_mt` bytes and `names.txt`, with dates normalised; `UPDATE_GOLDEN=1` rewrites the source golden files.
+- [x] `OrderFilesAssert` compares worksheet XML, `.cut_mt` bytes and `names.txt`, with dates normalised; `UPDATE_GOLDEN=1` rewrites the source golden files.
 - [ ] `GoldenTests` covers every valid fixture × all three manufacturers, plus the Suliver different-edge-colour case, through a single `RunPipeline` helper.
 - [ ] The golden files are committed and were reviewed in Excel.
 - [ ] The `bg-BG` test exists, is skipped with a reason pointing at phase 02, and fails only because of culture when un-skipped.

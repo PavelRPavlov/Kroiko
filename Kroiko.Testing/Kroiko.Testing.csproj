@@ -7,6 +7,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <InternalsVisibleTo Include="ATAFurniture.Server.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\Kroiko.Domain\Kroiko.Domain.csproj" />
     </ItemGroup>
 

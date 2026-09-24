@@ -1,3 +1,7 @@
 # The Polyboard parser splits strictly on CRLF (DetailsExtractorService),
 # so the test fixtures must keep CRLF regardless of platform / core.autocrlf.
 Kroiko.Testing/TestData/polyboard/*.txt text eol=crlf
+
+# Golden files (01-golden-baseline) are compared byte for byte / as exact text: worksheet XML
+# uses LF, the .cut_mt uses the generator's line endings. Never let git convert them.
+Kroiko.Testing/TestData/golden/** -text
