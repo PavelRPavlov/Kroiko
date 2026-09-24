@@ -108,9 +108,18 @@ only the domain tests record the Server's output. The host and the missing-brows
 `Hosting/` checks the Azure Static Web Apps config, `Kroiko.Client.Blazor/wwwroot/staticwebapp.config.json`
 (fallback excludes, `no-cache` routes, MIME types), and against the publish output that it is published at the
 root, that the service worker does not precache it, and that every precached asset is excluded from the fallback.
+`PublishScript/` runs the real `scripts/publish-pwa.ps1` (the manual deploy, phase 07) in `pwsh` against a
+throwaway git repository with a bare `origin`, with `dotnet` and `swa` replaced by logging stubs on `PATH`: the
+branch-model refusals, the exact `swa deploy` command, the dry run, and that the token is never printed.
 `Conversion/ConverterStateTests` unit-tests the Order rules through `ConverterState`'s public API with the
 confirmation and the device settings faked (`Conversion/Fakes.cs`, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §4), on the
 real domain and the shared fixtures; no browser, no `Category=E2E`.
+
+**Deploys** are manual: `scripts/publish-pwa.ps1 -Environment main|production [-DryRun]` refuses a dirty tree, a
+`HEAD` that is not `origin/main` (staging) or `origin/release` checked out as `release` with the pushed tag
+`v<Version>`, no older than any `vX.Y.Z` tag on `origin` (production), and failing tests; then publishes in
+Release and runs `swa deploy <temp>/wwwroot --env <main|production>`. The token comes only from
+`SWA_CLI_DEPLOYMENT_TOKEN`, and only the `swa` call sees it.
 
 **`ConverterState`** (`Kroiko.Client.Blazor/Conversion/`) is the app's one Order ([ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §4),
 registered scoped (once for a WASM app) by `AddConverterState()` in `Program.cs`. It depends on `IConfirmation` (a yes/no
