@@ -11,15 +11,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="TemplateBuilding\Lonira\template.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="TemplateBuilding\Suliver\template.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="TemplateBuilding\MegaTrading\template.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
+      <!-- Compiled into the DLL (ADR-0004 §2): no file on disk, so they work in the browser and are
+           offline-cached with the assembly. Manifest names: Kroiko.Domain.TemplateBuilding.<Manufacturer>.template.json -->
+      <None Remove="TemplateBuilding\*\template.json" />
+      <EmbeddedResource Include="TemplateBuilding\*\template.json" />
     </ItemGroup>
 
 </Project>

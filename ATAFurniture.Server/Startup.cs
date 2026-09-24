@@ -2,10 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using ATAFurniture.Server.Auth;
 using ATAFurniture.Server.DataAccess;
-using ATAFurniture.Server.TemplateBuilding;
 using Microsoft.AspNetCore.Authentication;
-using ATAFurniture.Server.TemplateBuilding.Lonira;
-using ATAFurniture.Server.TemplateBuilding.Suliver;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -86,13 +83,16 @@ public class Startup(IConfiguration configuration, IWebHostEnvironment environme
         services.AddScoped<UserContextService>();
         
         services.AddScoped<IDetailsExtractorService, DetailsExtractorService>();
-        services.AddKeyedScoped<ITemplateBuilder, LoniraTemplateBuilder>(nameof(SupportedCompanies.Lonira));
+        services.AddKeyedScoped<ITemplateBuilder>(nameof(SupportedCompanies.Lonira),
+            (sp, key) => new LoniraTemplateBuilder(sp.GetRequiredKeyedService<ITableRowProvider>(key)));
         services.AddKeyedScoped<ITableRowProvider, LoniraTableRowProvider>(nameof(SupportedCompanies.Lonira));
         services.AddKeyedScoped<IFileNameProvider, LoniraFileNameProvider>(nameof(SupportedCompanies.Lonira));
-        services.AddKeyedScoped<ITemplateBuilder, SuliverTemplateBuilder>(nameof(SupportedCompanies.Suliver));
+        services.AddKeyedScoped<ITemplateBuilder>(nameof(SupportedCompanies.Suliver),
+            (sp, key) => new SuliverTemplateBuilder(sp.GetRequiredKeyedService<ITableRowProvider>(key)));
         services.AddKeyedScoped<ITableRowProvider, SuliverTableRowProvider>(nameof(SupportedCompanies.Suliver));
         services.AddKeyedScoped<IFileNameProvider, SuliverFileNameProvider>(nameof(SupportedCompanies.Suliver));
-        services.AddKeyedScoped<ITemplateBuilder, MegaTradingTemplateBuilder>(nameof(SupportedCompanies.MegaTrading));
+        services.AddKeyedScoped<ITemplateBuilder>(nameof(SupportedCompanies.MegaTrading),
+            (sp, key) => new MegaTradingTemplateBuilder(sp.GetRequiredKeyedService<ITableRowProvider>(key)));
         services.AddKeyedScoped<ITableRowProvider, MegaTradingTableRowProvider>(nameof(SupportedCompanies.MegaTrading));
         services.AddKeyedScoped<IFileNameProvider, MegaTradingFileNameProvider>(nameof(SupportedCompanies.MegaTrading));
         services.AddScoped<IExcelFileGenerator, ExcelFileGenerator>();

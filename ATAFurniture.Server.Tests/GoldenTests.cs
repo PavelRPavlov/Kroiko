@@ -1,9 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using ATAFurniture.Server.Models;
-using ATAFurniture.Server.TemplateBuilding;
-using ATAFurniture.Server.TemplateBuilding.Lonira;
-using ATAFurniture.Server.TemplateBuilding.Suliver;
 using Kroiko.Domain;
 using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.ExcelFilesGeneration;
@@ -117,15 +114,18 @@ public sealed class GoldenTests
 
             // Copied from Startup.ConfigureServices (keep in step with it): the keyed builder, row provider and file-name provider, resolved by
             // company name as OrderHandlingComponent.GenerateFiles does. The builders read their template.json
-            // from next to ATAFurniture.Server.dll, as in production.
+            // embedded in Kroiko.Domain, as in production.
             var services = new ServiceCollection();
-            services.AddKeyedScoped<ITemplateBuilder, LoniraTemplateBuilder>(nameof(SupportedCompanies.Lonira));
+            services.AddKeyedScoped<ITemplateBuilder>(nameof(SupportedCompanies.Lonira),
+                (sp, key) => new LoniraTemplateBuilder(sp.GetRequiredKeyedService<ITableRowProvider>(key)));
             services.AddKeyedScoped<ITableRowProvider, LoniraTableRowProvider>(nameof(SupportedCompanies.Lonira));
             services.AddKeyedScoped<IFileNameProvider, LoniraFileNameProvider>(nameof(SupportedCompanies.Lonira));
-            services.AddKeyedScoped<ITemplateBuilder, SuliverTemplateBuilder>(nameof(SupportedCompanies.Suliver));
+            services.AddKeyedScoped<ITemplateBuilder>(nameof(SupportedCompanies.Suliver),
+                (sp, key) => new SuliverTemplateBuilder(sp.GetRequiredKeyedService<ITableRowProvider>(key)));
             services.AddKeyedScoped<ITableRowProvider, SuliverTableRowProvider>(nameof(SupportedCompanies.Suliver));
             services.AddKeyedScoped<IFileNameProvider, SuliverFileNameProvider>(nameof(SupportedCompanies.Suliver));
-            services.AddKeyedScoped<ITemplateBuilder, MegaTradingTemplateBuilder>(nameof(SupportedCompanies.MegaTrading));
+            services.AddKeyedScoped<ITemplateBuilder>(nameof(SupportedCompanies.MegaTrading),
+                (sp, key) => new MegaTradingTemplateBuilder(sp.GetRequiredKeyedService<ITableRowProvider>(key)));
             services.AddKeyedScoped<ITableRowProvider, MegaTradingTableRowProvider>(nameof(SupportedCompanies.MegaTrading));
             services.AddKeyedScoped<IFileNameProvider, MegaTradingFileNameProvider>(nameof(SupportedCompanies.MegaTrading));
             services.AddScoped<IExcelFileGenerator, ExcelFileGenerator>();

@@ -1,8 +1,5 @@
 using System.Collections.ObjectModel;
 using ATAFurniture.Server.Models;
-using ATAFurniture.Server.TemplateBuilding;
-using ATAFurniture.Server.TemplateBuilding.Lonira;
-using ATAFurniture.Server.TemplateBuilding.Suliver;
 using FluentAssertions;
 using Kroiko.Domain;
 using Kroiko.Domain.CellsExtracting;
@@ -37,9 +34,6 @@ public class GenerationSmokeTests
         var extractor = new DetailsExtractorService(NullLogger<DetailsExtractorService>.Instance);
         return await extractor.ExtractDetails(stream);
     }
-
-    private static string TemplatePath(string company) =>
-        Path.Combine(AppContext.BaseDirectory, "TemplateBuilding", company, "template.json");
 
     private static FileGeneratorService NewGenerator() =>
         new(new ExcelFileGenerator(), new MegaTradingFileGenerator());
@@ -90,7 +84,7 @@ public class GenerationSmokeTests
             .Select(g => new KroikoFile { FileName = g.Key, Details = g.ToList().ToLoniraDetails() })
             .ToList();
 
-        var builder = new LoniraTemplateBuilder(new LoniraTableRowProvider(), TemplatePath("Lonira"));
+        var builder = new LoniraTemplateBuilder(new LoniraTableRowProvider());
         var result = await NewGenerator().CreateFiles(Contact(), files, builder, new LoniraFileNameProvider());
 
         result.Should().HaveCount(4);
@@ -107,7 +101,7 @@ public class GenerationSmokeTests
             new() { FileName = "Suliver", Details = details.ToSuliverDetails() }
         };
 
-        var builder = new SuliverTemplateBuilder(new SuliverTableRowProvider(), TemplatePath("Suliver"));
+        var builder = new SuliverTemplateBuilder(new SuliverTableRowProvider());
         var result = await NewGenerator().CreateFiles(Contact(), files, builder, new SuliverFileNameProvider());
 
         result.Should().ContainSingle();
@@ -124,7 +118,7 @@ public class GenerationSmokeTests
             new() { FileName = "MegaTrading", Details = details.ToMegaTradingDetails() }
         };
 
-        var builder = new MegaTradingTemplateBuilder(new MegaTradingTableRowProvider(), TemplatePath("MegaTrading"));
+        var builder = new MegaTradingTemplateBuilder(new MegaTradingTableRowProvider());
         // generateTextFiles: true -> also emit the .cut_mt text file.
         var result = await NewGenerator().CreateFiles(
             Contact(), files, builder, new MegaTradingFileNameProvider(), generateTextFiles: true);

@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Kroiko.Domain.TemplateBuilding;
 
@@ -41,11 +42,17 @@ public abstract class TemplateBuilderBase : ITemplateBuilder
         return tableStartCell;
     }
     
-    protected async Task<T> ReadTemplateAsync<T>(string templatePath) where T : ISheet
+    /// <summary>
+    /// A fresh copy of <paramref name="manufacturer"/>'s template, deserialised from the <c>template.json</c>
+    /// embedded in this assembly. Each call returns a new sheet, as the builders fill it in place.
+    /// </summary>
+    protected static T ReadTemplate<T>(string manufacturer, JsonTypeInfo<T> typeInfo) where T : ISheet
     {
-        var rawContent = await File.ReadAllTextAsync(templatePath);
-        var templateDefinition = JsonSerializer.Deserialize<T>(rawContent);
-        return templateDefinition;
+        var resourceName = $"{typeof(TemplateBuilderBase).Namespace}.{manufacturer}.template.json";
+        using var stream = typeof(TemplateBuilderBase).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"'{resourceName}' is not embedded in {typeof(TemplateBuilderBase).Assembly.GetName().Name}.");
+        return JsonSerializer.Deserialize(stream, typeInfo)
+            ?? throw new InvalidOperationException($"'{resourceName}' holds no template.");
     }
     
     protected void PopulateDetails(ISheet sheet, Cell tableStartCell, IEnumerable<IKroikoDetail> details, ITableRowProvider tableRowProvider)
