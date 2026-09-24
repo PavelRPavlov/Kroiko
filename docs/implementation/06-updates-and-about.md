@@ -48,10 +48,11 @@ snackbar. The snackbar never reloads over an unsaved Order without asking. The A
 ## Done criteria
 
 - [x] About shows `vX.Y.Z (sha)` from the assembly's informational version; the formatting is unit-tested.
-- [ ] A published build shows "Нова версия е налична" after a newer build is served; "Презареди" applies it; "По-късно" moves the offer into About.
-- [ ] "Презареди" asks first when `HasUnsavedWork` is true.
-- [ ] Update checks run hourly, on visibility and on `online`, and are silent offline; the manual check reports its three outcomes.
+- [x] A published build shows "Нова версия е налична" after a newer build is served; "Презареди" applies it; "По-късно" moves the offer into About.
+- [x] "Презареди" asks first when `HasUnsavedWork` is true.
+- [x] Update checks run hourly, on visibility and on `online`, and are silent offline; the manual check reports its three outcomes.
 - [ ] The update flow was verified manually by publishing two versions locally (noted in the PR), and appears in the release checklist's per-release items ([07](07-hosting-and-go-live.md) 07b step 1).
+  The local two-version check is done (step 3's PR); the release-checklist half follows in 07b.
 
 ## Out of this phase
 
