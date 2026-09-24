@@ -25,7 +25,7 @@ namespace ATAFurniture.Server.Tests;
 /// valid fixture × manufacturer matches its golden file in <c>Kroiko.Testing/TestData/golden/</c>.
 /// Re-record with <c>UPDATE_GOLDEN=1</c> only for an intended output change, and explain the diff in the PR.
 /// </summary>
-public class GoldenTests
+public sealed class GoldenTests
 {
     private static readonly string[] ValidFixtures =
     [
@@ -63,7 +63,7 @@ public class GoldenTests
     [MemberData(nameof(EveryValidFixtureAndManufacturer))]
     public async Task Todays_order_files_match_the_golden_files(string fixture, string manufacturer)
     {
-        var files = await RunPipeline(fixture, manufacturer);
+        var files = await RunPipelineAsync(fixture, manufacturer);
         OrderFilesAssert.MatchGolden(fixture, manufacturer, files);
     }
 
@@ -73,14 +73,14 @@ public class GoldenTests
         // cabinet-23-field has oversized details ("СДВ с краен размер …") and "Different" edges
         // ("Кантиране с друг цвят"); the operator's colour fills the template's {DifferentEdgeColor} cell.
         const string fixture = "cabinet-23-field";
-        var files = await RunPipeline(fixture, nameof(SupportedCompanies.Suliver), differentEdgeColor: "Бял гланц");
+        var files = await RunPipelineAsync(fixture, nameof(SupportedCompanies.Suliver), differentEdgeColor: "Бял гланц");
 
         OrderFilesAssert.MatchGolden(fixture, "Suliver-different-edge-color", files);
     }
 
     // The only place that knows how today's Server turns a fixture into order files.
     // Phase 02 changes this method's body — and nothing else in the tests.
-    private static async Task<IReadOnlyList<FileSaveContext>> RunPipeline(
+    private static async Task<IReadOnlyList<FileSaveContext>> RunPipelineAsync(
         string fixture, string manufacturer, string? differentEdgeColor = null)
     {
         var culture = CultureInfo.CurrentCulture;
@@ -93,10 +93,15 @@ public class GoldenTests
             using var stream = new MemoryStream(await File.ReadAllBytesAsync(TestData.Polyboard(fixture)));
             var extractor = new DetailsExtractorService(NullLogger<DetailsExtractorService>.Instance);
             var details = new ObservableCollection<Detail>(await extractor.ExtractDetails(stream));
+            if (!details.Any())
+            {
+                // The live app stops here with an error, so there is nothing to record.
+                throw new InvalidOperationException($"'{fixture}' parses to no details; it is not a valid fixture.");
+            }
 
             var files = GroupIntoFiles(manufacturer, details);
 
-            // Startup.ConfigureServices: the keyed builder, row provider and file-name provider, resolved by
+            // Copied from Startup.ConfigureServices (keep in step with it): the keyed builder, row provider and file-name provider, resolved by
             // company name as OrderHandlingComponent.GenerateFiles does. The builders read their template.json
             // from next to ATAFurniture.Server.dll, as in production.
             var services = new ServiceCollection();

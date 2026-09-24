@@ -98,11 +98,14 @@ static IReadOnlyList<FileSaveContext> RunPipeline(string fixture, string manufac
 
 Done, except the review in Excel (no Excel on the recording machine; still to do by hand).
 `GoldenTests` runs 5 fixtures × 3 manufacturers plus `cabinet-23-field` for Suliver with
-`differentEdgeColor: "Бял гланц"`, recorded as `Suliver-different-edge-color` (that fixture also has
-the `СДВ с краен размер …` and `Кантиране с друг цвят` notes). `RunPipeline` builds its own
-`ServiceCollection` with `Startup`'s keyed registrations, so the builders load `template.json` from
-their default path next to `ATAFurniture.Server.dll`, as in production; a `null` `differentEdgeColor`
-is passed as `string.Empty`, `ConverterContext`'s initial value. Reviewed instead of in Excel: all
+`differentEdgeColor: "Бял гланц"`, recorded as `Suliver-different-edge-color`. The `СДВ с краен размер …`
+and `Кантиране с друг цвят` notes come from that fixture's data, so plain `cabinet-23-field/Suliver`
+records them too; the extra case pins the operator's colour in the `{DifferentEdgeColor}` cell (B1).
+The helper is `RunPipelineAsync`, because `CreateFiles` is async (AGENTS.md: `Async` suffix). It builds
+its own `ServiceCollection` with a copy of `Startup`'s keyed registrations, so the builders load
+`template.json` from their default path next to `ATAFurniture.Server.dll`, as in production; a `null`
+`differentEdgeColor` is passed as `string.Empty`, `ConverterContext`'s initial value; and a fixture
+that parses to no details throws, as the live upload stops there. Reviewed instead of in Excel: all
 worksheet XML parses, row counts equal details plus template header rows, only Lonira's template
 carries the contact cells, and the generated `.xlsx` packages are valid. No fixture contains Cyrillic,
 so the `.cut_mt` bodies are ASCII plus `╪` (UTF-8, no BOM) and Cyrillic appears only in the
