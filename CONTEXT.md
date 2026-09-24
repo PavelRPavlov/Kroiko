@@ -31,7 +31,7 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 | **Order** | One conversion in progress: a parsed Polyboard file, the chosen SupportedCompany, its editable KroikoFiles, the Contact info and, once generated, the order files. Changing any of these inputs discards the generated files. Not the same as the Server's `User`/credit records. | [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) |
 | **Contact info** | The end customer's company name and phone number, written into the order files. Both must be filled before generating; the PWA remembers the last values used per device. The Server edits a `ContactInfoModel` that also carries the user's email. _Avoid_: account info, profile. | `Kroiko.Domain/ContactInfo.cs`, [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) |
 | **Sheet / Cell** | In-memory spreadsheet model. A Cell has an Excel-style name ("A1"), a value, and alignment. | `Kroiko.Domain/TemplateBuilding/` |
-| **TemplateBuilder** | Per-company: fills a JSON template sheet with static info + detail rows. | `*/TemplateBuilding/*TemplateBuilder.cs` |
+| **TemplateBuilder** | Per-company: fills a fresh copy of its `template.json` (embedded in `Kroiko.Domain`) with static info + detail rows. | `Kroiko.Domain/TemplateBuilding/*/*TemplateBuilder.cs` |
 | **TableRowProvider** | Per-company: maps a detail into a row of Cells (explicit column list; reflection is being removed). | `Kroiko.Domain/TemplateBuilding/*/` |
 | **FileNameProvider** | Per-company: names the produced file. | `Kroiko.Domain/TemplateBuilding/*/` |
 | **Credit** | Unit of metered usage. Consumed on download / successful email. Stored on the Server's `User` row. | `UserContextService`, `KroikoDataRepository` |
@@ -136,11 +136,12 @@ These were found in a code review; several are naturally fixed by the migration.
   → ✅ Gone from the domain (three manufacturers, ADR-0004; phase 02 step 1); Kuklensko is the Server's
   `ManufacturerBranches.SuliverKuklensko`, which shares the Suliver format on purpose.
 - 🟠 **Browser-safety gaps in `Kroiko.Domain`.**
-  `TemplateBuilderBase.ReadTemplateAsync` uses `File.ReadAllTextAsync` (no filesystem in WASM);
-  its `JsonSerializer.Deserialize` and all three `TableRowProvider`s' `Type.GetProperty`
-  reflection are trim-fragile (IL2026/IL2070). LargeXlsx generation itself is WASM/trim-clean.
+  ✅ Templates: the three `template.json` files are embedded resources of `Kroiko.Domain`, read with
+  `GetManifestResourceStream` through the source-generated `TemplateJsonContext` (phase 02 step 3).
+  Still open: all three `TableRowProvider`s' `Type.GetProperty` reflection is trim-fragile (IL2070).
+  LargeXlsx generation itself is WASM/trim-clean.
   → Decided in [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md): embedded
-  templates + source-generated JSON, explicit column mappings, trim analyzers as errors (not yet implemented).
+  templates + source-generated JSON (done), explicit column mappings, trim analyzers as errors (not yet implemented).
 
 ## 8. Cross-cutting invariants (do not break)
 

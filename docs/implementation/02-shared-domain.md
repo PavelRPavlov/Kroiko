@@ -88,6 +88,15 @@ log entry, and that an LF-only file now parses.
 - Move the Server's `*TemplateBuilder`s into the domain. Remove the optional `templatePath`
   constructor parameter and every `File.*` / `Assembly.Location` use.
 
+Done. `Kroiko.Domain.csproj` embeds `TemplateBuilding/*/template.json` (manifest names
+`Kroiko.Domain.TemplateBuilding.<Manufacturer>.template.json`) and no longer copies them to the output.
+`TemplateBuilderBase.ReadTemplate(manufacturer, typeInfo)` deserialises a fresh sheet from the resource stream on
+every call through the source-generated `TemplateJsonContext` (default options, as before). The three builders
+live in `Kroiko.Domain/TemplateBuilding/<Manufacturer>/`, take only their `ITableRowProvider` (no `templatePath`,
+no DI attribute: the domain has no DI), and return their sheets without I/O. `Startup` and the golden helper's copy
+of it register each builder with a factory that passes the keyed row provider. `TemplateBuilderTests` (domain)
+proves each builder works with no path and starts every build from a fresh template; the golden files are unchanged.
+
 ### 4. Explicit column mappings and invariant culture
 
 - Replace the row providers' `Type.GetProperty` reflection with explicit per-manufacturer column
@@ -160,7 +169,7 @@ Its own PR, once steps 1–8 are merged.
 
 - [ ] `PolyboardParser.Parse`, `IOrderFormat` (`CreateFiles`, `Generate`, `Check`) and `OrderFormats` are the only public conversion entry points; builders, providers and generators are `internal`.
 - [x] The domain has no `User`, no email, no INPC; `SupportedCompany` has three manufacturers.
-- [ ] Templates are embedded resources read through a source-generated JSON context.
+- [x] Templates are embedded resources read through a source-generated JSON context.
 - [ ] `Kroiko.Domain` builds with the trim/AOT analyzers as errors and the banned-API list, with no suppressions.
 - [ ] The golden tests pass under invariant **and** `bg-BG` culture, and live in `Kroiko.Domain.Tests`.
 - [x] LF, CR, BOM and whitespace-line fixtures parse to the same Details as their CRLF originals.
