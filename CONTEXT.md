@@ -116,7 +116,7 @@ one download triggered, `MarkSaved()`).
 inherit `ConverterStateComponentBase` (injects `ConverterState`, re-renders on `Changed`). The Converter page (`/`) loads the device
 settings on init and shows `Error` as a snackbar. `TargetCompanySelectionComponent` offers the three manufacturers and, after a "Не",
 re-creates its `MudSelect` (a new `@key`) so it shows `ConverterState`'s manufacturer again. `FileUploadComponent` hands the picked file
-(≤ 10 MB, as on the Server) to `UploadAsync` and lists `UploadErrors` in its alert, with the link to `/configuration`.
+(≤ 10 MB, as on the Server) to `UploadAsync` and lists `UploadErrors` (the last upload's only: cleared when the next one starts) in its alert, with the link to `/configuration`.
 `E2E/UploadPanelTests` covers the alert, the discard confirmation and the remembered manufacturer.
 
 **Device settings** (`LocalStorageDeviceSettingsStore`, registered by `AddDeviceSettingsStore()`) are one JSON document

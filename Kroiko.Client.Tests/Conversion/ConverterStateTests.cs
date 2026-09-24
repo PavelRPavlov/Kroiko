@@ -83,6 +83,18 @@ public sealed class ConverterStateTests
     }
 
     [Fact]
+    public async Task The_upload_errors_describe_only_the_last_file_so_a_declined_upload_clears_them()
+    {
+        await LoadAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        await _state.UploadAsync(Fixture("bad-lines-12"));
+        _confirmation.Answer = false;
+
+        await _state.UploadAsync(Fixture("kitchen-8-materials"));
+
+        _state.UploadErrors.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task A_file_with_no_Details_and_no_errors_is_rejected_as_empty()
     {
         var loaded = await _state.UploadAsync(new MemoryStream("\r\n  \r\n"u8.ToArray()));

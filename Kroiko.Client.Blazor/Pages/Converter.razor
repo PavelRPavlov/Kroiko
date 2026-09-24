@@ -19,13 +19,9 @@
 
     private void ShowError(string message) => Snackbar.Add(message, Severity.Error);
 
-    protected override void Dispose(bool disposing)
+    public override void Dispose()
     {
-        if (disposing)
-        {
-            ConverterState.Error -= ShowError;
-        }
-
-        base.Dispose(disposing);
+        ConverterState.Error -= ShowError;
+        base.Dispose();
     }
 }

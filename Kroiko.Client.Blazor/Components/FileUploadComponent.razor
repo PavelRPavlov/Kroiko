@@ -74,24 +74,41 @@
             return;
         }
 
+        Stream content;
         try
         {
-            await using var content = file.OpenReadStream(MaxFileSize);
-            await ConverterState.UploadAsync(content);
+            content = file.OpenReadStream(MaxFileSize);
         }
-        catch (IOException exception)
+        catch (Exception exception)
         {
-            // OpenReadStream refuses a file over MaxFileSize; UploadAsync reports its own failures.
+            // E.g. a file over MaxFileSize. UploadAsync reports its own failures through ConverterState.Error.
             Logger.LogError(exception, "The uploaded file could not be opened.");
             Snackbar.Add(ConverterState.ReadFailedMessage, Severity.Error);
+            await ForgetPickAsync();
+            return;
         }
-        finally
+
+        await using (content)
         {
-            // Forget the pick, so choosing the same file again (e.g. after a "no") uploads it again.
+            await ConverterState.UploadAsync(content);
+        }
+
+        await ForgetPickAsync();
+    }
+
+    // Forget the pick, so choosing the same file again (e.g. after a "no") uploads it again.
+    private async Task ForgetPickAsync()
+    {
+        try
+        {
             if (_fileUpload is not null)
             {
                 await _fileUpload.ClearAsync();
             }
+        }
+        catch (Exception exception)
+        {
+            Logger.LogWarning(exception, "The file picker could not be cleared.");
         }
     }
 }

@@ -61,7 +61,8 @@ public sealed class ConverterState(
 
     /// <summary>
     /// Why the last uploaded file was rejected, for the upload panel's alert: up to 10 <c>ред N: …</c> lines
-    /// and <c>…и още N</c> (ADR-0006 §2), or that it is empty. Empty once a file is loaded.
+    /// and <c>…и още N</c> (ADR-0006 §2), or that it is empty. Cleared when the next upload starts, so it
+    /// never describes an older file.
     /// </summary>
     public IReadOnlyList<string> UploadErrors { get; private set; } = [];
 
@@ -192,6 +193,7 @@ public sealed class ConverterState(
 
         ParseResult result;
         IsUploading = true;
+        UploadErrors = [];
         OnChanged();
         try
         {
@@ -218,14 +220,7 @@ public sealed class ConverterState(
             return false;
         }
 
-        if (!await ReplaceFilesAsync(Manufacturer, result.Details))
-        {
-            return false;
-        }
-
-        UploadErrors = [];
-        OnChanged();
-        return true;
+        return await ReplaceFilesAsync(Manufacturer, result.Details);
     }
 
     /// <summary>

@@ -8,9 +8,9 @@ namespace Kroiko.Client.Blazor.Conversion;
 /// </summary>
 public sealed class MudDialogConfirmation(IDialogService dialogs) : IConfirmation
 {
-    internal const string Title = "Потвърждение";
-    internal const string Yes = "Да";
-    internal const string No = "Не";
+    private const string Title = "Потвърждение";
+    private const string Yes = "Да";
+    private const string No = "Не";
 
     public async Task<bool> ConfirmAsync(string question) =>
         await dialogs.ShowMessageBoxAsync(Title, question, yesText: Yes, noText: No) == true;
