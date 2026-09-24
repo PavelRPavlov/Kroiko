@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Headers;
+using Kroiko.Client.Tests.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -23,7 +24,7 @@ namespace Kroiko.Client.Tests.E2E;
 /// </summary>
 internal sealed class StaticSiteHost : IAsyncDisposable
 {
-    private const string ConfigFilePath = "/staticwebapp.config.json";
+    private const string ConfigFilePath = "/" + StaticWebAppConfig.FileName;
 
     // Preferred first, as a static host would.
     private static readonly (string Encoding, string Extension)[] Precompressed = [("br", ".br"), ("gzip", ".gz")];

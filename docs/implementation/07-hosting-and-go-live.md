@@ -73,7 +73,9 @@ Deploy the phase 03 shell with `-Environment main`, then check it by hand on the
 - `curl -sI -H "Accept-Encoding: br" <url>/_framework/<a .wasm file>` → `Content-Encoding: br`
   and `Content-Type: application/wasm`;
 - `/manifest.webmanifest`, a `.dat` file and a font return the MIME types above;
-- `/configuration` and an unknown route both serve the app; a missing `/_framework/x.js` is a 404;
+- `/configuration` and an unknown route both serve the app; a missing `/_framework/x.js` is a 404, and so
+  is a missing `/_content/MudBlazor/x.css` (only the `*.{…}` extension exclude covers it; the tests match it
+  the way the SWA CLI emulator does, so this is its check against the real service);
 - `index.html` and `service-worker.js` carry `Cache-Control: no-cache`;
 - Edge installs it, and after one online visit it starts offline.
 

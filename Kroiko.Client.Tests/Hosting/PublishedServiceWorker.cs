@@ -33,18 +33,27 @@ internal static partial class PublishedServiceWorker
             .ToList();
     }
 
-    // `const name = [ /a/, /b/ ];`: the JavaScript regex literals the template uses are also valid .NET patterns.
+    // `const name = [ /a/, /b/i ];`: the JavaScript regex literals the template uses are also valid .NET patterns.
+    // Anything in the list that is not such a literal fails loudly instead of being skipped.
     private static List<Regex> RegexList(string worker, string name)
     {
-        var declaration = Regex.Match(worker, $@"const {name} = \[(?<items>[^\]]*)\];");
+        var declaration = Regex.Match(worker, $@"const\s+{name}\s*=\s*\[(?<items>.*?)\]\s*;");
         if (!declaration.Success)
             throw new InvalidOperationException($"No `const {name} = [ … ];` in the published service-worker.js.");
 
-        return RegexLiteral().Matches(declaration.Groups["items"].Value)
-            .Select(literal => new Regex(literal.Groups["pattern"].Value))
+        var items = declaration.Groups["items"].Value;
+        var literals = RegexLiteral().Matches(items);
+        if (RegexLiteral().Replace(items, "").Trim(',', ' ', '\t', '\r', '\n').Length > 0)
+            throw new InvalidOperationException($"`{name}` holds something other than regex literals: [{items}]");
+
+        return literals
+            .Select(literal => new Regex(
+                literal.Groups["pattern"].Value,
+                literal.Groups["flags"].Value.Contains('i') ? RegexOptions.IgnoreCase : RegexOptions.None))
             .ToList();
     }
 
-    [GeneratedRegex(@"/(?<pattern>(?:\\.|[^/\\])+)/")]
+    // A /pattern/flags literal. A character class ([...]) may contain an unescaped '/', as JavaScript allows.
+    [GeneratedRegex(@"/(?<pattern>(?:\\.|\[(?:\\.|[^\]\\])*\]|[^/\\\[\r\n])+)/(?<flags>[dgimsuvy]*)")]
     private static partial Regex RegexLiteral();
 }

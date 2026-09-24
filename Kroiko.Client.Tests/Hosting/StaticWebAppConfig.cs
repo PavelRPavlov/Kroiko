@@ -28,7 +28,8 @@ internal sealed class StaticWebAppConfig
     /// <summary>The top-level sections, e.g. <c>navigationFallback</c>, <c>routes</c>, <c>mimeTypes</c>.</summary>
     public IReadOnlyList<string> Sections => _root.EnumerateObject().Select(property => property.Name).ToList();
 
-    public string? FallbackRewrite => NavigationFallback?.GetProperty("rewrite").GetString();
+    public string? FallbackRewrite =>
+        NavigationFallback is { } fallback && fallback.TryGetProperty("rewrite", out var rewrite) ? rewrite.GetString() : null;
 
     public IReadOnlyList<string> FallbackExcludes =>
         NavigationFallback is { } fallback && fallback.TryGetProperty("exclude", out var exclude)
