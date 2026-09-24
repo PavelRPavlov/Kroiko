@@ -354,7 +354,7 @@ public sealed class ConverterStateTests
     public async Task Any_input_edit_clears_the_generated_files_and_the_saved_flag_without_asking(string edit)
     {
         await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
-        _state.MarkSaved();
+        await _state.DownloadAsync(_state.GeneratedFiles[0]);
 
         Edit(edit);
 
@@ -423,7 +423,7 @@ public sealed class ConverterStateTests
     public async Task An_edit_after_saving_is_unsaved_work_again()
     {
         await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
-        _state.MarkSaved();
+        await _state.DownloadAsync(_state.GeneratedFiles[0]);
 
         Edit("cell");
 
@@ -434,21 +434,11 @@ public sealed class ConverterStateTests
     public async Task Generating_again_after_saving_is_unsaved_work_again()
     {
         await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
-        _state.MarkSaved();
+        await _state.DownloadAsync(_state.GeneratedFiles[0]);
 
         await _state.GenerateAsync();
 
         _state.HasUnsavedWork.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task Nothing_generated_cannot_be_saved()
-    {
-        await LoadAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
-
-        _state.MarkSaved();
-
-        _state.IsSaved.Should().BeFalse();
     }
 
     [Theory]
@@ -457,14 +447,14 @@ public sealed class ConverterStateTests
     [InlineData("cell")]
     [InlineData("company name")]
     [InlineData("generate")]
-    [InlineData("save")]
+    [InlineData("download file")]
     [InlineData("download all")]
     [InlineData("save to folder")]
     public async Task Every_change_raises_Changed_once_the_state_has_changed(string change)
     {
         await LoadAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
         FillContacts();
-        if (change is "save" or "download all" or "save to folder")
+        if (change is "download file" or "download all" or "save to folder")
         {
             await _state.GenerateAsync();
         }
@@ -477,7 +467,7 @@ public sealed class ConverterStateTests
             case "upload": await _state.UploadAsync(Fixture("kitchen-8-materials")); break;
             case "manufacturer": await _state.SelectManufacturerAsync(SupportedCompanies.Suliver); break;
             case "generate": await _state.GenerateAsync(); break;
-            case "save": _state.MarkSaved(); break;
+            case "download file": await _state.DownloadAsync(_state.GeneratedFiles[0]); break;
             case "download all": await _state.DownloadAllAsync(); break;
             case "save to folder": await _state.SaveToFolderAsync(); break;
             default: Edit(change); break;
@@ -855,6 +845,115 @@ public sealed class ConverterStateTests
         await second!;
 
         _downloader.Downloads.Should().HaveCount(4);
+    }
+
+    [Fact]
+    public async Task Downloading_one_file_triggers_only_that_file_under_its_sanitised_name_and_sets_the_saved_flag()
+    {
+        await _state.SelectManufacturerAsync(SupportedCompanies.Lonira);
+        await _state.UploadAsync(Polyboard(
+            "214.0;247.0;1;HDF 3 mm;0;1;1;1;0;Model[0];1",
+            "250.0;247.0;1;Egger W1000: \"бял\";0;0;0;1;0;Model[0];2"));
+        FillContacts();
+        await _state.GenerateAsync();
+
+        await _state.DownloadAsync(_state.GeneratedFiles[1]);
+
+        _downloader.Downloads.Should().ContainSingle();
+        _downloader.Downloads[0].FileName.Should().Be("Egger W1000_ _бял_.xlsx");
+        _downloader.Downloads[0].Content.Should().Equal(_state.GeneratedFiles[1].Content);
+        _state.IsSaved.Should().BeTrue();
+        _state.HasUnsavedWork.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task A_file_download_that_cannot_start_raises_an_error_and_is_not_saved()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var errors = new List<string>();
+        _state.Error += errors.Add;
+        _downloader.FailAt = 0;
+
+        await _state.DownloadAsync(_state.GeneratedFiles[0]);
+
+        errors.Should().Equal("Файлът за поръчка не можа да бъде изтеглен.");
+        _state.IsSaved.Should().BeFalse();
+        _state.IsDownloading.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Downloading_one_file_is_busy_until_it_is_triggered_and_nothing_else_saves_meanwhile()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var busy = new List<bool>();
+        Task? others = null;
+        _downloader.OnDownload = () =>
+        {
+            if (others is not null)
+            {
+                return;
+            }
+
+            busy.Add(_state.IsDownloading);
+            busy.Add(_state.CanGenerate);
+            others = Task.CompletedTask;
+            others = Task.WhenAll(
+                _state.DownloadAsync(_state.GeneratedFiles[1]),
+                _state.DownloadAllAsync(),
+                _state.SaveToFolderAsync());
+        };
+
+        await _state.DownloadAsync(_state.GeneratedFiles[0]);
+        await others!;
+
+        busy.Should().Equal(true, false);
+        _downloader.Downloads.Should().ContainSingle();
+        _picker.Picks.Should().Be(0);
+        _state.IsDownloading.Should().BeFalse();
+        _state.CanGenerate.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task A_file_that_is_no_longer_generated_is_not_downloaded()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var discarded = _state.GeneratedFiles[0];
+        Edit("cell");
+        await _state.GenerateAsync();
+
+        await _state.DownloadAsync(discarded);
+
+        _downloader.Downloads.Should().BeEmpty();
+        _state.IsSaved.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task An_edit_while_a_file_downloads_leaves_the_new_input_unsaved()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        _downloader.OnDownload = () => _state.CompanyName = "Друга ООД";
+
+        await _state.DownloadAsync(_state.GeneratedFiles[0]);
+
+        _downloader.Downloads.Should().ContainSingle();
+        _state.IsSaved.Should().BeFalse();
+        _state.HasUnsavedWork.Should().BeTrue();
+        _state.IsDownloading.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task A_file_link_waits_for_a_folder_save()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var picked = new TaskCompletionSource();
+        _picker.PickedWhen = picked.Task;
+
+        var save = _state.SaveToFolderAsync();
+        await _state.DownloadAsync(_state.GeneratedFiles[0]);
+        picked.SetResult();
+        await save;
+
+        _downloader.Downloads.Should().BeEmpty();
     }
 
     [Fact]

@@ -139,4 +139,34 @@ public sealed class GenerationTests(PublishedApp app)
         files.Select(f => f.FileName).Should().Equal("_CON.xlsx", "Egger W1000_ _бял_.xlsx");
         console.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task A_file_link_downloads_only_that_file_under_its_sanitised_name()
+    {
+        await using var context = await app.NewContextAsync();
+        var page = await context.NewPageAsync();
+        var console = ConsoleErrors(page);
+        await page.GotoAsync("/");
+        var downloads = 0;
+        page.Download += (_, _) => Interlocked.Increment(ref downloads);
+
+        await UploadAsync(page, new FilePayload
+        {
+            Name = "names.txt",
+            MimeType = "text/plain",
+            Buffer = Encoding.UTF8.GetBytes("214.0;247.0;1;CON;0;0;0;1;0;Model[0];1\r\n250.0;247.0;1;Egger W1000: \"бял\";0;0;0;1;0;Model[0];2\r\n"),
+        });
+        await FillContactsAsync(page, "Тест ООД", "0888123456");
+        await GenerateButton(page).ClickAsync();
+        await Expect(FileLinks(page)).ToHaveTextAsync(["_CON.xlsx", "Egger W1000_ _бял_.xlsx"]);
+
+        var download = await page.RunAndWaitForDownloadAsync(() => FileLinks(page).Nth(1).ClickAsync());
+        var linked = await ReadAsync(download);
+
+        linked.FileName.Should().Be("Egger W1000_ _бял_.xlsx");
+        var all = await DownloadAllAsync(page, count: 2);
+        linked.Content.Should().Equal(all[1].Content, "the link saves the generated file");
+        downloads.Should().Be(3, "the link downloaded one file and \"Изтегли всички\" two");
+        console.Should().BeEmpty();
+    }
 }

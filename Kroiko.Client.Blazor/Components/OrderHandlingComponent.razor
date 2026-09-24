@@ -4,9 +4,10 @@
 @inject ILogger<OrderHandlingComponent> Logger
 
 @* The Server's OrderHandlingComponent, stripped (ADR-0005 §1): no email, credits or Blob Storage links. The files
-   are generated in the browser and listed under the names they are saved with; "Изтегли всички" downloads them
-   (ADR-0003 §1, §5, §7). Where the browser has a folder picker, "Запази в папка…" writes them into a picked folder
-   and lists the names they got (ADR-0003 §2, §4). Phase 05 step 3 adds a link per file and the primary action. *@
+   are generated in the browser and listed under the names they are saved with, each a link that downloads it, as on
+   the Server; "Изтегли всички" downloads them all (ADR-0003 §1, §5, §7). Where the browser has a folder picker,
+   "Запази в папка…" is the primary action: it writes them into a picked folder and lists the names they got, and
+   "Изтегли всички" stays as the secondary one (ADR-0003 §2, §4, §5). *@
 <MudPaper Class="pa-4">
     <MudStack Row="true" Class="py-3" Spacing="2">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.GridOn"
@@ -20,10 +21,17 @@
     }
     else if (ConverterState.GeneratedFiles.Count > 0)
     {
-        <ul class="py-2">
+        <ul class="py-2" data-testid="generated-files">
             @foreach (var file in ConverterState.GeneratedFiles)
             {
-                <li class="py-1">@ConverterState.SavedFileName(file)</li>
+                @* A link, as the Server's; the no-op href keeps it in the tab order and opens it with Enter, and the
+                   click hands the file to the download helper (ADR-0003 §5). *@
+                <li class="py-1">
+                    <MudLink Href="javascript:void(0)" role="link" OnClick="() => ConverterState.DownloadAsync(file)"
+                             Disabled="@ConverterState.IsSaving">
+                        @ConverterState.SavedFileName(file)
+                    </MudLink>
+                </li>
             }
         </ul>
         <MudStack Row="true" Spacing="2">
@@ -35,7 +43,8 @@
                     Запази в папка…
                 </MudButton>
             }
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
+            <MudButton Variant="@(_canSaveToFolder ? Variant.Outlined : Variant.Filled)" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Download"
                        OnClick="ConverterState.DownloadAllAsync" Disabled="@ConverterState.IsSaving">
                 Изтегли всички
             </MudButton>
