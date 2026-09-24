@@ -82,7 +82,8 @@ Confirmations use a `MudDialog` implementation of the confirmation interface, in
 - **"Изтегли всички"** downloads every file one after another: `Blob` + `<a download>`, streamed
   through `DotNetStreamReference`. Each name first passes through `FileNameSanitizer` (ADR-0003
   §5, §7). Triggering it sets the saved flag. Keep the download JS in one module, `wwwroot/js/files.js`;
-  phase 05 extends it.
+  phase 05 extends it. `ConverterState` reaches the browser download through a third small interface,
+  `IFileDownloader`, so the naming and saved-flag rules are unit-tested like the step 1 rules.
 - Errors show a Bulgarian `MudSnackbar`; spinners always clear.
 
 ### 6. E2E parity scenarios
@@ -101,10 +102,10 @@ Add to `Kroiko.Client.Tests` (ADR-0007 §5):
 
 - [x] `ConverterState` holds the Order app-wide; every rule in step 1 has a unit test.
 - [x] Device settings carry `schemaVersion`, with forward migrations and newer-schema fallback, and are unit-tested.
-- [ ] Upload, picker, tabs and the contact section are copied and stripped from the Server; no auth, credits, Blob Storage or email code remains.
+- [x] Upload, picker, tabs and the contact section are copied and stripped from the Server; no auth, credits, Blob Storage or email code remains.
 - [x] Grids edit the domain details directly; `MegaTradingViewModel` is not in the client.
-- [ ] "Генерирай бланки за поръчка" is disabled on empty contacts or `Check` problems.
-- [ ] "Изтегли всички" downloads sanitised file names and sets the saved flag.
+- [x] "Генерирай бланки за поръчка" is disabled on empty contacts or `Check` problems.
+- [x] "Изтегли всички" downloads sanitised file names and sets the saved flag.
 - [ ] The three manufacturer E2E scenarios match the golden files under both `bg-BG` and `en-US`.
 - [ ] The bad-lines, device-storage and offline-conversion E2E scenarios pass.
 - [ ] Every row of [CONTEXT.md §9](../../CONTEXT.md) that this phase implements names its actual test.
