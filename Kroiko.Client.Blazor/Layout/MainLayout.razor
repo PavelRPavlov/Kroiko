@@ -1,7 +1,10 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @using Kroiko.Client.Blazor.Updates
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 @inject AppUpdates AppUpdates
+@inject UpdateOffer UpdateOffer
 
 <MudThemeProvider/>
 <MudPopoverProvider/>
@@ -42,11 +45,50 @@
         new("configuration", Icons.Material.Filled.Settings, "Configuration"),
     ];
 
+    // The reload snackbar while UpdateOffer.ShowsSnackbar; null while none is shown.
+    private Snackbar? _updateSnackbar;
+
+    protected override void OnInitialized()
+    {
+        UpdateOffer.Changed += OnUpdateOfferChanged;
+        UpdateOffer.Error += OnUpdateOfferError;
+    }
+
     // The layout lives as long as the app: from its first render on, the app hears about new versions (ADR-0002 §1).
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
             await AppUpdates.StartAsync();
+    }
+
+    public void Dispose()
+    {
+        UpdateOffer.Changed -= OnUpdateOfferChanged;
+        UpdateOffer.Error -= OnUpdateOfferError;
+    }
+
+    // The offer also changes from a JS callback, so through InvokeAsync; event handlers, hence async void.
+    private async void OnUpdateOfferChanged() => await InvokeAsync(ShowOrHideUpdateSnackbar);
+
+    private async void OnUpdateOfferError(string message) =>
+        await InvokeAsync(() => Snackbar.Add(message, Severity.Error));
+
+    // A persistent snackbar (ADR-0002 §1) until "По-късно": no timeout, no close icon; its buttons are its only actions.
+    private void ShowOrHideUpdateSnackbar()
+    {
+        if (UpdateOffer.ShowsSnackbar && _updateSnackbar is null)
+        {
+            _updateSnackbar = Snackbar.Add<UpdateSnackbar>(severity: Severity.Info, configure: options =>
+            {
+                options.RequireInteraction = true;
+                options.ShowCloseIcon = false;
+            });
+        }
+        else if (!UpdateOffer.ShowsSnackbar && _updateSnackbar is not null)
+        {
+            Snackbar.Remove(_updateSnackbar);
+            _updateSnackbar = null;
+        }
     }
 
     private Task OpenAboutAsync() =>
