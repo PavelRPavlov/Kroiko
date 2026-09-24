@@ -17,6 +17,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The conversion runs in the browser on the shared, browser-safe domain (ADR-0004). -->
+    <ProjectReference Include="..\Kroiko.Domain\Kroiko.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The tests reach internals, e.g. the device-settings store with other schema migrations. -->
+    <InternalsVisibleTo Include="Kroiko.Client.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
   </ItemGroup>
 
