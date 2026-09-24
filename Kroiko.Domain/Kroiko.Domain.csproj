@@ -6,8 +6,26 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <!-- The compiler guards browser safety (ADR-0004 §7): the domain runs trimmed in WASM, so reflection
+             the trimmer cannot see, untyped JSON and the file system fail the build. No suppressions: if one
+             of these fires, something browser-unsafe got in. -->
+        <IsTrimmable>true</IsTrimmable>
+        <IsAotCompatible>true</IsAotCompatible>
+        <WarningsAsErrors>$(WarningsAsErrors);IL2026;IL2067;IL2070;IL2075;IL3050;RS0030</WarningsAsErrors>
+    </PropertyGroup>
+
     <ItemGroup>
       <PackageReference Include="LargeXlsx" Version="1.12.0" />
+      <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- The banned-API list (RS0030, an error above): APIs that have no meaning in the browser. -->
+      <AdditionalFiles Include="BannedSymbols.txt" />
     </ItemGroup>
 
     <ItemGroup>
