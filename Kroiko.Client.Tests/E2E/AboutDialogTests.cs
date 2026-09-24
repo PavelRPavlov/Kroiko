@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Kroiko.Client.Blazor.Updates;
 using Microsoft.Playwright;
 using Xunit;
@@ -11,7 +12,7 @@ namespace Kroiko.Client.Tests.E2E;
 /// </summary>
 [Collection(E2ECollection.Name)]
 [Trait("Category", "E2E")]
-public sealed class AboutDialogTests(PublishedApp app)
+public sealed partial class AboutDialogTests(PublishedApp app)
 {
     [Fact]
     public async Task About_shows_the_version_and_commit_the_app_was_built_from()
@@ -22,9 +23,14 @@ public sealed class AboutDialogTests(PublishedApp app)
 
         await page.Locator("header.mud-appbar").GetByRole(AriaRole.Button, new() { Name = "Относно" }).ClickAsync();
 
-        // The published app and the one these tests reference are built from the same commit.
         var about = page.GetByRole(AriaRole.Dialog);
         await Expect(about).ToContainTextAsync("Конвертор на списъци за разкрой от Polyboard към бланки за поръчка.");
-        await Expect(about.GetByText(AppVersion.Current, new() { Exact = true })).ToBeVisibleAsync();
+        // Built from the git repo, Source Link appends the commit, so the sha is there; the published app and the one
+        // these tests reference are built from the same commit.
+        var version = about.GetByText(VersionAndSha());
+        await Expect(version).ToHaveTextAsync(AppVersion.Current);
     }
+
+    [GeneratedRegex(@"^v\d+\.\d+\.\d+ \([0-9a-f]{7}\)$")]
+    private static partial Regex VersionAndSha();
 }

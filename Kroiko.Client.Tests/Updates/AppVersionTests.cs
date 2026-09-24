@@ -23,9 +23,4 @@ public sealed class AppVersionTests
     [InlineData("0.1.0+", "v0.1.0")]
     public void Shows_only_the_version_without_a_commit_sha(string informationalVersion, string shown) =>
         AppVersion.Format(informationalVersion).Should().Be(shown);
-
-    [Fact]
-    public void The_app_carries_its_version_and_the_commit_it_was_built_from() =>
-        // Source Link appends +<sha> to the csproj <Version> when the app is built from the git repo.
-        AppVersion.Current.Should().MatchRegex(@"^v\d+\.\d+\.\d+ \([0-9a-f]{7}\)$");
 }

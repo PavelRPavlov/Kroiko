@@ -9,13 +9,12 @@ namespace Kroiko.Client.Blazor.Updates;
 /// </summary>
 internal static class AppVersion
 {
-    private const int ShortShaLength = 7; // as scripts/publish-pwa.ps1 prints it: git rev-parse --short=7
+    // ADR-0002 §5's a1b2c3d. publish-pwa.ps1's `git rev-parse --short=7` agrees unless 7 characters are ambiguous.
+    private const int ShortShaLength = 7;
 
-    /// <summary>This build's version, e.g. <c>v0.1.0 (a1b2c3d)</c>.</summary>
+    /// <summary>This build's version, e.g. <c>v0.1.0 (a1b2c3d)</c>; the SDK always emits the informational version.</summary>
     public static string Current { get; } = Format(
-        typeof(AppVersion).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-        ?? typeof(AppVersion).Assembly.GetName().Version?.ToString(3)
-        ?? "0.0.0");
+        typeof(AppVersion).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion);
 
     /// <summary>
     /// Formats an informational version, <c>0.1.0+&lt;sha&gt;</c>, as <c>v0.1.0 (a1b2c3d)</c>: the short commit sha
