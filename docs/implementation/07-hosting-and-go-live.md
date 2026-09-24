@@ -57,6 +57,23 @@ token is read from `SWA_CLI_DEPLOYMENT_TOKEN` in the operator's own environment.
 **never** committed, echoed or written to a file. The script prints the deployed version and URL.
 It is a plain, readable script (no encoded commands, per [AGENTS.md](../../AGENTS.md)).
 
+As built:
+
+- It fetches `origin` first, so "equals `origin/…`" means the remote as it is now. For production the tag must
+  also be on `origin` (the same tag object), so every production deploy is a pushed, tagged release.
+- It passes `--env` explicitly (the CLI's default is `preview`) and `--swa-config-location <temp>/wwwroot`, and runs
+  `swa` from the publish folder, away from the repo's `.github/workflows/`, which the CLI would otherwise read
+  ([`swa deploy` options](https://learn.microsoft.com/en-us/azure/static-web-apps/static-web-apps-cli-deploy#options)).
+- The CLI reads the token from the environment and logs it only under `SWA_CLI_DEBUG=silly`, so the script
+  clears that variable for the call and masks the token in everything the CLI prints. The CLI can exit `0` after
+  a failure, so success is its `Project deployed to <url>` line; without it the script fails.
+- `-DryRun` runs every check, the tests and the publish, then prints the `swa` command, file count and size
+  instead of deploying. It needs neither the token nor the CLI.
+- `Kroiko.Client.Tests/PublishScript/` runs the script against a throwaway repository with stubbed `dotnet` and
+  `swa` (see [CONTEXT.md](../../CONTEXT.md) §5).
+- The tree must be clean, untracked files included: a local tool folder such as `.claude/` belongs in
+  `.git/info/exclude` on the deploying machine.
+
 ### 3. Provision (human)
 
 - [ ] Create the Static Web App (Free plan) in ATA's existing subscription; no API, no repo link.
@@ -114,7 +131,7 @@ Write it from ADR-0007 §9, with two sections:
 ## Done criteria
 
 - [x] `staticwebapp.config.json` is in the published output with the fallback excludes, `no-cache` headers and MIME types.
-- [ ] `scripts/publish-pwa.ps1` refuses dirty trees, wrong branches, unsynced `HEAD`, a missing or mismatched tag, and failing tests; it never prints the token.
+- [x] `scripts/publish-pwa.ps1` refuses dirty trees, wrong branches, unsynced `HEAD`, a missing or mismatched tag, and failing tests; it never prints the token.
 - [ ] The Static Web App exists; `app.kroiko.com` resolves to it over HTTPS.
 - [ ] The `main` staging deploy passes the step-4 checks (07a done).
 - [ ] `docs/release-checklist.md` exists with the go-live, per-release and release-procedure sections.

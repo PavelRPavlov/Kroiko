@@ -102,6 +102,14 @@ and no cross-origin requests). The host and the missing-browser message have the
 `Hosting/` checks the Azure Static Web Apps config, `Kroiko.Client.Blazor/wwwroot/staticwebapp.config.json`
 (fallback excludes, `no-cache` routes, MIME types), and against the publish output that it is published at the
 root, that the service worker does not precache it, and that every precached asset is excluded from the fallback.
+`PublishScript/` runs the real `scripts/publish-pwa.ps1` (the manual deploy, phase 07) in `pwsh` against a
+throwaway git repository with a bare `origin`, with `dotnet` and `swa` replaced by logging stubs on `PATH`: the
+branch-model refusals, the exact `swa deploy` command, the dry run, and that the token is never printed.
+
+**Deploys** are manual: `scripts/publish-pwa.ps1 -Environment main|production [-DryRun]` refuses a dirty tree, a
+`HEAD` that is not `origin/main` (staging) or `origin/release` checked out as `release` with the pushed tag
+`v<Version>` (production), and failing tests; then publishes in Release and runs
+`swa deploy <temp>/wwwroot --env <main|production>`. The token comes only from `SWA_CLI_DEPLOYMENT_TOKEN`.
 
 ## 6. Decision log
 
