@@ -18,41 +18,13 @@ public interface IFileDownloader
 /// <see cref="DotNetStreamReference"/> and saved with a <c>Blob</c> and an <c>&lt;a download&gt;</c>. It throws what
 /// the interop throws.
 /// </summary>
-public sealed class BrowserFileDownloader(IJSRuntime js) : IFileDownloader, IAsyncDisposable
+internal sealed class BrowserFileDownloader(FilesModule files) : IFileDownloader
 {
-    private Task<IJSObjectReference>? _module;
-
     public async Task DownloadAsync(string fileName, byte[] content)
     {
-        IJSObjectReference module;
-        try
-        {
-            module = await (_module ??= js.InvokeAsync<IJSObjectReference>("import", "./js/files.js").AsTask());
-        }
-        catch
-        {
-            // Import again next time rather than keep a failed import.
-            _module = null;
-            throw;
-        }
-
+        var module = await files.GetAsync();
         using var stream = new MemoryStream(content, writable: false);
         using var streamReference = new DotNetStreamReference(stream);
         await module.InvokeVoidAsync("downloadFile", fileName, streamReference);
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_module is { IsCompletedSuccessfully: true })
-        {
-            try
-            {
-                await (await _module).DisposeAsync();
-            }
-            catch (JSDisconnectedException)
-            {
-                // The page is gone, and the module with it.
-            }
-        }
     }
 }

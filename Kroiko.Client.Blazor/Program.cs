@@ -12,6 +12,7 @@ builder.Services.AddMudServices();
 builder.Services.AddConfirmationDialog();
 builder.Services.AddDeviceSettingsStore();
 builder.Services.AddFileDownloader();
+builder.Services.AddFolderPicker();
 builder.Services.AddConverterState();
 
 await builder.Build().RunAsync();

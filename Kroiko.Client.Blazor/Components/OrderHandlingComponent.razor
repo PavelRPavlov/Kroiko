@@ -1,9 +1,12 @@
 @using Kroiko.Client.Blazor.Conversion
 @inherits ConverterStateComponentBase
+@inject IFolderPicker FolderPicker
+@inject ILogger<OrderHandlingComponent> Logger
 
 @* The Server's OrderHandlingComponent, stripped (ADR-0005 §1): no email, credits or Blob Storage links. The files
    are generated in the browser and listed under the names they are saved with; "Изтегли всички" downloads them
-   (ADR-0003 §1, §5, §7). Phase 05 adds the folder save and a link per file. *@
+   (ADR-0003 §1, §5, §7). Where the browser has a folder picker, "Запази в папка…" writes them into a picked folder
+   and lists the names they got (ADR-0003 §2, §4). Phase 05 step 3 adds a link per file and the primary action. *@
 <MudPaper Class="pa-4">
     <MudStack Row="true" Class="py-3" Spacing="2">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.GridOn"
@@ -23,9 +26,51 @@
                 <li class="py-1">@ConverterState.SavedFileName(file)</li>
             }
         </ul>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
-                   OnClick="ConverterState.DownloadAllAsync" Disabled="@ConverterState.IsDownloading">
-            Изтегли всички
-        </MudButton>
+        <MudStack Row="true" Spacing="2">
+            @if (_canSaveToFolder)
+            {
+                @* The picker opens straight from this click (ADR-0003 §2). *@
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.DriveFolderUpload"
+                           OnClick="ConverterState.SaveToFolderAsync" Disabled="@IsSaving">
+                    Запази в папка…
+                </MudButton>
+            }
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
+                       OnClick="ConverterState.DownloadAllAsync" Disabled="@IsSaving">
+                Изтегли всички
+            </MudButton>
+        </MudStack>
+        @if (ConverterState.FolderSave is { } folderSave)
+        {
+            <MudAlert Severity="Severity.Success" Class="mt-3" data-testid="folder-save">
+                Файловете са записани в папка „@folderSave.FolderName“:
+                <ul>
+                    @foreach (var name in folderSave.FileNames)
+                    {
+                        <li>@name</li>
+                    }
+                </ul>
+            </MudAlert>
+        }
     }
 </MudPaper>
+
+@code {
+    private bool _canSaveToFolder;
+
+    private bool IsSaving => ConverterState.IsDownloading || ConverterState.IsSavingToFolder;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Also loads the last folder, so the picker need not wait for it when clicked.
+            _canSaveToFolder = await FolderPicker.IsAvailableAsync();
+        }
+        catch (Exception exception)
+        {
+            // Without the picker the downloads remain (ADR-0003 §5).
+            Logger.LogWarning(exception, "Could not find out whether the browser can save to a folder.");
+        }
+    }
+}
