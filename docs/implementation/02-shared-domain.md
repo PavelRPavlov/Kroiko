@@ -174,6 +174,19 @@ UI against the golden files, once per manufacturer.
   two materials; `FileNameSanitizer` on illegal characters, Cyrillic, reserved names, trailing
   dots/spaces, an empty result, and extension preservation.
 
+Done. `IOrderFormat.Check(files)` returns `IReadOnlyList<OrderProblem>`; `OrderProblem` is an abstract record and
+`TooManyMaterials(Max, Materials)` its one case (`Kroiko.Domain/OrderProblem.cs`, root namespace). `OrderFormatBase.Check`
+returns none; `MegaTradingOrderFormat.Check` counts the distinct `Material` values of the files as they are now (so after
+the operator's renames), in order of first use, and returns `TooManyMaterials` listing all of them when there are more
+than `MegaTradingFileGenerator.MaxMaterials` (6), the constant whose loop now writes the `.cut_mt` header rows. The
+Server does not call `Check`. `FileNameSanitizer.Sanitize(name)` (`Kroiko.Domain/FileNameSanitizer.cs`, next to
+`OrderFormats`) replaces `\ / : * ? " < > |` and control characters (`char.IsControl`) with `_`, trims trailing dots and
+spaces, falls back to `поръчка` plus the extension (from the last dot) when the name before it is empty or only dots
+and spaces (e.g. `.cut_mt` for an empty company name), and prefixes `_` when the part before the first dot, trailing
+spaces aside, is a reserved Windows name in any case (`CON.xlsx`, `nul .xlsx`). Nothing calls it yet (phase 05).
+`OrderFormatCheckTests` covers 6 and 7 materials, a rename that merges two and one that splits one, and Lonira/Suliver;
+`FileNameSanitizerTests` covers each rule, Cyrillic names left as they are, and the extension. The golden files are unchanged.
+
 ### 7. The compiler guards browser safety
 
 In `Kroiko.Domain.csproj`: `IsTrimmable` and `IsAotCompatible` set to `true`, with
@@ -205,13 +218,13 @@ Its own PR, once steps 1–8 are merged.
 
 ## Done criteria
 
-- [ ] `PolyboardParser.Parse`, `IOrderFormat` (`CreateFiles`, `Generate`, `Check`) and `OrderFormats` are the only public conversion entry points; builders, providers and generators are `internal`.
+- [x] `PolyboardParser.Parse`, `IOrderFormat` (`CreateFiles`, `Generate`, `Check`) and `OrderFormats` are the only public conversion entry points; builders, providers and generators are `internal`.
 - [x] The domain has no `User`, no email, no INPC; `SupportedCompany` has three manufacturers.
 - [x] Templates are embedded resources read through a source-generated JSON context.
 - [ ] `Kroiko.Domain` builds with the trim/AOT analyzers as errors and the banned-API list, with no suppressions.
 - [ ] The golden tests pass under invariant **and** `bg-BG` culture, and live in `Kroiko.Domain.Tests`.
 - [x] LF, CR, BOM and whitespace-line fixtures parse to the same Details as their CRLF originals.
-- [ ] `Check` and `FileNameSanitizer` are covered by domain tests; the 6-material limit is one constant.
+- [x] `Check` and `FileNameSanitizer` are covered by domain tests; the 6-material limit is one constant.
 - [ ] `ATAFurniture.Server` is rewired, and its UI was smoke-checked once per manufacturer against the golden files.
 - [ ] `ATAFurniture.Server.Tests` holds only the Server-only tests; `GenerationSmokeTests` is gone.
 - [ ] LargeXlsx is 2.0.2 and SharpCompress is gone from the domain's dependency graph; any golden change is explained in its PR.

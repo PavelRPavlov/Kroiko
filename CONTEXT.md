@@ -128,6 +128,8 @@ These were found in a code review; several are naturally fixed by the migration.
   dates; the `bg-BG` golden theory runs and matches the invariant golden files.
   The PWA blocks MegaTrading orders with more than 6 materials
   via `IOrderFormat.Check` ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)); the Server still truncates.
+  ✅ `Check` exists (phase 02 step 6): MegaTrading returns `TooManyMaterials` above
+  `MegaTradingFileGenerator.MaxMaterials`, the one constant that also sizes the header; the PWA's blocking is phase 04.
   Line endings were `Environment.NewLine` (LF on Linux and in WASM, CRLF on Windows, where the golden files
   were recorded). → ✅ Pinned to CRLF on every host ([ADR-0009](docs/adr/0009-cut-mt-line-endings-crlf.md));
   a Linux-hosted Server's `.cut_mt` changes from LF to CRLF.
