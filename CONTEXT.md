@@ -60,7 +60,7 @@ Browser ──SignalR circuit──► ATAFurniture.Server (Blazor Server, .NET 
                                  └─ SendinBlue/Brevo (email with attachments)
 ```
 
-- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `ATAFurniture.Server.Tests` (xUnit — generation smoke tests over checked-in fixtures; golden tests move to a new `Kroiko.Domain.Tests` per [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md), with shared test data in `Kroiko.Testing` and PWA tests in `Kroiko.Client.Tests` per [ADR-0007](docs/adr/0007-parity-and-test-strategy.md)).
+- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `ATAFurniture.Server.Tests` (xUnit — generation smoke tests over the synthetic fixtures in `Kroiko.Testing/TestData/polyboard/`; golden tests move to a new `Kroiko.Domain.Tests` per [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md), with shared test data in `Kroiko.Testing` and PWA tests in `Kroiko.Client.Tests` per [ADR-0007](docs/adr/0007-parity-and-test-strategy.md)).
 - **Auth:** Azure AD B2C; per-page `[Authorize]` (global filter is commented out). Claims read in `UserContextService`.
 - **Secrets:** SQL conn string, Azure Storage conn string, SendinBlue API key — all from user-secrets/env (not committed). Sentry DSN **is** committed (should be rotated/moved). *(The Syncfusion license key is gone — Syncfusion + Radzen were replaced with MudBlazor, one fewer secret.)*
 - **Observability:** Serilog (console + rolling file) + Sentry.

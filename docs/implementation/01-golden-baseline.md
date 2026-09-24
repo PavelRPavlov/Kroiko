@@ -1,6 +1,6 @@
 # 01 — Golden baseline
 
-- **Status:** Not started
+- **Status:** In progress
 - **Depends on:** —  **Can run alongside:** [03 Client shell](03-client-shell.md)
 - **ADRs:** [0004](../adr/0004-shared-browser-safe-conversion-domain.md) §8–9, [0007](../adr/0007-parity-and-test-strategy.md) §1–3
 
@@ -28,6 +28,13 @@ measured against.
 - Delete the now-empty `ATAFurniture.Server.Tests/TestFiles/` and root `TestFiles/`, and point
   `GenerationSmokeTests` at the new paths (a `TestData.Polyboard(name)` helper in `Kroiko.Testing`).
 - Remove the unused `Snapshooter` / `Snapshooter.Xunit` references (ADR-0007 §1).
+
+Done. Valid fixtures: `bathroom-4-materials`, `beds-5-materials`, `kitchen-8-materials`,
+`wardrobes-4-materials` (all 11-field) and `cabinet-23-field` (23-field, 2 materials). Invalid:
+`bad-field-count` (one 9-field line among 11-field ones) and `unsupported-16-field` (every line has
+16 fields). `Wardrobes-Niki-i-Toni.txt` was byte-identical to `file.txt` (11-field, not 23), and
+`Mokro_1.txt` to `Mokro.txt`; one of each was deleted. `.gitattributes` pins
+`TestData/polyboard/*.txt` to CRLF, so phase 02's LF/CR-only fixtures need their own rule.
 
 **Green:** `dotnet test` — the six existing smoke tests pass unchanged.
 
@@ -85,8 +92,8 @@ static IReadOnlyList<FileSaveContext> RunPipeline(string fixture, string manufac
 
 ## Done criteria
 
-- [ ] `Kroiko.Testing` exists in the solution; all fixtures live in `Kroiko.Testing/TestData/polyboard/` with neutral names; the old fixture folders are gone.
-- [ ] No fixture file name refers to a person or a customer.
+- [x] `Kroiko.Testing` exists in the solution; all fixtures live in `Kroiko.Testing/TestData/polyboard/` with neutral names; the old fixture folders are gone.
+- [x] No fixture file name refers to a person or a customer.
 - [ ] `OrderFilesAssert` compares worksheet XML, `.cut_mt` bytes and `names.txt`, with dates normalised; `UPDATE_GOLDEN=1` rewrites the source golden files.
 - [ ] `GoldenTests` covers every valid fixture × all three manufacturers, plus the Suliver different-edge-colour case, through a single `RunPipeline` helper.
 - [ ] The golden files are committed and were reviewed in Excel.
