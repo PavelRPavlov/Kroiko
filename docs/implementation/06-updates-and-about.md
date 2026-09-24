@@ -31,6 +31,8 @@ snackbar. The snackbar never reloads over an unsaved Order without asking. The A
   - call `registration.update()` every **60 minutes**, on `visibilitychange` to visible, and on
     `online`. It swallows failures while offline (ADR-0002 §4);
   - `applyUpdate()`: post `SKIP_WAITING` to the waiting worker, then reload once on `controllerchange`;
+    fail when no reload has started within 10 seconds, so "Презареди" reports the error and the
+    snackbar's buttons work again;
   - `checkNow()`: returns *up to date* / *downloading* / *offline* for the About dialog.
 - The dev-time `service-worker.js` stays a no-op. The flow only exists in a published build.
 
