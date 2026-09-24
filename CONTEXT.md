@@ -117,7 +117,15 @@ inherit `ConverterStateComponentBase` (injects `ConverterState`, re-renders on `
 settings on init and shows `Error` as a snackbar. `TargetCompanySelectionComponent` offers the three manufacturers and, after a "Не",
 re-creates its `MudSelect` (a new `@key`) so it shows `ConverterState`'s manufacturer again. `FileUploadComponent` hands the picked file
 (≤ 10 MB, as on the Server) to `UploadAsync` and lists `UploadErrors` (the last upload's only: cleared when the next one starts) in its alert, with the link to `/configuration`.
-`E2E/UploadPanelTests` covers the alert, the discard confirmation and the remembered manufacturer.
+Under them, once there are files, `FileDisplayComponent` shows one tab per `KroikoFile` (a new `@key` per list of files, so new files start
+on the first tab) with the manufacturer's `Lonira`/`Suliver`/`MegaTradingTabItemContent`: each `MudDataGrid` edits the domain details in place
+(no `MegaTradingViewModel`), in the invariant culture whatever the browser's, and calls `NotifyInputEdited()` on each committed cell; editable as on
+the Server ([ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §3) — Lonira the note and the file (material) name, Suliver the note and
+"Кантиране с друг цвят" (`DifferentEdgeColor`) when a part has one, MegaTrading the edges, edge-banding material, note and the material rename,
+whose tab-local "old → new name" rows go to `ConverterState.RenameMaterials` (matched by the names before the rename, so two can swap; a blank
+name renames nothing). The MegaTrading tab shows a `TooManyMaterials` problem with its materials and points to the rename rows. The per-tab
+contact fields are not copied. `E2E/UploadPanelTests` covers the alert, the discard confirmation and the remembered manufacturer;
+`E2E/ConversionTabsTests` the three tabs, the rename and invariant numbers under `bg-BG`.
 
 **Device settings** (`LocalStorageDeviceSettingsStore`, registered by `AddDeviceSettingsStore()`) are one JSON document
 in `localStorage` under `kroiko.deviceSettings`: `{"schemaVersion":1,"companyName":…,"mobileNumber":…,"manufacturer":"Lonira"}`,
@@ -223,7 +231,7 @@ Server's output. The manual acceptance check (`docs/release-checklist.md`) walks
 |---|---|---|
 | No login, user accounts, credits or email; nothing leaves the device | Map scope | — (absent features) |
 | A file with bad lines is rejected and the first 10 bad lines are listed (Server: generic alert, nothing loaded) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §2 | `ConverterStateTests.A_file_with_bad_lines_loads_nothing_and_lists_the_first_ten` + Playwright `UploadPanelTests.A_file_with_bad_lines_shows_the_first_ten_and_links_to_the_configuration` |
-| MegaTrading orders with more than 6 materials cannot be generated (Server: `.cut_mt` header truncated) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §3 | `Check` domain test + `ConverterStateTests.More_than_six_MegaTrading_materials_is_a_problem_that_cannot_generate` |
+| MegaTrading orders with more than 6 materials cannot be generated (Server: `.cut_mt` header truncated) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §3 | `Check` domain test + `ConverterStateTests.More_than_six_MegaTrading_materials_is_a_problem_that_cannot_generate` + Playwright `ConversionTabsTests.MegaTrading_names_too_many_materials_and_the_rename_can_merge_them` |
 | Both contact fields must be filled before generating; last values and manufacturer remembered per device | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §6 | `ConverterStateTests.An_empty_contact_field_cannot_generate`, `…Generating_remembers_the_contacts_and_the_manufacturer_on_the_device` + Playwright "device storage" |
 | Any input edit clears the generated files (Server: stale output kept) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §7 | `ConverterStateTests.Any_input_edit_clears_the_generated_files_and_the_saved_flag_without_asking` |
 | Switching manufacturer or re-uploading asks before discarding files (Server: silent rebuild) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §5 | `ConverterStateTests.Switching_manufacturer_when_files_exist_asks_and_no_changes_nothing`, `…Uploading_again_when_files_exist_asks_and_no_changes_nothing` + Playwright `UploadPanelTests.Switching_manufacturer_or_uploading_again_asks_first_and_no_keeps_the_Order` |
