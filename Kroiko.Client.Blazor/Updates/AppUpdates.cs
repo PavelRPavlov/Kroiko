@@ -8,8 +8,8 @@ namespace Kroiko.Client.Blazor.Updates;
 /// <c>index.html</c> starts with the service worker's registration. The browser downloads a new version in the
 /// background; once it waits, <see cref="IsUpdateReady"/> turns true and <see cref="UpdateReady"/> is raised, once.
 /// <see cref="ApplyUpdateAsync"/> activates it and reloads the page; <see cref="CheckNowAsync"/> is the manual check.
-/// Only a published build has the service worker that applies a version. Nothing here throws: a failure is logged,
-/// and the next launch applies a waiting version anyway.
+/// Only a published build has the service worker that applies a version. A failing JS call is logged, not thrown: the
+/// next launch applies a waiting version anyway.
 /// </summary>
 public sealed class AppUpdates(IJSRuntime js, ILogger<AppUpdates> logger) : IAsyncDisposable
 {

@@ -1,7 +1,7 @@
 @inherits LayoutComponentBase
 @using Kroiko.Client.Blazor.Updates
 @inject IDialogService DialogService
-@inject AppUpdates Updates
+@inject AppUpdates AppUpdates
 
 <MudThemeProvider/>
 <MudPopoverProvider/>
@@ -46,7 +46,7 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
-            await Updates.StartAsync();
+            await AppUpdates.StartAsync();
     }
 
     private Task OpenAboutAsync() =>

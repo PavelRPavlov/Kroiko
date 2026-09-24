@@ -37,8 +37,10 @@ export function unsubscribe() {
     subscriber = null;
 }
 
-// Activates the waiting version and reloads once it controls the page, so the page runs from one cache only.
-// With nothing waiting (another window of the app already applied it), a reload is all it takes.
+// Activates the waiting version and reloads once it controls the page (controllerchange), so the page runs from one
+// cache only. A page no worker controls reloads once the version is activated instead. With nothing waiting (another
+// window of the app already applied it), a reload is all it takes; a waiting version that a newer one replaced before
+// it could activate hands over to that newer one.
 export async function applyUpdate() {
     const waiting = (await registration)?.waiting;
     if (!waiting) {
@@ -46,20 +48,27 @@ export async function applyUpdate() {
         return;
     }
     navigator.serviceWorker.addEventListener('controllerchange', reload);
+    waiting.addEventListener('statechange', () => {
+        if (waiting.state === 'activated')
+            reload();
+        else if (waiting.state === 'redundant' && !reloading)
+            applyUpdate();
+    });
     waiting.postMessage('SKIP_WAITING');
 }
 
 // The manual check (ADR-0002 §4): 'upToDate', 'downloading' (a newer version is installing or already waits; a
-// waiting one is also announced through OnUpdateReady) or 'offline' (the server could not be asked).
+// waiting one is also announced through OnUpdateReady) or 'offline' (offline, or the server could not be asked).
+// It reads the registration directly: update() and register() queue behind an install in progress, which can take
+// as long as downloading the whole new version.
 export async function checkNow() {
-    const current = await registration;
-    if (!current || !navigator.onLine)
+    const current = await navigator.serviceWorker?.getRegistration();
+    if (!current)
         return 'offline';
-    try {
-        await current.update();
-    } catch {
+    if (current.installing)
+        return 'downloading';
+    if (!await tryUpdate(current))
         return 'offline';
-    }
     return current.installing || current.waiting ? 'downloading' : 'upToDate';
 }
 
@@ -73,18 +82,19 @@ function watch(current) {
         });
     });
 
-    setInterval(() => check(current), checkIntervalMs);
+    // Background checks: silent when offline or when the server cannot be reached; the next trigger tries again.
+    setInterval(() => tryUpdate(current), checkIntervalMs);
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible')
-            check(current);
+            tryUpdate(current);
     });
-    window.addEventListener('online', () => check(current));
+    window.addEventListener('online', () => tryUpdate(current));
     return current;
 }
 
 // A new version waits only behind the one controlling this page. The first install activates at once (its
-// 'installed' is not an update), and a page no worker controls (a hard reload) would never see the
-// controllerchange that reloads it; its next load runs the newest version anyway.
+// 'installed' is not an update), and a page no worker controls (a hard reload) runs the newest version on its next
+// load anyway.
 function offerWaiting(current) {
     if (!current.waiting || !navigator.serviceWorker.controller)
         return;
@@ -92,14 +102,15 @@ function offerWaiting(current) {
     notify();
 }
 
-// A background check: silent when offline or the server cannot be reached; the next trigger tries again.
-async function check(current) {
+// Asks the server for a newer version: false, without asking, when offline, and false when the request failed.
+async function tryUpdate(current) {
     if (!navigator.onLine)
-        return;
+        return false;
     try {
         await current.update();
+        return true;
     } catch {
-        // Offline in all but name: nothing to report.
+        return false;
     }
 }
 
