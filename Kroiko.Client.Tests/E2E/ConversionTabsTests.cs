@@ -25,11 +25,8 @@ public sealed class ConversionTabsTests(PublishedApp app)
         await page.GotoAsync("/");
         var tabs = page.GetByRole(AriaRole.Tab);
 
-        // No manufacturer yet: no files, so no tabs.
+        // The device remembers no manufacturer, so the picker starts on Lonira and the upload makes its files.
         await UploadAsync(page, "wardrobes-4-materials");
-        await Expect(page.Locator(".mud-table")).ToHaveCountAsync(0);
-
-        await PickAsync(page, "Лонира, гр.София");
         await Expect(page.GetByText("Прегледай информацията и редактирай при необходимост:")).ToBeVisibleAsync();
         await Expect(tabs).ToHaveTextAsync(["Basic white W908 ST2", "HDF 3 mm", "AGT White", "H3170 Dyb kendyl natur"]);
         await Expect(page.Locator(".mud-table th")).ToContainTextAsync(

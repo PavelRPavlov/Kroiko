@@ -80,6 +80,19 @@ public sealed class UploadPanelTests(PublishedApp app)
     }
 
     [Fact]
+    public async Task The_picker_starts_on_Lonira_on_a_first_visit()
+    {
+        await using var context = await app.NewContextAsync();
+        var page = await context.NewPageAsync();
+        var console = ConsoleErrors(page);
+
+        await page.GotoAsync("/");
+
+        await Expect(page.Locator(".mud-select").First.Locator("input")).ToHaveValueAsync("Лонира, гр.София");
+        console.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task The_picker_starts_on_the_manufacturer_remembered_on_the_device()
     {
         await using var context = await app.NewContextAsync();

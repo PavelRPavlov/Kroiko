@@ -47,7 +47,16 @@ public sealed class ConverterState(
     /// <summary>An operation failed; show the Bulgarian message in a snackbar.</summary>
     public event Action<string>? Error;
 
-    /// <summary>The manufacturer the files are made for, or <c>null</c> until one is picked.</summary>
+    /// <summary>
+    /// The manufacturer the picker starts on when the device remembers none: Lonira, as on the Server, so a first
+    /// visit can convert without picking one.
+    /// </summary>
+    internal static SupportedCompany DefaultManufacturer => SupportedCompanies.Lonira;
+
+    /// <summary>
+    /// The manufacturer the files are made for, or <c>null</c> until one is picked or the device settings are
+    /// loaded.
+    /// </summary>
     public SupportedCompany? Manufacturer { get; private set; }
 
     /// <summary>A Polyboard file is loaded.</summary>
@@ -127,8 +136,9 @@ public sealed class ConverterState(
 
     /// <summary>
     /// Fills what the operator has not chosen yet — the contact fields and the manufacturer — from the device
-    /// settings (ADR-0005 §6). Runs once per app start, so returning to the Converter page keeps the Order as
-    /// the operator left it; settings that cannot be loaded leave the Order as it is.
+    /// settings (ADR-0005 §6). A device that remembers no manufacturer starts on <see cref="DefaultManufacturer"/>.
+    /// Runs once per app start, so returning to the Converter page keeps the Order as the operator left it;
+    /// settings that cannot be loaded leave the contacts as they are and are tried again on the next call.
     /// </summary>
     public async Task LoadDeviceSettingsAsync()
     {
@@ -141,14 +151,14 @@ public sealed class ConverterState(
         try
         {
             settings = await deviceSettings.LoadAsync();
+            _deviceSettingsLoaded = true;
         }
         catch (Exception exception)
         {
             logger.LogWarning(exception, "The device settings could not be loaded.");
-            return;
+            settings = DeviceSettings.Default;
         }
 
-        _deviceSettingsLoaded = true;
         var changed = false;
         if (_companyName is null && settings.Contact.CompanyName is not null)
         {
@@ -163,9 +173,9 @@ public sealed class ConverterState(
         }
 
         // With no manufacturer there are no files, so making them for the remembered one discards nothing.
-        if (Manufacturer is null && settings.Manufacturer is not null)
+        if (Manufacturer is null)
         {
-            Manufacturer = settings.Manufacturer;
+            Manufacturer = settings.Manufacturer ?? DefaultManufacturer;
             Files = CreateFiles(Manufacturer, _details);
             changed = true;
         }

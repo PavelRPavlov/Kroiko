@@ -106,7 +106,8 @@ real domain and the shared fixtures; no browser, no `Category=E2E`.
 registered scoped (once for a WASM app) by `AddConverterState()` in `Program.cs`. It depends on `IConfirmation` (a yes/no
 question before files are discarded; `MudDialogConfirmation`, a Bulgarian "Да"/"Не" MudBlazor message box, registered by `AddConfirmationDialog()`)
 and `IDeviceSettingsStore` (the last `ContactInfo` and manufacturer: loaded once per app start into whatever the
-operator has not chosen yet, saved after each successful generation). Components read it and re-render on `Changed`;
+operator has not chosen yet — a device that remembers no manufacturer starts on Lonira, as the Server does — saved
+after each successful generation). Components read it and re-render on `Changed`;
 grids edit the domain details in `Files` in place and call `NotifyInputEdited()`; an edit made while generating
 drops that generation's output. Failures of reading, the dialog, making files, generating and device storage are
 logged and raise `Error` with a Bulgarian message instead of throwing. `HasUnsavedWork` = a file is loaded and its current input has not been generated and saved (at least
@@ -124,7 +125,7 @@ the Server ([ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §3) — Lo
 "Кантиране с друг цвят" (`DifferentEdgeColor`) when a part has one, MegaTrading the edges, edge-banding material, note and the material rename,
 whose tab-local "old → new name" rows go to `ConverterState.RenameMaterials` for that tab's file (each detail matched by its material before
 the rename, so renames never chain and two materials can swap). The MegaTrading tab shows a `TooManyMaterials` problem with its materials and points to the rename rows. The per-tab
-contact fields are not copied. `E2E/UploadPanelTests` covers the alert, the discard confirmation and the remembered manufacturer;
+contact fields are not copied. `E2E/UploadPanelTests` covers the alert, the discard confirmation, the Lonira default and the remembered manufacturer;
 `E2E/ConversionTabsTests` the three tabs, the rename and invariant numbers under `bg-BG`.
 
 **Device settings** (`LocalStorageDeviceSettingsStore`, registered by `AddDeviceSettingsStore()`) are one JSON document

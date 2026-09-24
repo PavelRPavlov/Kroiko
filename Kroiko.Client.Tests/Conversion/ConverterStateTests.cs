@@ -648,14 +648,36 @@ public sealed class ConverterStateTests
     }
 
     [Fact]
-    public async Task Device_settings_that_cannot_be_loaded_leave_the_Order_empty()
+    public async Task Device_settings_that_cannot_be_loaded_leave_the_contacts_empty_and_start_on_Lonira()
     {
         _settings.LoadFailure = new InvalidOperationException("storage is blocked");
 
         await _state.Invoking(s => s.LoadDeviceSettingsAsync()).Should().NotThrowAsync();
 
         _state.CompanyName.Should().BeNull();
-        _state.Manufacturer.Should().BeNull();
+        _state.Manufacturer.Should().Be(SupportedCompanies.Lonira);
+    }
+
+    [Fact]
+    public async Task A_device_that_remembers_no_manufacturer_starts_on_Lonira_like_the_Server()
+    {
+        _settings.Stored = new DeviceSettings(new ContactInfo("Тест ООД", "0888123456"), Manufacturer: null);
+
+        await _state.LoadDeviceSettingsAsync();
+
+        _state.Manufacturer.Should().Be(SupportedCompanies.Lonira);
+        _state.CompanyName.Should().Be("Тест ООД");
+    }
+
+    [Fact]
+    public async Task Starting_on_Lonira_after_an_upload_makes_its_files_without_asking()
+    {
+        await _state.UploadAsync(Fixture("wardrobes-4-materials"));
+
+        await _state.LoadDeviceSettingsAsync();
+
+        _state.Files.Should().HaveCount(4);
+        _confirmation.Questions.Should().BeEmpty();
     }
 
     [Fact]
