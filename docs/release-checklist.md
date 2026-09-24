@@ -51,7 +51,7 @@ never from an older version than the newest tag on `origin`.
    git fetch origin
    git switch release
    git merge --ff-only origin/release
-   git merge origin/main
+   git merge --no-edit origin/main
    git push origin release
    ```
 
@@ -73,9 +73,10 @@ never from an older version than the newest tag on `origin`.
    ./scripts/publish-pwa.ps1 -Environment production -DryRun
    ```
 
-   It must end with `Dry run: would deploy vX.Y.Z (<sha>) to production`. If it refuses, fix what it names;
-   never work around it.
-5. **Deploy.** Enter the token in your own session only.
+   It must print `Dry run: would deploy vX.Y.Z (<sha>) to production - …`, followed by the `swa deploy`
+   command. If it refuses, fix what it names; never work around it.
+5. **Deploy.** First do part 2's "Before you deploy" setup on the test machine: the update checks need the
+   previous version open while this one lands. Then enter the token in your own session only.
 
    ```powershell
    $env:SWA_CLI_DEPLOYMENT_TOKEN = Read-Host -MaskInput 'SWA deployment token'
@@ -214,8 +215,9 @@ foreach ($path in '', 'index.html', 'service-worker.js', 'service-worker-assets.
       text and layout look right.
 - [ ] If the deployed Server includes phase 02 (rewired onto `Kroiko.Domain`), its UI smoke check has passed:
       one fixture per manufacturer matches the golden files ([02](implementation/02-shared-domain.md) step 5).
-      If the deployed Server predates phase 02, it is the Server the golden files recorded, and the run below
-      compares against it directly.
+      If the deployed Server predates phase 02, its `.cut_mt` line endings are its host's. A Windows host writes
+      CRLF, and a Linux host writes LF, which the go-live does not accept (ADR-0009). The `.cut_mt` item below
+      checks this.
 
 ### Side-by-side run on real orders ([ADR-0007](adr/0007-parity-and-test-strategy.md) §9)
 
@@ -256,11 +258,12 @@ Pick ~10 recent real orders. Keep the files in a local folder only (see the note
       Compare-Object (Get-WorksheetHashes <server.xlsx>) (Get-WorksheetHashes <pwa.xlsx>)
       ```
 
-- [ ] Every `.cut_mt` is byte-equal apart from the date. Today's `.cut_mt` carries no date, so expect `fc.exe /b
-      <server.cut_mt> <pwa.cut_mt>` to print `FC: no differences encountered`. Write `fc.exe`: in PowerShell,
-      `fc` is `Format-Custom`. If only CR bytes (`0D`) differ, the Server writes LF, so it is a Linux-hosted build
-      without [ADR-0009](adr/0009-cut-mt-line-endings-crlf.md). The go-live needs a Server with it, so stop and
-      settle it with Pavel.
+- [ ] Every `.cut_mt` is byte-equal. The `.cut_mt` carries no date, so `fc.exe /b <server.cut_mt> <pwa.cut_mt>`
+      must print `FC: no differences encountered`. Write `fc.exe`: in PowerShell, `fc` is `Format-Custom`. The
+      PWA's file is always CRLF. If the files differ, check the Server's line endings:
+      `` [System.IO.File]::ReadAllText((Resolve-Path '<server.cut_mt>').Path).Contains("`r`n") ``. `False` means the Server writes LF, so
+      it is a Linux-hosted build without [ADR-0009](adr/0009-cut-mt-line-endings-crlf.md). The go-live needs a
+      Server with it, so stop and settle it with Pavel.
 - [ ] Cyrillic material names show correctly in both apps' grids and in the files.
 - [ ] The files open in each manufacturer's software: Lonira's and Suliver's `.xlsx`, and MegaTrading's `.xlsx`
       and the CRLF `.cut_mt` in MegaTrading's (ADR-0009).
