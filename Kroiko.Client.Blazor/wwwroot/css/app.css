@@ -66,3 +66,9 @@ h1:focus {
     .loading-progress-text:after {
         content: var(--blazor-load-percentage-text, "Loading");
     }
+
+/* The upload panel's file <input>, stretched invisibly over its drop zone (FileUploadComponent). */
+.upload-drop-input {
+    opacity: 0;
+    cursor: pointer;
+}
