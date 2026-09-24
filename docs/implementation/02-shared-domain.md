@@ -135,6 +135,26 @@ the Server's `OversizeNoteTests` the notes. A trial build of `Kroiko.Domain` wit
 - Run the Server locally once and convert a fixture per manufacturer. The downloaded files must match
   the golden files (a manual smoke check of the rewired UI; say so in the PR).
 
+Done, except the manual smoke check. `IOrderFormat` and `OrderFormats` live in the domain's root namespace
+(`Kroiko.Domain/IOrderFormat.cs`, `OrderFormats.cs`); `OrderFormats.For` finds a format by the company's `Name`
+and throws `ArgumentException` for an unknown one. `LoniraOrderFormat`, `SuliverOrderFormat` and
+`MegaTradingOrderFormat` (in `TemplateBuilding/<Manufacturer>/`, all `internal`) hold the `To*Details()` mapping
+moved from the Server's `Models/*Extensions.cs` (the "СДВ" notes still invariant) and the grouping moved from
+`FileDisplayComponent` (Lonira: one file per non-empty material, in order of first use; the others: one file, none
+for no Details). The shared `OrderFormatBase.Generate` fills the template, the different-edge-colour cell and the
+`{CompanyName}` in the file names; MegaTrading puts its `.cut_mt` first. `FileGeneratorService`, the
+`IExcelFileGenerator`/`ITextFileGenerator` interfaces and every `async` in generation are gone; the builders, row
+providers, file-name providers, sheets, cells, `ExcelFileGenerator` and `MegaTradingFileGenerator` are `internal`
+(`InternalsVisibleTo` `Kroiko.Domain.Tests`). Every `.cut_mt` line ends in one place (`AppendRow`, still
+`Environment.NewLine`). The Server's `AddOrderFormats()` registers each format as a keyed singleton by its name;
+`FileDisplayComponent` calls `CreateFiles` and `OrderHandlingComponent` calls `Generate`; `MegaTradingExtensions`
+keeps only the view-model conversions. `RunPipelineAsync` is now `PolyboardParser.Parse` → `OrderFormats.For(m)
+.CreateFiles` → `Generate`. `OrderFormatsTests` (domain) pins the registry, the grouping and the invariant
+"СДВ" notes (they replace the Server's `OversizeNoteTests`); `OrderFormatRegistrationTests` (Server) pins that every
+`SupportedCompanies` key and every dropdown branch resolves a format, and that Kuklensko resolves to the Suliver
+format with its own email. The golden files are unchanged. **Still to do:** the manual smoke check of the rewired
+UI against the golden files, once per manufacturer.
+
 ### 6. `Check` / `OrderProblem` and `FileNameSanitizer`
 
 - `IOrderFormat.Check(files) → IReadOnlyList<OrderProblem>` (ADR-0006 §3). MegaTrading returns

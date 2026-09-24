@@ -24,9 +24,9 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 | **Detail** | One cut part (panel): height, width, quantity, material, edges, thickness, etc. Parsed from one line of the Polyboard file. | `Kroiko.Domain/CellsExtracting/Detail.cs` |
 | **Old vs latest format** | Polyboard lines come in two shapes: **11 fields** (legacy) or **23 fields** (current). Field count selects the parser. | `Kroiko.Domain/CellsExtracting/PolyboardParser.cs` |
 | **Parse result** | What parsing a Polyboard file yields: the Details of every good line plus one **Parse error** per bad line (line number, a `ParseErrorKind` — `FieldCount` or `InvalidNumber` — and the field count or the bad field's name). The parser reports bad lines; the caller decides what to do with them (the PWA rejects the file and lists them; the Server logs them and discards the file). | `Kroiko.Domain/CellsExtracting/ParseResult.cs`, [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md), [ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) |
-| **KroikoFile** | A logical output unit — a filename plus its details. Lonira produces one KroikoFile per material; Suliver/MegaTrading produce one. | `Kroiko.Domain/TemplateBuilding/KroikoFile.cs` |
+| **KroikoFile** | A logical output unit — a filename plus its details, made by `IOrderFormat.CreateFiles`. Lonira produces one KroikoFile per material; Suliver/MegaTrading produce one. | `Kroiko.Domain/TemplateBuilding/KroikoFile.cs` |
 | **SupportedCompany** | A target manufacturer (name, translated label). The domain knows three: Lonira, Suliver, MegaTrading. Order emails and Suliver's second branch are Server-only: the Server's **ManufacturerBranch** (name, label, order email) has four, Kuklensko being a branch named `Suliver`. | `Kroiko.Domain/CellsExtracting/SupportedCompanies.cs`, `ATAFurniture.Server/Models/ManufacturerBranch.cs` |
-| **Order format** | Everything one manufacturer needs to turn Details into order files: map + group Details into KroikoFiles, then generate the files. One per SupportedCompany; the only way the apps reach TemplateBuilders, TableRowProviders and FileNameProviders. | `IOrderFormat` — [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md) |
+| **Order format** | Everything one manufacturer needs to turn Details into order files: map + group Details into KroikoFiles, then generate the files. One per SupportedCompany, from `OrderFormats.All` / `OrderFormats.For(company)` (the Server registers each with keyed DI); the only way the apps reach the `internal` TemplateBuilders, TableRowProviders, FileNameProviders and generators. `Generate` is synchronous. | `Kroiko.Domain/IOrderFormat.cs`, `OrderFormats.cs`, `TemplateBuilding/*/*OrderFormat.cs` — [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md) |
 | **Order problem** | A reason an Order format refuses to generate, found by `IOrderFormat.Check` before generating — today only MegaTrading's "more than 6 materials". The PWA blocks generation while any exist; the Server does not check. | [ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) |
 | **Order** | One conversion in progress: a parsed Polyboard file, the chosen SupportedCompany, its editable KroikoFiles, the Contact info and, once generated, the order files. Changing any of these inputs discards the generated files. Not the same as the Server's `User`/credit records. | [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) |
 | **Contact info** | The end customer's company name and phone number, written into the order files. Both must be filled before generating; the PWA remembers the last values used per device. The Server edits a `ContactInfoModel` that also carries the user's email. _Avoid_: account info, profile. | `Kroiko.Domain/ContactInfo.cs`, [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) |
@@ -35,7 +35,7 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 | **TableRowProvider** | Per-company: maps a detail into a row of Cells through an explicit column list (value selector + alignment, `TableColumn<TDetail>`), numbers in the invariant culture. | `Kroiko.Domain/TemplateBuilding/*/` |
 | **FileNameProvider** | Per-company: names the produced file. | `Kroiko.Domain/TemplateBuilding/*/` |
 | **Credit** | Unit of metered usage. Consumed on download / successful email. Stored on the Server's `User` row. | `UserContextService`, `KroikoDataRepository` |
-| **FALC** | A special panel operation that adjusts a detail's height/width. | `Models/SuliverExtensions.cs` |
+| **FALC** | A special panel operation that adjusts a detail's height/width. | `Kroiko.Domain/TemplateBuilding/Suliver/SuliverOrderFormat.cs` |
 
 ## 3. The three target manufacturers
 
@@ -53,14 +53,14 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 Browser ──SignalR circuit──► ATAFurniture.Server (Blazor Server, .NET 8)
                                  ├─ Razer UI (Radzen + Syncfusion components)
                                  ├─ DetailsExtractorService  (adapter over the domain's PolyboardParser)
-                                 ├─ Kroiko.Domain            (template build + LargeXlsx)
+                                 ├─ Kroiko.Domain            (map + group + template build + LargeXlsx, behind IOrderFormat)
                                  ├─ EF Core 9 ──► SQL Server  (users + credits)
                                  ├─ Azure AD B2C auth (Microsoft.Identity.Web, cookie/OIDC)
                                  ├─ Azure Blob Storage (download links)
                                  └─ SendinBlue/Brevo (email with attachments)
 ```
 
-- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `Kroiko.Testing` (class lib — shared test data: the synthetic Polyboard fixtures in `TestData/polyboard/`, the golden files in `TestData/golden/`, and `OrderFilesAssert.MatchGolden`, which compares generated order files with them or re-records them under `UPDATE_GOLDEN=1`), `ATAFurniture.Server.Tests` (xUnit — generation smoke tests and, for now, `GoldenTests`, which runs every valid fixture × manufacturer through one `RunPipelineAsync` helper, plus the same theory under `bg-BG`, green since phase 02 step 4), `Kroiko.Domain.Tests` (xUnit — the domain's own tests, today `PolyboardParserTests`; the golden tests move here in phase 02 step 8 per [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)). PWA tests go in `Kroiko.Client.Tests` per [ADR-0007](docs/adr/0007-parity-and-test-strategy.md).
+- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `Kroiko.Testing` (class lib — shared test data: the synthetic Polyboard fixtures in `TestData/polyboard/`, the golden files in `TestData/golden/`, and `OrderFilesAssert.MatchGolden`, which compares generated order files with them or re-records them under `UPDATE_GOLDEN=1`), `ATAFurniture.Server.Tests` (xUnit — generation smoke tests, the Server's keyed `IOrderFormat` registration and, for now, `GoldenTests`, which runs every valid fixture × manufacturer through one `RunPipelineAsync` helper — `PolyboardParser.Parse` → `OrderFormats.For(m).CreateFiles` → `Generate` — plus the same theory under `bg-BG`, green since phase 02 step 4), `Kroiko.Domain.Tests` (xUnit — the domain's own tests: parser, `OrderFormats`, template builders, row providers, generator culture; the golden tests move here in phase 02 step 8 per [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)). PWA tests go in `Kroiko.Client.Tests` per [ADR-0007](docs/adr/0007-parity-and-test-strategy.md).
 - **Auth:** Azure AD B2C; per-page `[Authorize]` (global filter is commented out). Claims read in `UserContextService`.
 - **Secrets:** SQL conn string, Azure Storage conn string, SendinBlue API key — all from user-secrets/env (not committed). Sentry DSN **is** committed (should be rotated/moved). *(The Syncfusion license key is gone — Syncfusion + Radzen were replaced with MudBlazor, one fewer secret.)*
 - **Observability:** Serilog (console + rolling file) + Sentry.
@@ -108,7 +108,9 @@ These were found in a code review; several are naturally fixed by the migration.
   → Server-only; the PWA has no credits. Not addressed by the PWA plan (the Server is maintained, not developed).
 - 🔴 **Null-deref crash.** Missing template builder / file-name provider is logged as
   a warning then dereferenced. `OrderHandlingComponent.razor.cs` → `FileGeneratorService.cs`.
-  → Removed by `IOrderFormat` ([ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)).
+  → ✅ Removed by `IOrderFormat` ([ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md), phase 02 step 5): each format
+  owns its builder and file-name provider, `FileGeneratorService` and its nullable arguments are gone, and the
+  Server resolves the format by keyed DI.
 - 🔴 **Free-credits abuse hole.** "Add credits" button grants 10 credits with no
   payment. `UserCreditsComponent.razor`.
 - 🟠 **No optimistic concurrency** on `User` → lost updates under concurrent use.
