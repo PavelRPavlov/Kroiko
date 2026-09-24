@@ -23,6 +23,9 @@ public sealed class PublishedApp : IAsyncLifetime
     /// <summary>The published app's root, ending in <c>/</c>.</summary>
     public Uri BaseAddress => (_host ?? throw NotStarted()).BaseAddress;
 
+    /// <summary>The published <c>wwwroot</c> on disk: what a deploy uploads and the host serves.</summary>
+    public string WebRoot => _host is null ? throw NotStarted() : Path.Combine(_publishDir, "wwwroot");
+
     public async Task InitializeAsync()
     {
         // The browser first: a missing browser fails in seconds, not after a publish.
@@ -62,7 +65,7 @@ public sealed class PublishedApp : IAsyncLifetime
 
     private static async Task PublishAsync(string outputDir)
     {
-        var project = Path.Combine(RepoRoot(), "Kroiko.Client.Blazor", "Kroiko.Client.Blazor.csproj");
+        var project = RepoPaths.ClientProject;
         var start = new ProcessStartInfo(Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet")
         {
             RedirectStandardOutput = true,
@@ -94,17 +97,6 @@ public sealed class PublishedApp : IAsyncLifetime
             throw new InvalidOperationException(
                 $"dotnet publish of {project} failed with exit code {process.ExitCode}:{Environment.NewLine}{output}");
         }
-    }
-
-    private static string RepoRoot()
-    {
-        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "TextConverter.sln")))
-                return dir.FullName;
-        }
-
-        throw new InvalidOperationException($"No TextConverter.sln above {AppContext.BaseDirectory}.");
     }
 
     private static InvalidOperationException NotStarted() => new("The published app has not started.");
