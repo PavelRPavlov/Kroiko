@@ -1,10 +1,10 @@
 #Requires -Version 7.2
 <#
 .SYNOPSIS
-    Tests, publishes and deploys Kroiko.Client.Blazor (the PWA) to Azure Static Web Apps.
+    Tests, publishes and deploys Kroiko.Client.Blazor (the PWA) to Amazon S3 + CloudFront.
 
 .DESCRIPTION
-    Enforces the branch model of ADR-0001 (docs/adr/0001-host-pwa-on-azure-static-web-apps.md) and refuses to
+    Enforces the branch model of ADR-0010 (docs/adr/0010-host-pwa-on-s3-and-cloudfront.md) and refuses to
     run unless:
       1. the working tree is clean (git status --porcelain is empty);
       2. -Environment main:       HEAD equals origin/main (after a fetch);
@@ -12,25 +12,29 @@
                                   vX.Y.Z of the csproj <Version>, pushed to origin and not older than any other
                                   vX.Y.Z tag there (roll forward, never back: ADR-0002 §8);
       3. the full `dotnet test` passes, E2E included.
-    Then it runs `dotnet publish -c Release` into a temporary folder and
-    `swa deploy <temp>/wwwroot --env <main|production>`, and prints the deployed version and URL.
+    Then it runs `dotnet publish -c Release` into a temporary folder and deploys its wwwroot:
+      - uploads it to a new release folder s3://<bucket>/<environment>/<release>/, as a raw/ tree (the plain
+        files) and a br/ tree (each file's .br sibling, stored with Content-Encoding: br, where there is one),
+        with Content-Type and Cache-Control set on every object;
+      - brings the environment's CloudFront Function up to hosting/cloudfront/viewer-request.js;
+      - switches the distribution's origin path to the new folder, waits until it is deployed, invalidates /*;
+    and prints the deployed version and URL.
 
-    The deployment token is read by the SWA CLI from SWA_CLI_DEPLOYMENT_TOKEN in your own environment. It is never
-    a parameter, never written to a file and never printed: only the swa call sees it, and every line the CLI
-    prints passes through a filter that masks it.
+    The IDs come from hosting/aws/hosting.json. The credentials are the AWS CLI profile it names (kroiko-pwa):
+    an IAM user's access key, set up with `aws configure --profile kroiko-pwa` on your machine only. The script
+    never reads, prints or writes the key; it passes --profile to every aws call.
 
     See docs/implementation/07-hosting-and-go-live.md (07a.2) for the rules and 07b for the release procedure.
 
 .PARAMETER Environment
-    main       - the Static Web Apps staging environment "main", from origin/main.
+    main       - the staging distribution "main" (its *.cloudfront.net URL), from origin/main.
     production - app.kroiko.com, from a tagged origin/release.
 
 .PARAMETER DryRun
-    Runs every check, the tests and the publish, then prints the swa command instead of running it (the publish
-    folder is removed afterwards). Needs neither the token nor the SWA CLI.
+    Runs every check, the tests and the publish, then prints what it would upload and switch instead of doing it
+    (the publish folder is removed afterwards). Needs neither the credentials nor the AWS CLI.
 
 .EXAMPLE
-    $env:SWA_CLI_DEPLOYMENT_TOKEN = Read-Host -MaskInput 'SWA deployment token'
     ./scripts/publish-pwa.ps1 -Environment main
 
 .EXAMPLE
@@ -49,10 +53,33 @@ $PSNativeCommandUseErrorActionPreference = $false   # native exit codes are chec
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $clientProject = Join-Path $repoRoot 'Kroiko.Client.Blazor/Kroiko.Client.Blazor.csproj'
+$hostingPath = Join-Path $repoRoot 'hosting/aws/hosting.json'
+$functionPath = Join-Path $repoRoot 'hosting/cloudfront/viewer-request.js'
 $branch = if ($Environment -eq 'production') { 'release' } else { 'main' }
-$token = $env:SWA_CLI_DEPLOYMENT_TOKEN
-$savedSwaDebug = $env:SWA_CLI_DEBUG
 $publishDir = Join-Path ([System.IO.Path]::GetTempPath()) "kroiko-pwa-$([guid]::NewGuid().ToString('N'))"
+
+# Every file type the publish holds. A file with any other extension makes the deploy refuse, so nothing is ever
+# served with a type S3 guessed.
+$contentTypes = @{
+    '.html'        = 'text/html; charset=utf-8'
+    '.css'         = 'text/css; charset=utf-8'
+    '.js'          = 'text/javascript; charset=utf-8'
+    '.txt'         = 'text/plain; charset=utf-8'
+    '.json'        = 'application/json'
+    '.map'         = 'application/json'
+    '.webmanifest' = 'application/manifest+json'
+    '.wasm'        = 'application/wasm'
+    '.dat'         = 'application/octet-stream'
+    '.woff2'       = 'font/woff2'
+    '.png'         = 'image/png'
+    '.ico'         = 'image/x-icon'
+}
+# The update check reads index.html and the service-worker files, so they and every other file whose name does
+# not change with its content are revalidated on every request (ADR-0002). A fingerprinted _framework/ file
+# never changes under its name.
+$noCache = 'no-cache'
+$immutable = 'public, max-age=31536000, immutable'
+$fingerprinted = '^_framework/.+\.[a-z0-9]{10}\.[^./]+$'
 
 function Stop-Publish([string] $Reason) {
     Write-Host "publish-pwa: refused - $Reason" -ForegroundColor Red
@@ -65,22 +92,37 @@ function Get-Commit([string] $Ref) {
     return $sha
 }
 
-# --- Tools and token (not needed for a dry run) ---------------------------------------------------------------
+# Runs one aws call with the deploy profile and region; its output as one trimmed string. Its errors go to the
+# console, and a failure stops the deploy with $What (and $Hint, when there is something to do about it).
+function Invoke-Aws([string] $What, [string[]] $Arguments, [string] $Hint = '') {
+    $output = & aws @Arguments --profile $hosting.profile --region $hosting.region
+    if ($LASTEXITCODE -ne 0) {
+        Stop-Publish ("$What failed (aws exit code $LASTEXITCODE; its message is above)" + $(if ($Hint) { ". $Hint" } else { '' }))
+    }
+    return ([string]($output -join "`n")).Trim()
+}
+
+# --- Configuration and tools (the tools are not needed for a dry run) ------------------------------------------
+
+if (-not (Test-Path -LiteralPath $hostingPath)) { Stop-Publish "there is no hosting/aws/hosting.json" }
+$hosting = Get-Content -Raw -LiteralPath $hostingPath | ConvertFrom-Json
+$target = $hosting.environments.$Environment
 
 if (-not $DryRun) {
-    if (-not $token) {
-        Stop-Publish ("SWA_CLI_DEPLOYMENT_TOKEN is not set. Set it in your own environment, e.g. " +
-            "`$env:SWA_CLI_DEPLOYMENT_TOKEN = Read-Host -MaskInput 'SWA deployment token'")
+    $missing = @()
+    if (-not $hosting.bucket) { $missing += 'bucket' }
+    foreach ($field in 'distributionId', 'functionName', 'url') {
+        if (-not $target.$field) { $missing += "environments.$Environment.$field" }
     }
-    if (-not (Get-Command swa -ErrorAction SilentlyContinue)) {
-        Stop-Publish 'the SWA CLI is not installed (npm i -g @azure/static-web-apps-cli)'
+    if ($missing) {
+        Stop-Publish "hosting/aws/hosting.json has no $($missing -join ', '); fill it in from the provisioning (07a.3)"
+    }
+    if (-not (Get-Command aws -ErrorAction SilentlyContinue)) {
+        Stop-Publish 'the AWS CLI v2 is not installed (https://aws.amazon.com/cli/)'
     }
 }
 
 try {
-    # Only the swa call gets the token: git, the tests and the build never see it. Restored below for your session.
-    $env:SWA_CLI_DEPLOYMENT_TOKEN = $null
-
     # --- 1. Clean working tree ---------------------------------------------------------------------------------
 
     $changes = git -C $repoRoot status --porcelain
@@ -89,7 +131,7 @@ try {
         Stop-Publish "the working tree is not clean (git status --porcelain):`n$($changes -join "`n")"
     }
 
-    # --- 2. Branch model (ADR-0001) ----------------------------------------------------------------------------
+    # --- 2. Branch model (ADR-0010, from ADR-0001) -------------------------------------------------------------
 
     git -C $repoRoot fetch --quiet --prune origin
     if ($LASTEXITCODE -ne 0) { Stop-Publish 'git fetch origin failed, so HEAD cannot be checked against origin' }
@@ -144,68 +186,165 @@ try {
     }
 
     $shortSha = git -C $repoRoot rev-parse --short=7 HEAD
-    $deploying = "v$(if ($version) { $version } else { '1.0.0' }) ($shortSha)"   # as About shows it (ADR-0002 §5)
+    $shownVersion = if ($version) { $version } else { '1.0.0' }
+    $deploying = "v$shownVersion ($shortSha)"   # as About shows it (ADR-0002 §5)
     if (-not $version) { Write-Host 'Note: the client csproj has no <Version>, so the build is the SDK default 1.0.0.' }
+
+    # Before the long test run, so missing credentials fail fast.
+    if (-not $DryRun) {
+        Invoke-Aws "checking the credentials of the AWS CLI profile $($hosting.profile)" @('sts', 'get-caller-identity', '--query', 'Arn', '--output', 'text') `
+            -Hint "Set them up once with: aws configure --profile $($hosting.profile) (07a.3)" | Out-Null
+    }
 
     # --- 3. The full test run, E2E included (ADR-0007 §6) ------------------------------------------------------
 
     dotnet test (Join-Path $repoRoot 'TextConverter.sln')
     if ($LASTEXITCODE -ne 0) { Stop-Publish 'dotnet test failed' }
 
-    # --- Publish and deploy ------------------------------------------------------------------------------------
+    # --- Publish -----------------------------------------------------------------------------------------------
 
     dotnet publish $clientProject -c Release -o $publishDir
     if ($LASTEXITCODE -ne 0) { Stop-Publish 'dotnet publish failed' }
 
     $webRoot = Join-Path $publishDir 'wwwroot'
-    foreach ($required in @('index.html')) {
-        if (-not (Test-Path -LiteralPath (Join-Path $webRoot $required))) {
-            Stop-Publish "the publish output has no wwwroot/$required"
-        }
+    if (-not (Test-Path -LiteralPath (Join-Path $webRoot 'index.html'))) {
+        Stop-Publish 'the publish output has no wwwroot/index.html'
     }
 
-    # Explicit --env: the SWA CLI's default is "preview". The config sits in the deployed folder; say so anyway.
-    $swaArgs = @('deploy', $webRoot, '--env', $Environment, '--swa-config-location', $webRoot)
+    # --- The release folder: raw/ and br/, grouped by the metadata each object gets --------------------------------
+
+    # One folder per (Content-Type, Cache-Control, Content-Encoding), each holding raw/<path> and br/<path>, so one
+    # `aws s3 cp --recursive` uploads a whole group with its headers.
+    $uploadDir = Join-Path $publishDir 'upload'
+    $groups = [ordered]@{}
+    function Add-ReleaseObject([string] $RelativePath, [string] $Source, [string] $ContentType, [string] $CacheControl, [string] $Encoding) {
+        $key = "$ContentType|$CacheControl|$Encoding"
+        if (-not $groups.Contains($key)) {
+            $groups[$key] = [pscustomobject]@{
+                Folder = Join-Path $uploadDir "group$($groups.Count)"
+                ContentType = $ContentType
+                CacheControl = $CacheControl
+                Encoding = $Encoding
+            }
+        }
+        $destination = Join-Path $groups[$key].Folder $RelativePath
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destination) | Out-Null
+        Copy-Item -LiteralPath $Source -Destination $destination
+    }
+
+    $unknownTypes = @()
+    $fileCount = 0
+    $bytes = @{ raw = 0L; br = 0L }
+    $plainFiles = Get-ChildItem -LiteralPath $webRoot -Recurse -File | Where-Object { $_.Extension -notin '.br', '.gz' }
+    foreach ($file in $plainFiles) {
+        $relative = [System.IO.Path]::GetRelativePath($webRoot, $file.FullName).Replace('\', '/')
+        $contentType = $contentTypes[$file.Extension]
+        if (-not $contentType) { $unknownTypes += $relative; continue }
+        $cacheControl = if ($relative -cmatch $fingerprinted) { $immutable } else { $noCache }
+
+        Add-ReleaseObject "raw/$relative" $file.FullName $contentType $cacheControl ''
+        $brotli = Get-Item -LiteralPath "$($file.FullName).br" -ErrorAction SilentlyContinue
+        if ($brotli) {
+            Add-ReleaseObject "br/$relative" $brotli.FullName $contentType $cacheControl 'br'
+            $bytes.br += $brotli.Length
+        }
+        else {
+            Add-ReleaseObject "br/$relative" $file.FullName $contentType $cacheControl ''
+            $bytes.br += $file.Length
+        }
+        $bytes.raw += $file.Length
+        $fileCount++
+    }
+    if ($unknownTypes) {
+        Stop-Publish "no Content-Type for $($unknownTypes -join ', '); add the extension to `$contentTypes in scripts/publish-pwa.ps1"
+    }
+
+    $release = '{0}-v{1}-{2}' -f [DateTime]::UtcNow.ToString('yyyyMMdd\THHmmss\Z', [cultureinfo]::InvariantCulture), $shownVersion, $shortSha
+    $prefix = "$Environment/$release"
+    $releaseUrl = "s3://$($hosting.bucket)/$prefix/"
 
     if ($DryRun) {
-        $files = @(Get-ChildItem -LiteralPath $webRoot -Recurse -File)
-        $megabytes = [math]::Round(($files | Measure-Object -Property Length -Sum).Sum / 1MB, 1)
-        $commandLine = ($swaArgs | ForEach-Object { if ($_ -match '\s') { "`"$_`"" } else { $_ } }) -join ' '
+        $megabytes = { param($count) [math]::Round($count / 1MB, 1).ToString([cultureinfo]::InvariantCulture) }
+        $distribution = if ($target.distributionId) { $target.distributionId } else { '(distributionId not set)' }
+        if (-not $hosting.bucket) { $releaseUrl = "s3://(bucket not set)/$prefix/" }
         Write-Host ''
-        Write-Host "Dry run: would deploy $deploying to $Environment - $($files.Count) files, $megabytes MB, with:" -ForegroundColor Yellow
-        Write-Host "  swa $commandLine"
+        Write-Host "Dry run: would deploy $deploying to $Environment - $fileCount files, raw $(& $megabytes $bytes.raw) MB, br $(& $megabytes $bytes.br) MB:" -ForegroundColor Yellow
+        Write-Host "  upload  $releaseUrl (raw/ and br/, in $($groups.Count) uploads)"
+        Write-Host "  switch  $distribution to origin path /$prefix, then invalidate /*"
         exit 0
     }
 
-    # SWA_CLI_DEBUG=silly makes the CLI log the token; the filter below masks it in any case.
-    $env:SWA_CLI_DEBUG = $null
-    $env:SWA_CLI_DEPLOYMENT_TOKEN = $token
-    $deployedUrl = $null
-    Push-Location -LiteralPath $publishDir   # away from the repo's .github/workflows, which the CLI would read
-    try {
-        & swa @swaArgs 2>&1 | ForEach-Object {
-            $line = "$_".Replace($token, '***')
-            Write-Host $line
-            $plain = $line -replace '\x1b\[[0-9;]*m', ''
-            if ($plain -match 'Project deployed to (https://\S+)') { $deployedUrl = $Matches[1] }
-        }
-        $swaExit = $LASTEXITCODE
+    # --- Deploy ------------------------------------------------------------------------------------------------
+
+    Write-Host "Uploading $deploying to $releaseUrl"
+    foreach ($group in $groups.Values) {
+        $arguments = @('s3', 'cp', $group.Folder, $releaseUrl, '--recursive', '--only-show-errors',
+            '--content-type', $group.ContentType, '--cache-control', $group.CacheControl)
+        if ($group.Encoding) { $arguments += @('--content-encoding', $group.Encoding) }
+        Invoke-Aws "uploading to $releaseUrl" $arguments -Hint 'Nothing was switched; the live release is unchanged' | Out-Null
     }
-    finally {
-        Pop-Location
+
+    # The environment's function runs the committed code, so a change to it ships through the same branch rules.
+    $functionName = $target.functionName
+    $code = ([System.IO.File]::ReadAllText($functionPath)) -replace "`r`n", "`n"
+    $codePath = Join-Path $publishDir 'viewer-request.js'
+    [System.IO.File]::WriteAllText($codePath, $code)
+    $livePath = Join-Path $publishDir 'viewer-request.live.js'
+    Invoke-Aws "reading the live code of the function $functionName" @('cloudfront', 'get-function', '--name', $functionName, '--stage', 'LIVE', $livePath) | Out-Null
+    $liveCode = if (Test-Path -LiteralPath $livePath) { ([System.IO.File]::ReadAllText($livePath)) -replace "`r`n", "`n" } else { '' }
+    if ($liveCode -ne $code) {
+        Write-Host "Updating the function $functionName to hosting/cloudfront/viewer-request.js"
+        $functionConfigPath = Join-Path $publishDir 'function-config.json'
+        [System.IO.File]::WriteAllText($functionConfigPath, '{ "Comment": "Kroiko PWA viewer request (ADR-0010)", "Runtime": "cloudfront-js-2.0" }')
+        $functionTag = Invoke-Aws "reading the function $functionName" @('cloudfront', 'describe-function', '--name', $functionName, '--query', 'ETag', '--output', 'text')
+        $functionTag = Invoke-Aws "updating the function $functionName" @('cloudfront', 'update-function', '--name', $functionName, '--if-match', $functionTag,
+            '--function-config', "file://$functionConfigPath", '--function-code', "fileb://$codePath", '--query', 'ETag', '--output', 'text')
+        Invoke-Aws "publishing the function $functionName" @('cloudfront', 'publish-function', '--name', $functionName, '--if-match', $functionTag) | Out-Null
     }
-    if ($swaExit -ne 0) { Stop-Publish "swa deploy failed (exit code $swaExit)" }
-    if (-not $deployedUrl) { Stop-Publish 'swa deploy reported no deployed URL; check its output above' }
+
+    # The switch: only the origin path changes. The config is edited as text, so nothing else is re-serialised.
+    $distributionId = $target.distributionId
+    $distributionTag = Invoke-Aws "reading the distribution $distributionId" @('cloudfront', 'get-distribution-config', '--id', $distributionId, '--query', 'ETag', '--output', 'text')
+    $configJson = Invoke-Aws "reading the distribution $distributionId" @('cloudfront', 'get-distribution-config', '--id', $distributionId, '--query', 'DistributionConfig', '--output', 'json')
+    # The config comes back through the console, whose encoding on Windows follows the system locale: text beyond
+    # ASCII (a Cyrillic comment, say) could come back changed, and would be sent back changed.
+    if ($configJson -match '[^\x00-\x7F]') {
+        Stop-Publish "the distribution $distributionId config holds text beyond ASCII (its Comment?); keep it ASCII (07a.3)"
+    }
+    $config = $configJson | ConvertFrom-Json
+    if ($config.Origins.Quantity -ne 1) {
+        Stop-Publish "the distribution $distributionId has $($config.Origins.Quantity) origins; it must have exactly the bucket (07a.3)"
+    }
+    $viewerRequest = @($config.DefaultCacheBehavior.FunctionAssociations.Items) | Where-Object { $_ -and $_.EventType -eq 'viewer-request' }
+    if (-not $viewerRequest -or $viewerRequest.FunctionARN -notlike "*:function/$functionName") {
+        Stop-Publish "the distribution $distributionId does not run the function $functionName on viewer request (07a.3)"
+    }
+    $originPaths = [regex]::Matches($configJson, '"OriginPath"\s*:\s*"([^"]*)"')
+    if ($originPaths.Count -ne 1) { Stop-Publish "the distribution $distributionId config has $($originPaths.Count) origin paths, not 1" }
+    $previousPath = $originPaths[0].Groups[1].Value
+    $switched = $configJson.Substring(0, $originPaths[0].Index) + "`"OriginPath`": `"/$prefix`"" +
+        $configJson.Substring($originPaths[0].Index + $originPaths[0].Length)
+    $switchedPath = Join-Path $publishDir 'distribution-config.json'
+    [System.IO.File]::WriteAllText($switchedPath, $switched)
+
+    Write-Host "Switching $distributionId from $(if ($previousPath) { $previousPath } else { '(no origin path)' }) to /$prefix"
+    Invoke-Aws "switching the distribution $distributionId" @('cloudfront', 'update-distribution', '--id', $distributionId, '--if-match', $distributionTag,
+        '--distribution-config', "file://$switchedPath", '--query', 'Distribution.Status', '--output', 'text') `
+        -Hint 'Nothing was switched; the live release is unchanged' | Out-Null
+
+    $afterSwitch = "The distribution already serves /$prefix. Invalidate it by hand: aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*' --profile $($hosting.profile)"
+    Write-Host 'Waiting until every edge location has it (a few minutes)'
+    Invoke-Aws "waiting for the distribution $distributionId" @('cloudfront', 'wait', 'distribution-deployed', '--id', $distributionId) -Hint $afterSwitch | Out-Null
+    $invalidation = Invoke-Aws "invalidating the distribution $distributionId" @('cloudfront', 'create-invalidation', '--distribution-id', $distributionId,
+        '--paths', '/*', '--query', 'Invalidation.Id', '--output', 'text') -Hint $afterSwitch
+    Invoke-Aws "waiting for the invalidation $invalidation" @('cloudfront', 'wait', 'invalidation-completed', '--distribution-id', $distributionId, '--id', $invalidation) `
+        -Hint "The distribution already serves /$prefix; the invalidation $invalidation is still running" | Out-Null
 }
 finally {
-    $env:SWA_CLI_DEPLOYMENT_TOKEN = $token
-    $env:SWA_CLI_DEBUG = $savedSwaDebug
     Remove-Item -LiteralPath $publishDir -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 Write-Host ''
-Write-Host "Deployed $deploying to ${Environment}: $deployedUrl" -ForegroundColor Green
-if ($Environment -eq 'production') {
-    Write-Host '  Custom domain: https://app.kroiko.com'
-}
+Write-Host "Deployed $deploying to ${Environment}: $($target.url)" -ForegroundColor Green
+Write-Host "  Release folder: $releaseUrl"
 exit 0

@@ -1,0 +1,17 @@
+{
+  "profile": "kroiko-pwa",
+  "region": "eu-central-1",
+  "bucket": "",
+  "environments": {
+    "main": {
+      "distributionId": "",
+      "functionName": "kroiko-pwa-main",
+      "url": ""
+    },
+    "production": {
+      "distributionId": "",
+      "functionName": "kroiko-pwa-production",
+      "url": "https://app.kroiko.com"
+    }
+  }
+}

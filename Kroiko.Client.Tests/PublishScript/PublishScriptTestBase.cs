@@ -3,9 +3,9 @@ using Xunit;
 namespace Kroiko.Client.Tests.PublishScript;
 
 /// <summary>
-/// <c>scripts/publish-pwa.ps1</c> enforces ADR-0001's branch model before it deploys
+/// <c>scripts/publish-pwa.ps1</c> enforces the branch model (ADR-0010, from ADR-0001) before it deploys
 /// (docs/implementation/07-hosting-and-go-live.md, step 07a.2). Each test runs the real script against its own
-/// sandbox git repository; <c>dotnet</c> and <c>swa</c> are stubs, so nothing is built, tested or deployed.
+/// sandbox git repository; <c>dotnet</c> and <c>aws</c> are stubs, so nothing is built, tested or deployed.
 /// The tests are split over a few classes only so xUnit runs them in parallel.
 /// </summary>
 public abstract class PublishScriptTestBase : IClassFixture<PublishScriptTemplate>, IDisposable

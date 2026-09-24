@@ -96,12 +96,33 @@ distribution ID, function name and URL. The credentials are an IAM user's access
 templates in `hosting/aws/`. The script is a plain, readable script (no encoded commands, per
 [AGENTS.md](../../AGENTS.md)).
 
-As built (carried over from the Static Web Apps version):
+As built (the branch checks are carried over from the Static Web Apps version):
 
 - It fetches `origin` first, so "equals `origin/…`" means the remote as it is now. For production the tag must
   also be on `origin` (the same tag object), so every production deploy is a pushed, tagged release; `<Version>`
   must be `X.Y.Z`; and it must not be older than any `vX.Y.Z` tag on `origin`, so an older build is never
   redeployed (ADR-0002 §8). Redeploying the newest version is allowed. It uploads a new release folder.
+- Before the long test run, it refuses a `hosting.json` that is not filled in, a missing AWS CLI, and a profile
+  whose credentials fail `aws sts get-caller-identity`.
+- It groups the objects by their metadata (`Content-Type`, `Cache-Control`, `Content-Encoding`) into local
+  folders, each holding `raw/<path>` and `br/<path>`. One `aws s3 cp --recursive` then uploads each group with its
+  headers, about ten calls in all. `.br` and `.gz` files are never uploaded under their own names. A file with
+  no extension, or an extension outside the map, makes it refuse before anything is uploaded.
+- "Fingerprinted" means a `_framework/` name ending in `.<10 lowercase letters or digits>.<extension>`. .NET 10
+  fingerprints every `_framework/` file. A name that does not match just stays `no-cache`.
+- The function comparison ignores line endings, and the code it uploads always has LF. It updates with
+  `describe-function` → `update-function` → `publish-function` (each `--if-match` the previous ETag), before the
+  switch. The window between the two is minutes, and only matters if a function change and a release layout
+  change ship together.
+- The switch reads the distribution config twice (`--query ETag` and `--query DistributionConfig`) and replaces
+  the one `"OriginPath"` in the JSON text. Nothing else is parsed and re-serialised, so every other setting
+  goes back byte for byte, and `--if-match` rejects a config that changed in between. It refuses a distribution
+  with other than one origin, one that does not run the environment's function on viewer request, and a
+  config with text beyond ASCII. The console's encoding on Windows follows the locale, so such text could come
+  back changed.
+- A failure before the switch leaves the live release untouched. After the switch, a failed wait or
+  invalidation prints the `create-invalidation` command to finish by hand. A half-uploaded folder that was
+  never switched to is harmless, and can be pruned with the others.
 - `-DryRun` runs every check, the tests and the publish, then prints the plan instead of deploying: the release
   folder, the file count and size of each tree, and the origin path. It then removes the publish folder. It
   needs neither the credentials nor the AWS CLI.
@@ -194,8 +215,8 @@ the release procedure (with a `-DryRun` rehearsal before the deploy), every prod
 go-live. The manual checks that earlier phases left open are on it: the update flow from phase 06, the real
 folder picker and downloads from phase 05, and Edge install and offline start. Also on it are phase 01's
 Excel review, phase 02's Server smoke check, and step 4's host checks, which run again against
-`app.kroiko.com`. Its host-specific parts (the tools, the credentials, the host checks) are rewritten for
-S3 + CloudFront together with step 2.
+`app.kroiko.com`. Its host-specific parts (the tools, the credentials, the host checks) were rewritten for
+S3 + CloudFront with step 2.
 
 Two choices go beyond this step's text:
 
@@ -214,7 +235,7 @@ Two choices go beyond this step's text:
 
 - [x] `hosting/cloudfront/viewer-request.js` is committed and tested, and `StaticSiteHost` serves like it;
       `staticwebapp.config.json` is gone.
-- [ ] `scripts/publish-pwa.ps1` uploads a new release folder with its `raw/` and `br/` trees, switches the origin
+- [x] `scripts/publish-pwa.ps1` uploads a new release folder with its `raw/` and `br/` trees, switches the origin
       path and invalidates. It never prints the credentials.
 - [x] `scripts/publish-pwa.ps1` refuses dirty trees, wrong branches, unsynced `HEAD`, a missing or mismatched tag, and failing tests.
 - [ ] The bucket and both distributions exist, each distribution on the Free plan; `app.kroiko.com` resolves to
