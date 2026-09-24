@@ -1,7 +1,6 @@
 using FluentAssertions;
 using Kroiko.Domain.ExcelFilesGeneration;
 using Kroiko.Testing;
-using Microsoft.Playwright;
 using Xunit;
 using static Kroiko.Client.Tests.E2E.ConverterPage;
 using static Microsoft.Playwright.Assertions;
@@ -42,44 +41,37 @@ public sealed class ParityTests(PublishedApp app)
     {
         var files = await ConvertAsync(locale, manufacturer, fixture);
 
-        OrderFilesAssert.MatchGolden(fixture, golden, files);
+        MatchGolden(fixture, golden, files);
     }
 
     [Fact]
     public async Task Suliver_with_a_different_edge_colour_matches_the_golden_files()
     {
         // cabinet-23-field has "Different" edges; the operator's colour fills the template's {DifferentEdgeColor} cell.
-        var files = await ConvertAsync("bg-BG", Suliver, "cabinet-23-field", differentEdgeColour: "Бял гланц");
+        var files = await ConvertAsync("bg-BG", Suliver, "cabinet-23-field", TestData.GoldenDifferentEdgeColor);
 
-        OrderFilesAssert.MatchGolden("cabinet-23-field", "Suliver-different-edge-color", files);
+        MatchGolden("cabinet-23-field", "Suliver-different-edge-color", files);
     }
 
-    // Upload → contacts (the golden helper's) → generate → "Изтегли всички", on a fresh device with the browser's locale.
+    // On a fresh device with the browser's locale: pick the manufacturer, then convert as the golden files were recorded.
     private async Task<IReadOnlyList<FileSaveContext>> ConvertAsync(
-        string locale, string manufacturer, string fixture, string? differentEdgeColour = null)
+        string locale, string manufacturer, string fixture, string? differentEdgeColor = null)
     {
         await using var context = await app.NewContextAsync(locale);
         var page = await context.NewPageAsync();
         var console = ConsoleErrors(page);
         await page.GotoAsync("/");
         await PickAsync(page, manufacturer);
+        await Expect(ManufacturerPicker(page)).ToHaveValueAsync(manufacturer);
 
-        await Expect(page.Locator(".mud-select").First.Locator("input")).ToHaveValueAsync(manufacturer);
+        // .NET takes its culture from the browser's locale only with ICU loaded: under invariant globalization both
+        // locales would be the same run. (Proven once for the PR: formatting a number with the current culture in the
+        // domain turned the bg-BG Lonira run red, 177.5 → 1775, and left en-US green.)
+        (await page.EvaluateAsync<bool>(
+                @"() => performance.getEntriesByType('resource').some(e => /\/icudt[^/]*\.dat$/.test(e.name))"))
+            .Should().BeTrue("the app must load ICU data, or the browser's locale never reaches .NET");
 
-        await UploadAsync(page, fixture);
-        if (differentEdgeColour is not null)
-        {
-            var edgeColour = page.GetByLabel("Кантиране с друг цвят");
-            await edgeColour.FillAsync(differentEdgeColour);
-            await edgeColour.PressAsync("Tab");
-        }
-
-        await FillContactsAsync(page, "Тест ООД", "0888123456");
-        await GenerateButton(page).ClickAsync();
-        var generated = page.GetByRole(AriaRole.Listitem);
-        await Expect(generated.First).ToBeVisibleAsync();
-
-        var files = await DownloadAllAsync(page, await generated.CountAsync());
+        var files = await ConvertAsGoldenAsync(page, fixture, differentEdgeColor);
         console.Should().BeEmpty();
         return files;
     }

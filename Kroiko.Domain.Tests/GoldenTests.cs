@@ -72,7 +72,7 @@ public sealed class GoldenTests
         // cabinet-23-field has oversized details ("СДВ с краен размер …") and "Different" edges
         // ("Кантиране с друг цвят"); the operator's colour fills the template's {DifferentEdgeColor} cell.
         const string fixture = "cabinet-23-field";
-        var files = await RunPipelineAsync(fixture, nameof(SupportedCompanies.Suliver), differentEdgeColor: "Бял гланц");
+        var files = await RunPipelineAsync(fixture, nameof(SupportedCompanies.Suliver), differentEdgeColor: TestData.GoldenDifferentEdgeColor);
 
         OrderFilesAssert.MatchGolden(fixture, "Suliver-different-edge-color", files);
     }
@@ -99,7 +99,7 @@ public sealed class GoldenTests
         // IOrderFormat (the Server resolves the same instance by its keyed DI name).
         var format = FormatTestData.FormatNamed(manufacturer);
         var files = format.CreateFiles(parsed.Details);
-        var contact = new ContactInfo(CompanyName: "Тест ООД", MobileNumber: "0888123456");
+        var contact = TestData.GoldenContact;
 
         // ConverterContext.DifferentEdgeColor starts as string.Empty when the operator leaves it alone.
         return format.Generate(contact, files, differentEdgeColor ?? string.Empty);

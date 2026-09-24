@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Kroiko.Domain.ExcelFilesGeneration;
 using Kroiko.Testing;
 using Microsoft.Playwright;
+using static Microsoft.Playwright.Assertions;
 
 namespace Kroiko.Client.Tests.E2E;
 
@@ -22,6 +23,9 @@ internal static class ConverterPage
         await page.Locator(".mud-select").First.ClickAsync();
         await page.GetByRole(AriaRole.Option, new() { Name = manufacturer }).ClickAsync();
     }
+
+    /// <summary>The manufacturer picker's input, whose value is the picked manufacturer's Bulgarian label.</summary>
+    public static ILocator ManufacturerPicker(IPage page) => page.Locator(".mud-select").First.Locator("input");
 
     /// <summary>Fills the "Контакти на клиента" section.</summary>
     public static async Task FillContactsAsync(IPage page, string companyName, string mobileNumber)
@@ -75,6 +79,39 @@ internal static class ConverterPage
 
         return files;
     }
+
+    /// <summary>
+    /// Converts <paramref name="fixture"/> with the manufacturer already picked, as the golden files were recorded:
+    /// upload → the golden contacts (and the different edge colour, if given) → "Генерирай бланки за поръчка" →
+    /// "Изтегли всички". Returns every generated file as downloaded.
+    /// </summary>
+    public static async Task<IReadOnlyList<FileSaveContext>> ConvertAsGoldenAsync(
+        IPage page, string fixture, string? differentEdgeColor = null)
+    {
+        await UploadAsync(page, fixture);
+        if (differentEdgeColor is not null)
+        {
+            var edgeColour = page.GetByLabel("Кантиране с друг цвят");
+            await edgeColour.FillAsync(differentEdgeColor);
+            await edgeColour.PressAsync("Tab");
+        }
+
+        await FillContactsAsync(page, TestData.GoldenContact.CompanyName!, TestData.GoldenContact.MobileNumber!);
+        await GenerateButton(page).ClickAsync();
+        var generated = page.GetByRole(AriaRole.Listitem);
+        await Expect(generated.First).ToBeVisibleAsync();
+
+        // The list renders at once; names.txt catches a file too few or too many.
+        return await DownloadAllAsync(page, await generated.CountAsync());
+    }
+
+    /// <summary>
+    /// <see cref="OrderFilesAssert.MatchGolden(string, string, IReadOnlyList{FileSaveContext})"/> that always
+    /// compares, even under <c>UPDATE_GOLDEN=1</c>: the golden files are the Server's output as the domain tests
+    /// record it, never the browser's.
+    /// </summary>
+    public static void MatchGolden(string fixture, string manufacturer, IReadOnlyList<FileSaveContext> files) =>
+        OrderFilesAssert.MatchGolden(fixture, manufacturer, files, TestData.GoldenRoot, update: false);
 
     /// <summary>Errors the app logs to the console, e.g. an unhandled exception in a component.</summary>
     public static ConcurrentQueue<string> ConsoleErrors(IPage page)

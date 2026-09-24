@@ -1,6 +1,5 @@
 using System.Text;
 using FluentAssertions;
-using Kroiko.Testing;
 using Microsoft.Playwright;
 using Xunit;
 using static Kroiko.Client.Tests.E2E.ConverterPage;
@@ -44,7 +43,7 @@ public sealed class GenerationTests(PublishedApp app)
 
         // The golden helper's contacts, so the downloads are the Server's order files.
         var files = await DownloadAllAsync(page, count: 4);
-        OrderFilesAssert.MatchGolden("wardrobes-4-materials", "Lonira", files);
+        MatchGolden("wardrobes-4-materials", "Lonira", files);
         console.Should().BeEmpty();
     }
 
@@ -55,7 +54,7 @@ public sealed class GenerationTests(PublishedApp app)
         var page = await context.NewPageAsync();
         var console = ConsoleErrors(page);
         await page.GotoAsync("/");
-        var picker = page.Locator(".mud-select").First.Locator("input");
+        var picker = ManufacturerPicker(page);
         const string suliver = "Съливер, гр.Пловдив (бул.Васил Априлов)";
 
         // Suliver, not the first-visit default, so a pre-filled picker is the remembered manufacturer.
