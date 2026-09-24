@@ -1,0 +1,40 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "UploadReleaseFolders",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject"],
+      "Resource": "arn:aws:s3:::<bucket>/*"
+    },
+    {
+      "Sid": "SwitchTheDistributions",
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:GetDistribution",
+        "cloudfront:GetDistributionConfig",
+        "cloudfront:UpdateDistribution",
+        "cloudfront:CreateInvalidation",
+        "cloudfront:GetInvalidation"
+      ],
+      "Resource": [
+        "arn:aws:cloudfront::<account-id>:distribution/<main-distribution-id>",
+        "arn:aws:cloudfront::<account-id>:distribution/<production-distribution-id>"
+      ]
+    },
+    {
+      "Sid": "KeepTheFunctionsAtTheCommittedCode",
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:DescribeFunction",
+        "cloudfront:GetFunction",
+        "cloudfront:UpdateFunction",
+        "cloudfront:PublishFunction"
+      ],
+      "Resource": [
+        "arn:aws:cloudfront::<account-id>:function/kroiko-pwa-main",
+        "arn:aws:cloudfront::<account-id>:function/kroiko-pwa-production"
+      ]
+    }
+  ]
+}

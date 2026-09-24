@@ -5,21 +5,26 @@ namespace Kroiko.Client.Tests.PublishScript;
 
 /// <summary>
 /// <c>-Environment production</c>: only <c>origin/release</c>, checked out on <c>release</c>, tagged <c>vX.Y.Z</c> with
-/// the csproj <c>&lt;Version&gt;</c> (ADR-0001, ADR-0002 §6).
+/// the csproj <c>&lt;Version&gt;</c> (ADR-0010, ADR-0002 §6).
 /// </summary>
 public sealed class PublishScriptProductionTests(PublishScriptTemplate template) : PublishScriptTestBase(template)
 {
     [Fact]
-    public void Deploys_a_tagged_release_to_production()
+    public void Deploys_a_tagged_release_to_the_production_distribution()
     {
         ReleaseVersion("1.2.3", tag: "v1.2.3");
+        var shortSha = Repo.Git("rev-parse", "--short=7", "HEAD");
 
         var run = Repo.Run("production");
 
         run.ExitCode.Should().Be(0, run.Output);
         run.DotnetCalls.First().Should().StartWith("dotnet test ");
-        run.SwaCalls.Should().Equal(run.ExpectedSwaDeploy("production"));
-        run.Output.Should().Contain("Deployed v1.2.3 (").And.Contain("https://app.kroiko.com");
+        run.OriginPath.Should().MatchRegex($@"^/production/\d{{8}}T\d{{6}}Z-v1\.2\.3-{shortSha}$");
+        run.Uploads.Should().OnlyContain(upload => upload.Key.StartsWith("production/"));
+        run.AwsCalls.Where(c => c.Contains(" --id ") || c.Contains(" --distribution-id "))
+            .Should().NotBeEmpty().And.OnlyContain(c => c.Contains(PublishScriptSandbox.ProductionDistribution));
+        run.AwsCalls.Should().Contain(c => c.StartsWith("aws cloudfront get-function --name kroiko-pwa-production "));
+        run.Output.Should().Contain($"Deployed v1.2.3 ({shortSha}) to production: https://app.kroiko.com");
     }
 
     [Fact]

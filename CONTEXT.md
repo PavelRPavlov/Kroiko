@@ -110,8 +110,9 @@ app routes → `/index.html`, files keep their path (so a missing one is a 404),
 `br`, nothing but the URI changed; and, against the publish output, that every published and precached file keeps
 its path through it.
 `PublishScript/` runs the real `scripts/publish-pwa.ps1` (the manual deploy, phase 07) in `pwsh` against a
-throwaway git repository with a bare `origin`, with `dotnet` and `swa` replaced by logging stubs on `PATH`: the
-branch-model refusals, the exact `swa deploy` command, the dry run, and that the token is never printed.
+throwaway git repository with a bare `origin`, with `dotnet` and `aws` replaced by logging stubs on `PATH`: the
+branch-model refusals, the `raw/` and `br/` trees with each object's metadata, the function update, a switch that
+changes only the origin path, failures before and after the switch, the dry run, and `--profile` on every `aws` call.
 `Conversion/ConverterStateTests` unit-tests the Order rules through `ConverterState`'s public API with the
 confirmation and the device settings faked (`Conversion/Fakes.cs`, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §4), on the
 real domain and the shared fixtures; no browser, no `Category=E2E`.
@@ -119,8 +120,10 @@ real domain and the shared fixtures; no browser, no `Category=E2E`.
 **Deploys** are manual: `scripts/publish-pwa.ps1 -Environment main|production [-DryRun]` refuses a dirty tree, a
 `HEAD` that is not `origin/main` (staging) or `origin/release` checked out as `release` with the pushed tag
 `v<Version>`, no older than any `vX.Y.Z` tag on `origin` (production), and failing tests; then publishes in
-Release and runs `swa deploy <temp>/wwwroot --env <main|production>`. The token comes only from
-`SWA_CLI_DEPLOYMENT_TOKEN`, and only the `swa` call sees it. [`docs/release-checklist.md`](docs/release-checklist.md)
+Release, uploads `wwwroot` to a new S3 release folder `<environment>/<release>/` (a `raw/` and a `br/` tree, with
+`Content-Type` and `Cache-Control` on every object), brings the environment's CloudFront Function up to the committed
+code, switches the distribution's origin path to the folder and invalidates `/*` (ADR-0010). The IDs are in
+`hosting/aws/hosting.json`; the credentials only in the AWS CLI profile `kroiko-pwa`. [`docs/release-checklist.md`](docs/release-checklist.md)
 has the release procedure (bump, merge `main` into `release`, tag, `-DryRun`, deploy), the manual checks for every
 production release on the installed Edge PWA, and the go-live checks (ADR-0007 §9). Each release's run of them is
 recorded in a "Release vX.Y.Z sign-off" issue.

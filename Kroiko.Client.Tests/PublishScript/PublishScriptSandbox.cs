@@ -6,15 +6,23 @@ using System.Text;
 namespace Kroiko.Client.Tests.PublishScript;
 
 /// <summary>
-/// A throwaway git repository with its own bare <c>origin</c>, holding a copy of <c>scripts/publish-pwa.ps1</c> and a
-/// minimal client csproj, so the script's branch rules run against real git. <c>dotnet</c> and <c>swa</c> are
-/// replaced by stubs on <c>PATH</c> that log each call and never build, test or deploy anything. git reads only the
-/// sandbox's own config, so the machine's hooks, signing or credential settings never apply.
+/// A throwaway git repository with its own bare <c>origin</c>, holding a copy of <c>scripts/publish-pwa.ps1</c>, the
+/// committed CloudFront Function, a <c>hosting/aws/hosting.json</c> with sandbox IDs and a minimal client csproj, so
+/// the script's branch rules run against real git. <c>dotnet</c> and <c>aws</c> are replaced by stubs on <c>PATH</c>
+/// that log each call and never build, test or deploy anything. git reads only the sandbox's own config, so the
+/// machine's hooks, signing or credential settings never apply.
 /// </summary>
 internal sealed class PublishScriptSandbox : IDisposable
 {
-    /// <summary>The URL the <c>swa</c> stub reports, the way the real CLI does.</summary>
-    public const string StubUrl = "https://kroiko-stub-main.1.azurestaticapps.net";
+    public const string Bucket = "kroiko-pwa-sandbox";
+    public const string Profile = "kroiko-pwa";
+    public const string Region = "eu-central-1";
+    public const string MainDistribution = "EMAINSANDBOX";
+    public const string ProductionDistribution = "EPRODSANDBOX";
+    public const string MainUrl = "https://dmainsandbox.cloudfront.net";
+
+    /// <summary>The origin path the stubbed distributions start with: an earlier release.</summary>
+    public const string PreviousOriginPath = "/main/20260901T000000Z-v0.9.0-0000000";
 
     private readonly string _root;
 
@@ -29,8 +37,7 @@ internal sealed class PublishScriptSandbox : IDisposable
 
     public string WorkTree => Path.Combine(_root, "work");
 
-    /// <summary>The token the runs see in <c>SWA_CLI_DEPLOYMENT_TOKEN</c> unless a run says otherwise.</summary>
-    public string Token { get; } = "sandbox-token-" + Guid.NewGuid().ToString("N");
+    public string HostingConfigPath => Path.Combine(WorkTree, "hosting", "aws", "hosting.json");
 
     private string OriginPath => Path.Combine(_root, "origin.git");
 
@@ -46,7 +53,7 @@ internal sealed class PublishScriptSandbox : IDisposable
         var sandbox = new PublishScriptSandbox(root);
         Directory.CreateDirectory(sandbox.StubsPath);
         File.WriteAllText(Path.Combine(sandbox.StubsPath, "dotnet.ps1"), DotnetStub);
-        File.WriteAllText(Path.Combine(sandbox.StubsPath, "swa.ps1"), SwaStub);
+        File.WriteAllText(Path.Combine(sandbox.StubsPath, "aws.ps1"), AwsStub);
         File.WriteAllText(sandbox.GitConfigPath, """
             [user]
                 name = Sandbox
@@ -66,14 +73,35 @@ internal sealed class PublishScriptSandbox : IDisposable
         sandbox.Git("remote", "add", "origin", "../origin.git");
         File.WriteAllText(Path.Combine(sandbox.OriginPath, "objects", "info", "alternates"), "../../work/.git/objects\n");
 
-        var script = Path.Combine(sandbox.WorkTree, "scripts", "publish-pwa.ps1");
-        Directory.CreateDirectory(Path.GetDirectoryName(script)!);
-        File.Copy(Path.Combine(RepoPaths.Root, "scripts", "publish-pwa.ps1"), script);
+        foreach (var file in new[] { Path.Combine("scripts", "publish-pwa.ps1"), Path.Combine("hosting", "cloudfront", "viewer-request.js") })
+        {
+            var copy = Path.Combine(sandbox.WorkTree, file);
+            Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+            File.Copy(Path.Combine(RepoPaths.Root, file), copy);
+        }
+        sandbox.WriteHostingConfig(bucket: Bucket, mainDistribution: MainDistribution, mainUrl: MainUrl);
         File.WriteAllText(Path.Combine(sandbox.WorkTree, "TextConverter.sln"), "");
         sandbox.SetVersion(null);
         sandbox.Commit("initial");
         sandbox.Push("main");
         sandbox.Git("fetch", "--quiet", "origin");
+    }
+
+    /// <summary>Writes <c>hosting/aws/hosting.json</c> (not committed); an empty value is one not filled in yet.</summary>
+    public void WriteHostingConfig(string bucket, string mainDistribution, string mainUrl)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(HostingConfigPath)!);
+        File.WriteAllText(HostingConfigPath, $$"""
+            {
+              "profile": "{{Profile}}",
+              "region": "{{Region}}",
+              "bucket": "{{bucket}}",
+              "environments": {
+                "main": { "distributionId": "{{mainDistribution}}", "functionName": "kroiko-pwa-main", "url": "{{mainUrl}}" },
+                "production": { "distributionId": "{{ProductionDistribution}}", "functionName": "kroiko-pwa-production", "url": "https://app.kroiko.com" }
+              }
+            }
+            """);
     }
 
     /// <summary>
@@ -108,7 +136,6 @@ internal sealed class PublishScriptSandbox : IDisposable
         Git("commit", "--quiet", "--allow-empty", "-m", message);
     }
 
-
     public string Git(params string[] args) => RunGit(WorkTree, args);
 
     public ScriptRun Run(string environment, RunOptions? options = null)
@@ -123,14 +150,16 @@ internal sealed class PublishScriptSandbox : IDisposable
 
         psi.Environment["PATH"] = StubsPath + Path.PathSeparator + Environment.GetEnvironmentVariable("PATH");
         psi.Environment["SANDBOX_CALL_LOG"] = CallLogPath;
+        psi.Environment["SANDBOX_FUNCTION_SOURCE"] = Path.Combine(WorkTree, "hosting", "cloudfront", "viewer-request.js");
         psi.Environment["SANDBOX_TESTS_EXIT"] = options.TestsExitCode.ToString(CultureInfo.InvariantCulture);
-        psi.Environment["SANDBOX_SWA_EXIT"] = options.SwaExitCode.ToString(CultureInfo.InvariantCulture);
-        psi.Environment["SANDBOX_SWA_PRINTS_URL"] = options.SwaPrintsUrl ? "1" : "0";
-        psi.Environment["SWA_CLI_DEBUG"] = options.SwaCliDebug;
-        if (options.WithToken)
-            psi.Environment["SWA_CLI_DEPLOYMENT_TOKEN"] = Token;
-        else
-            psi.Environment.Remove("SWA_CLI_DEPLOYMENT_TOKEN");
+        psi.Environment["SANDBOX_PUBLISH_EXTRA"] = options.PublishExtraFile ?? "";
+        psi.Environment["SANDBOX_AWS_FAIL_ON"] = options.AwsFailsOn ?? "";
+        psi.Environment["SANDBOX_LIVE_FUNCTION_DIFFERS"] = options.LiveFunctionDiffers ? "1" : "0";
+        psi.Environment["SANDBOX_DISTRIBUTION_FUNCTION"] = options.DistributionFunction ?? "";
+        psi.Environment["SANDBOX_DISTRIBUTION_COMMENT"] = options.DistributionComment ?? "";
+        // The real CLI would read these before the profile's; the script must not depend on them.
+        foreach (var variable in new[] { "AWS_PROFILE", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN" })
+            psi.Environment.Remove(variable);
 
         var (exitCode, stdout, stderr) = RunProcess(psi, "PowerShell 7 (pwsh) is needed to test scripts/publish-pwa.ps1");
         var calls = File.Exists(CallLogPath) ? File.ReadAllLines(CallLogPath) : [];
@@ -212,31 +241,117 @@ internal sealed class PublishScriptSandbox : IDisposable
         }
     }
 
-    // Logs "dotnet <args>" and whether the token reached it. `test` exits with SANDBOX_TESTS_EXIT;
-    // `publish -o <dir>` writes a tiny wwwroot.
+    // Logs "dotnet <args>". `test` exits with SANDBOX_TESTS_EXIT; `publish -o <dir>` writes a small wwwroot with
+    // .br and .gz siblings, whose contents name the file, plus SANDBOX_PUBLISH_EXTRA when it is set.
     private const string DotnetStub = """
         Add-Content -LiteralPath $env:SANDBOX_CALL_LOG -Value ("dotnet " + ($args -join ' '))
-        Add-Content -LiteralPath $env:SANDBOX_CALL_LOG -Value ("dotnet-token-present " + [bool]$env:SWA_CLI_DEPLOYMENT_TOKEN)
         if ($args[0] -eq 'test') { exit [int]$env:SANDBOX_TESTS_EXIT }
         if ($args[0] -eq 'publish') {
-            $out = $args[[array]::IndexOf($args, '-o') + 1]
-            New-Item -ItemType Directory -Force -Path (Join-Path $out 'wwwroot') | Out-Null
-            Set-Content -LiteralPath (Join-Path $out 'wwwroot/index.html') -Value '<html></html>'
+            $webRoot = Join-Path $args[[array]::IndexOf($args, '-o') + 1] 'wwwroot'
+            $files = [ordered]@{
+                'index.html' = 'index'; 'index.html.br' = 'index-br'; 'index.html.gz' = 'index-gz'
+                'service-worker.js' = 'worker'; 'service-worker.js.br' = 'worker-br'
+                'service-worker-assets.js' = 'assets'
+                '_framework/dotnet.native.abcdefgh12.wasm' = 'wasm'; '_framework/dotnet.native.abcdefgh12.wasm.br' = 'wasm-br'
+                '_framework/dotnet.native.abcdefgh12.wasm.gz' = 'wasm-gz'
+                '_framework/icudt_EFIGS.tptq2av103.dat' = 'dat'; '_framework/icudt_EFIGS.tptq2av103.dat.br' = 'dat-br'
+                'fonts/roboto.woff2' = 'font'
+                'manifest.webmanifest' = 'manifest'; 'manifest.webmanifest.br' = 'manifest-br'
+                'css/app.css' = 'css'
+            }
+            if ($env:SANDBOX_PUBLISH_EXTRA) { $files[$env:SANDBOX_PUBLISH_EXTRA] = 'extra' }
+            foreach ($file in $files.Keys) {
+                $path = Join-Path $webRoot $file
+                New-Item -ItemType Directory -Force -Path (Split-Path -Parent $path) | Out-Null
+                Set-Content -LiteralPath $path -Value $files[$file] -NoNewline
+            }
         }
         exit 0
         """;
 
-    // Logs "swa <args>", whether the token reached it, and SWA_CLI_DEBUG; echoes the token the way
-    // `SWA_CLI_DEBUG=silly` would, to prove the script masks it; reports a URL like the real CLI.
-    private const string SwaStub = $$"""
-        Add-Content -LiteralPath $env:SANDBOX_CALL_LOG -Value ("swa " + ($args -join ' '))
-        Add-Content -LiteralPath $env:SANDBOX_CALL_LOG -Value ("swa-token-present " + [bool]$env:SWA_CLI_DEPLOYMENT_TOKEN)
-        Add-Content -LiteralPath $env:SANDBOX_CALL_LOG -Value ("swa-debug '" + $env:SWA_CLI_DEBUG + "'")
-        Write-Output "Deployment token found in Environment Variables: $env:SWA_CLI_DEPLOYMENT_TOKEN"
-        if ($env:SANDBOX_SWA_PRINTS_URL -eq '1') {
-            Write-Output ([char]0x2714 + " Project deployed to {{StubUrl}} " + [char]::ConvertFromUtf32(0x1F680))
+    // Logs "aws <args>" and answers like the real CLI. `s3 cp --recursive` logs one "aws-upload" line per object
+    // with its metadata; `update-function` and `update-distribution` log what they were given. SANDBOX_AWS_FAIL_ON
+    // makes the call whose "<service> <command>" contains it fail.
+    private const string AwsStub = """
+        $all = @($args)
+        Add-Content -LiteralPath $env:SANDBOX_CALL_LOG -Value ("aws " + ($all -join ' '))
+        function Get-Option([string] $Name) { $i = [array]::IndexOf($all, $Name); if ($i -ge 0) { $all[$i + 1] } else { '' } }
+        function Log([string] $Line) { Add-Content -LiteralPath $env:SANDBOX_CALL_LOG -Value $Line }
+        $command = "$($all[0]) $($all[1])"
+        if ($env:SANDBOX_AWS_FAIL_ON -and $command.Contains($env:SANDBOX_AWS_FAIL_ON)) {
+            [Console]::Error.WriteLine("An error occurred (AccessDenied) when calling $command")
+            exit 254
         }
-        exit [int]$env:SANDBOX_SWA_EXIT
+        $committedCode = ([System.IO.File]::ReadAllText($env:SANDBOX_FUNCTION_SOURCE)) -replace "`r`n", "`n"
+        $functionName = if ($env:SANDBOX_DISTRIBUTION_FUNCTION) { $env:SANDBOX_DISTRIBUTION_FUNCTION }
+            elseif ((Get-Option '--id') -eq 'EMAINSANDBOX') { 'kroiko-pwa-main' } else { 'kroiko-pwa-production' }
+        $config = @'
+        {
+            "CallerReference": "2026-09-24T10:00:00Z",
+            "Aliases": { "Quantity": 0 },
+            "DefaultRootObject": "",
+            "Origins": {
+                "Quantity": 1,
+                "Items": [
+                    {
+                        "Id": "kroiko-pwa-bucket",
+                        "DomainName": "kroiko-pwa-sandbox.s3.eu-central-1.amazonaws.com",
+                        "OriginPath": "/main/20260901T000000Z-v0.9.0-0000000",
+                        "S3OriginConfig": { "OriginAccessIdentity": "" },
+                        "OriginAccessControlId": "E2OACSANDBOX"
+                    }
+                ]
+            },
+            "DefaultCacheBehavior": {
+                "TargetOriginId": "kroiko-pwa-bucket",
+                "ViewerProtocolPolicy": "redirect-to-https",
+                "Compress": true,
+                "CachePolicyId": "83da9c7e-98b4-4e11-a168-04f0df8e2c65",
+                "FunctionAssociations": {
+                    "Quantity": 1,
+                    "Items": [ { "FunctionARN": "arn:aws:cloudfront::123456789012:function/FUNCTION_NAME", "EventType": "viewer-request" } ]
+                }
+            },
+            "Comment": "Kroiko PWA \"sandbox\"",
+            "Enabled": true
+        }
+        '@ -replace 'FUNCTION_NAME', $functionName
+        if ($env:SANDBOX_DISTRIBUTION_COMMENT) { $config = $config.Replace('Kroiko PWA \"sandbox\"', $env:SANDBOX_DISTRIBUTION_COMMENT) }
+        switch ($command) {
+            'sts get-caller-identity' { 'arn:aws:iam::123456789012:user/kroiko-pwa-deployer' }
+            's3 cp' {
+                $source = $all[2]; $destination = $all[3]
+                foreach ($file in Get-ChildItem -LiteralPath $source -Recurse -File) {
+                    $relative = [System.IO.Path]::GetRelativePath($source, $file.FullName).Replace('\', '/')
+                    Log ("aws-upload $destination$relative|$(Get-Option '--content-type')|$(Get-Option '--cache-control')|" +
+                        "$(Get-Option '--content-encoding')|$([System.IO.File]::ReadAllText($file.FullName))")
+                }
+            }
+            'cloudfront get-function' {
+                $code = if ($env:SANDBOX_LIVE_FUNCTION_DIFFERS -eq '1') { "function handler(event) { return event.request; }`n" } else { $committedCode }
+                [System.IO.File]::WriteAllText($all[[array]::IndexOf($all, '--stage') + 2], $code)
+                '{ "ContentType": "application/octet-stream", "ETag": "ETAG-LIVE" }'
+            }
+            'cloudfront describe-function' { 'ETAG-DEV-1' }
+            'cloudfront update-function' {
+                $code = [System.IO.File]::ReadAllText(((Get-Option '--function-code') -replace '^fileb://', ''))
+                Log "aws-function-code-is-committed $($code -ceq $committedCode)"
+                'ETAG-DEV-2'
+            }
+            'cloudfront publish-function' { }
+            'cloudfront get-distribution-config' { if ((Get-Option '--query') -eq 'ETag') { 'ETAG-DIST-1' } else { $config } }
+            'cloudfront update-distribution' {
+                $sent = [System.IO.File]::ReadAllText(((Get-Option '--distribution-config') -replace '^file://', ''))
+                $originPath = ($sent | ConvertFrom-Json).Origins.Items[0].OriginPath
+                Log "aws-origin-path $originPath"
+                Log "aws-config-otherwise-unchanged $($sent.Replace($originPath, '/main/20260901T000000Z-v0.9.0-0000000') -ceq $config)"
+                'InProgress'
+            }
+            'cloudfront wait' { }
+            'cloudfront create-invalidation' { 'I2SANDBOXINVALIDATION' }
+            default { [Console]::Error.WriteLine("aws stub: unexpected call $command"); exit 1 }
+        }
+        exit 0
         """;
 }
 
@@ -257,23 +372,47 @@ public sealed class PublishScriptTemplate : IDisposable
 internal sealed record RunOptions
 {
     public bool DryRun { get; init; }
-    public bool WithToken { get; init; } = true;
     public int TestsExitCode { get; init; }
-    public int SwaExitCode { get; init; }
-    public bool SwaPrintsUrl { get; init; } = true;
-    public string SwaCliDebug { get; init; } = "";
+
+    /// <summary>A file the stubbed publish adds to <c>wwwroot</c>, e.g. <c>notes.xyz</c>.</summary>
+    public string? PublishExtraFile { get; init; }
+
+    /// <summary>The aws call that fails: part of its "&lt;service&gt; &lt;command&gt;", e.g. <c>s3 cp</c>.</summary>
+    public string? AwsFailsOn { get; init; }
+
+    /// <summary>The environment's live function runs older code than the committed file.</summary>
+    public bool LiveFunctionDiffers { get; init; }
+
+    /// <summary>The function the stubbed distribution runs on viewer request; by default the environment's own.</summary>
+    public string? DistributionFunction { get; init; }
+
+    /// <summary>The comment of the stubbed distribution, in place of the ASCII one.</summary>
+    public string? DistributionComment { get; init; }
 }
 
-/// <param name="Calls">One line per stubbed call (<c>dotnet …</c>, <c>swa …</c>) and what each stub saw.</param>
+/// <summary>One object <c>aws s3 cp</c> uploaded, with the metadata it was given.</summary>
+internal sealed record Upload(string Key, string ContentType, string CacheControl, string ContentEncoding, string Content);
+
+/// <param name="Calls">One line per stubbed call (<c>dotnet …</c>, <c>aws …</c>) and what the stubs saw.</param>
 internal sealed record ScriptRun(int ExitCode, string Output, IReadOnlyList<string> Calls)
 {
     public IEnumerable<string> DotnetCalls => Calls.Where(c => c.StartsWith("dotnet ", StringComparison.Ordinal));
 
-    public IEnumerable<string> SwaCalls => Calls.Where(c => c.StartsWith("swa ", StringComparison.Ordinal));
+    public IReadOnlyList<string> AwsCalls => Calls.Where(c => c.StartsWith("aws ", StringComparison.Ordinal)).ToList();
+
+    /// <summary>Each aws call as "&lt;service&gt; &lt;command&gt;", e.g. <c>s3 cp</c>, <c>cloudfront wait</c>.</summary>
+    public IReadOnlyList<string> AwsCommands => AwsCalls.Select(c => string.Join(' ', c.Split(' ').Skip(1).Take(2))).ToList();
+
+    /// <summary>Every uploaded object, by its key under the bucket (e.g. <c>main/&lt;release&gt;/raw/index.html</c>).</summary>
+    public IReadOnlyList<Upload> Uploads => Calls
+        .Where(c => c.StartsWith("aws-upload ", StringComparison.Ordinal))
+        .Select(c => c["aws-upload ".Length..].Split('|'))
+        .Select(f => new Upload(f[0].Replace($"s3://{PublishScriptSandbox.Bucket}/", ""), f[1], f[2], f[3], f[4]))
+        .ToList();
+
+    /// <summary>The origin path the script switched the distribution to, if it did.</summary>
+    public string? OriginPath => Calls.SingleOrDefault(c => c.StartsWith("aws-origin-path ", StringComparison.Ordinal))?["aws-origin-path ".Length..];
 
     /// <summary>The <c>wwwroot</c> of the temporary folder the script published to (the stub's <c>-o</c> argument).</summary>
     public string WebRoot => Path.Combine(DotnetCalls.Single(c => c.StartsWith("dotnet publish ", StringComparison.Ordinal)).Split(' ').Last(), "wwwroot");
-
-    /// <summary>The <c>swa</c> call the script makes for <paramref name="environment"/> (ADR-0001: never the CLI's default <c>preview</c>).</summary>
-    public string ExpectedSwaDeploy(string environment) => $"swa deploy {WebRoot} --env {environment} --swa-config-location {WebRoot}";
 }

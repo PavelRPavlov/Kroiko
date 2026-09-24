@@ -33,7 +33,7 @@ ATATextConverter/
 │   └── research/             ← research findings the ADRs rely on
 ├── TextConverter.sln
 ├── global.json               ← pins the .NET 10 SDK
-├── hosting/                  ← the PWA host's config: the CloudFront Function (ADR-0010, phase 07)
+├── hosting/                  ← the PWA host (ADR-0010, phase 07): the CloudFront Function, aws/ IDs + policy templates
 ├── scripts/                  ← publish-pwa.ps1 (the manual PWA deploy, phase 07), init-local-secrets.ps1
 ├── ATAFurniture.Server/      ← Blazor Server web app (deployed; maintained, not developed)
 ├── Kroiko.Client.Blazor/     ← Blazor WASM PWA (being built)
