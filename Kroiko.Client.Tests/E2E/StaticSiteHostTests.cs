@@ -25,6 +25,8 @@ public sealed class StaticSiteHostTests : IAsyncLifetime
         Write("_framework/dotnet.native.wasm", "wasm");
         Write("_framework/icudt_EFIGS.dat", "icu");
         Write("manifest.webmanifest", "{}");
+        Write("notes.unknown", "?");
+        Write("notes.unknown.br", "?");
 
         _host = await StaticSiteHost.StartAsync(_webRoot);
         // No automatic decompression: the tests look at the encoding the host chose.
@@ -64,19 +66,19 @@ public sealed class StaticSiteHostTests : IAsyncLifetime
     }
 
     [Theory]
-    [InlineData("br", "brotli-bytes")]
-    [InlineData("gzip", "gzip-bytes")]
-    [InlineData("gzip, deflate, br", "brotli-bytes")]
-    [InlineData("identity", "console.log('plain');")]
-    public async Task Negotiates_the_precompressed_file(string acceptEncoding, string body)
+    [InlineData("br", "br", "brotli-bytes")]
+    [InlineData("gzip", "gzip", "gzip-bytes")]
+    [InlineData("gzip, deflate, br", "br", "brotli-bytes")]
+    [InlineData("br;q=0, gzip", "gzip", "gzip-bytes")]
+    [InlineData("identity", null, "console.log('plain');")]
+    public async Task Negotiates_the_precompressed_file(string acceptEncoding, string? contentEncoding, string body)
     {
         using var response = await GetAsync("app.js", acceptEncoding);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         (await response.Content.ReadAsStringAsync()).Should().Be(body);
         response.Content.Headers.ContentType!.MediaType.Should().Be("text/javascript");
-        var encoding = acceptEncoding == "identity" ? null : body.StartsWith("brotli") ? "br" : "gzip";
-        response.Content.Headers.ContentEncoding.SingleOrDefault().Should().Be(encoding);
+        response.Content.Headers.ContentEncoding.SingleOrDefault().Should().Be(contentEncoding);
         response.Headers.Vary.Should().Contain("Accept-Encoding");
     }
 
@@ -108,6 +110,15 @@ public sealed class StaticSiteHostTests : IAsyncLifetime
         using var response = await _http.GetAsync("_framework/missing.wasm");
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task A_file_of_an_unknown_type_is_a_plain_404_even_with_a_precompressed_sibling()
+    {
+        using var response = await GetAsync("notes.unknown", "br");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.Content.Headers.ContentEncoding.Should().BeEmpty();
     }
 
     private async Task<HttpResponseMessage> GetAsync(string path, string acceptEncoding)

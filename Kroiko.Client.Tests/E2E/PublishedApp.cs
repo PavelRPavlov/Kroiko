@@ -13,6 +13,7 @@ namespace Kroiko.Client.Tests.E2E;
 public sealed class PublishedApp : IAsyncLifetime
 {
     private static readonly TimeSpan PublishTimeout = TimeSpan.FromMinutes(10);
+    private const float ExpectTimeoutMs = 15_000; // Expect(...) waits; the offline boot from the cache takes a few seconds.
 
     private readonly string _publishDir = Directory.CreateTempSubdirectory("kroiko-e2e-").FullName;
     private IPlaywright? _playwright;
@@ -27,7 +28,7 @@ public sealed class PublishedApp : IAsyncLifetime
         // The browser first: a missing browser fails in seconds, not after a publish.
         _playwright = await Playwright.CreateAsync();
         _browser = await Chromium.LaunchAsync(_playwright);
-        Assertions.SetDefaultExpectTimeout(15_000);
+        Assertions.SetDefaultExpectTimeout(ExpectTimeoutMs);
 
         await PublishAsync(_publishDir);
         _host = await StaticSiteHost.StartAsync(Path.Combine(_publishDir, "wwwroot"));
@@ -45,7 +46,7 @@ public sealed class PublishedApp : IAsyncLifetime
         {
             Directory.Delete(_publishDir, recursive: true);
         }
-        catch (IOException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
             // Best effort: a temp folder left behind is harmless.
         }
@@ -82,14 +83,16 @@ public sealed class PublishedApp : IAsyncLifetime
         catch (OperationCanceledException)
         {
             process.Kill(entireProcessTree: true);
-            throw new TimeoutException($"dotnet publish of {project} did not finish within {PublishTimeout}.");
+            await process.WaitForExitAsync();
+            throw new TimeoutException(
+                $"dotnet publish of {project} did not finish within {PublishTimeout}:{Environment.NewLine}{await stdout}{await stderr}");
         }
 
+        var output = await stdout + await stderr;
         if (process.ExitCode != 0)
         {
             throw new InvalidOperationException(
-                $"dotnet publish of {project} failed with exit code {process.ExitCode}:{Environment.NewLine}" +
-                await stdout + await stderr);
+                $"dotnet publish of {project} failed with exit code {process.ExitCode}:{Environment.NewLine}{output}");
         }
     }
 
@@ -105,11 +108,4 @@ public sealed class PublishedApp : IAsyncLifetime
     }
 
     private static InvalidOperationException NotStarted() => new("The published app has not started.");
-}
-
-/// <summary>Every browser test joins this collection, so the app is published and served once per run.</summary>
-[CollectionDefinition(Name)]
-public sealed class E2ECollection : ICollectionFixture<PublishedApp>
-{
-    public const string Name = "E2E";
 }

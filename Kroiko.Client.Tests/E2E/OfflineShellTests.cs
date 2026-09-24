@@ -34,6 +34,10 @@ public sealed class OfflineShellTests(PublishedApp app)
         await Expect(page).ToHaveURLAsync(new Uri(app.BaseAddress, "configuration").ToString());
         await Expect(page.GetByText("Cutting Lists Options...")).ToBeVisibleAsync();
 
+        // A deep link, loaded offline: the service worker answers the navigation with the cached index.html.
+        await page.GotoAsync("configuration");
+        await Expect(page.GetByText("Cutting Lists Options...")).ToBeVisibleAsync();
+
         // load() fetches the regular face through the service worker; offline it only succeeds from the cache.
         var fontLoad = await page.EvaluateAsync<string>(
             "() => document.fonts.load('16px Roboto').then(() => 'loaded', error => `${error.name}: ${error.message}`)");

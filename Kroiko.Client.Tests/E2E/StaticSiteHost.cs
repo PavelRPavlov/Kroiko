@@ -39,26 +39,29 @@ internal sealed class StaticSiteHost : IAsyncDisposable
 
     public static async Task<StaticSiteHost> StartAsync(string webRoot)
     {
-        var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions
+        // Empty builder: no configuration sources (the site's own appsettings.json is content, not host
+        // configuration), no logging providers, not Development (no static web assets manifest lookup).
+        var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions
         {
             ContentRootPath = webRoot,
             WebRootPath = webRoot,
-            // Not Development: that would look for this test assembly's static web assets manifest.
             EnvironmentName = "Production",
         });
-        builder.Logging.ClearProviders();
-        builder.WebHost.ConfigureKestrel(kestrel => kestrel.Listen(IPAddress.Loopback, 0));
+        // Loopback, not "localhost": Kestrel cannot bind a dynamic port on "localhost". Both are secure contexts.
+        builder.WebHost.UseKestrelCore().ConfigureKestrel(kestrel => kestrel.Listen(IPAddress.Loopback, 0));
+        builder.Services.AddRouting();
 
         var app = builder.Build();
-        var files = new PhysicalFileProvider(webRoot);
+        var files = app.Environment.WebRootFileProvider;
         var contentTypes = new PrecompressedContentTypeProvider();
 
         app.Use((context, next) =>
         {
-            NegotiatePrecompressed(context, files);
+            NegotiatePrecompressed(context, files, contentTypes);
             return next(context);
         });
         app.UseStaticFiles(new StaticFileOptions { FileProvider = files, ContentTypeProvider = contentTypes });
+        app.UseRouting();
         // The route pattern skips paths with a file extension, so a missing asset stays a 404.
         app.MapFallbackToFile("index.html", new StaticFileOptions { FileProvider = files });
 
@@ -75,12 +78,15 @@ internal sealed class StaticSiteHost : IAsyncDisposable
         await _app.DisposeAsync();
     }
 
-    private static void NegotiatePrecompressed(HttpContext context, IFileProvider files)
+    private static void NegotiatePrecompressed(HttpContext context, IFileProvider files, IContentTypeProvider contentTypes)
     {
         context.Response.Headers.Vary = "Accept-Encoding";
 
+        // Only files the static-file middleware will serve: an unknown type is a 404, never a "br" 404.
         var path = context.Request.Path.Value;
-        if (path is null || !(HttpMethods.IsGet(context.Request.Method) || HttpMethods.IsHead(context.Request.Method)))
+        if (path is null
+            || !(HttpMethods.IsGet(context.Request.Method) || HttpMethods.IsHead(context.Request.Method))
+            || !contentTypes.TryGetContentType(path, out _))
             return;
 
         var accepted = AcceptedEncodings(context.Request.Headers.AcceptEncoding.ToString());
