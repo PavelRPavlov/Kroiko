@@ -147,8 +147,11 @@ These were found in a code review; several are naturally fixed by the migration.
   `GetManifestResourceStream` through the source-generated `TemplateJsonContext` (phase 02 step 3).
   ✅ Row providers: explicit per-manufacturer column lists replace `Type.GetProperty` (phase 02 step 4); a trial
   build with `IsTrimmable`/`IsAotCompatible` now reports no IL warnings. LargeXlsx generation itself is WASM/trim-clean.
+  ✅ The compiler guards it (phase 02 step 7): `Kroiko.Domain` is `IsTrimmable`/`IsAotCompatible` with
+  `IL2026;IL2067;IL2070;IL2075;IL3050` as errors, and `BannedSymbols.txt` (BannedApiAnalyzers, `RS0030` as an error) bans
+  `System.IO.File`, `System.IO.Directory`, `Assembly.Location` and `Environment.CurrentDirectory`; no suppressions.
   → Decided in [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md): embedded
-  templates + source-generated JSON (done), explicit column mappings (done), trim analyzers as errors (not yet implemented).
+  templates + source-generated JSON (done), explicit column mappings (done), trim analyzers as errors (done).
 
 ## 8. Cross-cutting invariants (do not break)
 

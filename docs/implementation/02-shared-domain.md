@@ -195,6 +195,15 @@ In `Kroiko.Domain.csproj`: `IsTrimmable` and `IsAotCompatible` set to `true`, wi
 `Environment.CurrentDirectory`. The build must be clean without any suppressions. If one seems
 needed, stop: something browser-unsafe survived.
 
+Done. `Kroiko.Domain.csproj` sets `IsTrimmable` and `IsAotCompatible` and adds `IL2026;IL2067;IL2070;IL2075;IL3050`
+and `RS0030` (the banned-API diagnostic, a warning by default) to `WarningsAsErrors`. It references
+`Microsoft.CodeAnalysis.BannedApiAnalyzers` 5.6.0 (`PrivateAssets=all`, so it does not flow to the Server) with
+`Kroiko.Domain/BannedSymbols.txt` as an `AdditionalFiles` item, banning the four APIs, each with the reason shown in the
+error. The domain builds with no IL or RS diagnostics and has no suppressions (no `#pragma`, `NoWarn`,
+`SuppressMessage` or trim annotations). The guard was proven by building a temporary file that used each banned API
+and one call per IL code: the build failed with all nine errors (four RS0030, IL2026, IL3050, IL2067, IL2070,
+IL2075), and the file was removed. The golden files are unchanged.
+
 ### 8. Move the tests
 
 Separate commits, in this order (ADR-0004 §9, refined by ADR-0007 §2):
@@ -221,7 +230,7 @@ Its own PR, once steps 1–8 are merged.
 - [x] `PolyboardParser.Parse`, `IOrderFormat` (`CreateFiles`, `Generate`, `Check`) and `OrderFormats` are the only public conversion entry points; builders, providers and generators are `internal`.
 - [x] The domain has no `User`, no email, no INPC; `SupportedCompany` has three manufacturers.
 - [x] Templates are embedded resources read through a source-generated JSON context.
-- [ ] `Kroiko.Domain` builds with the trim/AOT analyzers as errors and the banned-API list, with no suppressions.
+- [x] `Kroiko.Domain` builds with the trim/AOT analyzers as errors and the banned-API list, with no suppressions.
 - [ ] The golden tests pass under invariant **and** `bg-BG` culture, and live in `Kroiko.Domain.Tests`.
 - [x] LF, CR, BOM and whitespace-line fixtures parse to the same Details as their CRLF originals.
 - [x] `Check` and `FileNameSanitizer` are covered by domain tests; the 6-material limit is one constant.
