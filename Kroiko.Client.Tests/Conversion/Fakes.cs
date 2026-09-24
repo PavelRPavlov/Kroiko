@@ -128,8 +128,6 @@ internal sealed class FakeFolderPicker : IFolderPicker
 
     public FakeFolder Folder { get; } = new();
 
-    public bool Available { get; set; } = true;
-
     /// <summary>How many times the picker was opened.</summary>
     public int Picks { get; private set; }
 
@@ -139,7 +137,7 @@ internal sealed class FakeFolderPicker : IFolderPicker
     /// <summary>When set, the pick waits for it, as the real picker waits for the operator.</summary>
     public Task? PickedWhen { get; set; }
 
-    public Task<bool> IsAvailableAsync() => Task.FromResult(Available);
+    public Task<bool> IsAvailableAsync() => Task.FromResult(true);
 
     public async Task<FolderPick> PickAsync()
     {
@@ -166,7 +164,7 @@ internal sealed class FakeFolderPicker : IFolderPicker
 /// <summary>A picked folder held in memory: <see cref="Names"/> is what it holds, <see cref="Writes"/> what was written, in order.</summary>
 internal sealed class FakeFolder : IPickedFolder
 {
-    public string Name { get; set; } = "Поръчки";
+    public string Name => "Поръчки";
 
     public List<string> Names { get; } = [];
 
@@ -178,7 +176,7 @@ internal sealed class FakeFolder : IPickedFolder
     /// <summary>When set, writing the file with this zero-based index throws <see cref="WriteFailure"/>.</summary>
     public int? FailWriteAt { get; set; }
 
-    public Exception WriteFailure { get; set; } = new InvalidOperationException("The file could not be written.");
+    public Exception WriteFailure { get; } = new InvalidOperationException("The file could not be written.");
 
     /// <summary>Runs once each file is written, e.g. to check the busy flag or to edit the Order meanwhile.</summary>
     public Action? OnWrite { get; set; }

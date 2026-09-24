@@ -31,12 +31,12 @@
             {
                 @* The picker opens straight from this click (ADR-0003 §2). *@
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.DriveFolderUpload"
-                           OnClick="ConverterState.SaveToFolderAsync" Disabled="@IsSaving">
+                           OnClick="ConverterState.SaveToFolderAsync" Disabled="@ConverterState.IsSaving">
                     Запази в папка…
                 </MudButton>
             }
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
-                       OnClick="ConverterState.DownloadAllAsync" Disabled="@IsSaving">
+                       OnClick="ConverterState.DownloadAllAsync" Disabled="@ConverterState.IsSaving">
                 Изтегли всички
             </MudButton>
         </MudStack>
@@ -57,8 +57,6 @@
 
 @code {
     private bool _canSaveToFolder;
-
-    private bool IsSaving => ConverterState.IsDownloading || ConverterState.IsSavingToFolder;
 
     protected override async Task OnInitializedAsync()
     {

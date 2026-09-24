@@ -138,8 +138,8 @@ drops that generation's output. `DownloadAllAsync` ("Изтегли всички
 edit meanwhile stops the downloads of the files it discarded. `SaveToFolderAsync` ("Запази в папка…", ADR-0003 §2–4, §6) opens the picker before
 it awaits anything (the click's user activation), lists the picked folder, writes every generated file under its `ClashNaming.FinalNames` name
 and then sets the saved flag and `FolderSave` (the folder's name and the final names, for the confirmation; cleared with the generated files); a
-cancel does nothing, a blocked picker or a failed list/write raises `Error` pointing to "Изтегли всички" and saves nothing, and an edit meanwhile
-stops the writes. Downloading and saving to a folder never run together. Failures of reading, the dialog, making files, generating, device storage,
+cancel does nothing, a blocked picker or a failed list/write raises `Error` pointing to "Изтегли всички", saves nothing and clears an earlier
+save's confirmation, and an edit meanwhile stops the writes. Downloading and saving to a folder never run together (`IsSaving`). Failures of reading, the dialog, making files, generating, device storage,
 downloads and folder saves are logged and raise `Error` with a Bulgarian message instead of throwing. `HasUnsavedWork` = a file is loaded and its current input
 has not been generated and saved (at least one download triggered, or a folder save succeeded).
 `ClashNaming.FinalNames` (pure) gives each sanitised name ` (2)`, ` (3)`, … before its extension when the folder
@@ -169,7 +169,8 @@ matches the golden files, and the contacts and manufacturer pre-filled after a r
 saved files match the golden files, a second save after a reload gets ` (2)` names and opens at the last folder, the pick had the click's user
 activation, a cancel does nothing, a blocked picker shows the message, and a browser without the picker offers only the downloads. Its main test
 uses `PublishedApp.NewPersistentContextAsync` (a profile on disk): in Playwright's off-the-record contexts, reading a file-system handle back
-from IndexedDB crashes the page. The real picker is a manual release check.
+from IndexedDB crashes the page (Chromium 153; [reported upstream](https://github.com/andeplane/fem-lab/issues/247) with native handles
+too, so an Edge InPrivate window is a manual check). The real picker is a manual release check.
 
 **Device settings** (`LocalStorageDeviceSettingsStore`, registered by `AddDeviceSettingsStore()`) are one JSON document
 in `localStorage` under `kroiko.deviceSettings`: `{"schemaVersion":1,"companyName":…,"mobileNumber":…,"manufacturer":"Lonira"}`,

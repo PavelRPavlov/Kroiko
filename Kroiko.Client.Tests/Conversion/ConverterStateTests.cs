@@ -1100,6 +1100,41 @@ public sealed class ConverterStateTests
         _state.IsSaved.Should().BeFalse();
     }
 
+    [Theory]
+    [InlineData(FolderPickOutcome.Blocked)]
+    [InlineData(null)]
+    public async Task A_folder_save_that_fails_after_one_succeeded_clears_the_old_confirmation_but_stays_saved(FolderPickOutcome? outcome)
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        await _state.SaveToFolderAsync();
+        if (outcome is { } blocked)
+        {
+            _picker.Outcome = blocked;
+        }
+        else
+        {
+            _picker.Folder.FailWriteAt = _picker.Folder.Writes.Count;
+        }
+
+        await _state.SaveToFolderAsync();
+
+        _state.FolderSave.Should().BeNull();
+        _state.IsSaved.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task A_cancelled_folder_save_after_one_succeeded_keeps_its_confirmation()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        await _state.SaveToFolderAsync();
+        var confirmation = _state.FolderSave;
+        _picker.Outcome = FolderPickOutcome.Cancelled;
+
+        await _state.SaveToFolderAsync();
+
+        _state.FolderSave.Should().BeSameAs(confirmation);
+    }
+
     private void Edit(string edit)
     {
         var file = _state.Files[0];

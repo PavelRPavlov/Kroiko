@@ -124,6 +124,12 @@ public sealed class ConverterState(
     public bool IsSavingToFolder { get; private set; }
 
     /// <summary>
+    /// The generated files are being downloaded or saved to a folder: neither starts again, and nothing is generated,
+    /// until it is done.
+    /// </summary>
+    public bool IsSaving => IsDownloading || IsSavingToFolder;
+
+    /// <summary>
     /// "Генерирай бланки за поръчка" is allowed: there are files, both contact fields are filled (not just
     /// whitespace) and <see cref="Problems"/> is empty (ADR-0005 §6, ADR-0006 §3), and nothing is being generated
     /// or saved.
@@ -134,8 +140,7 @@ public sealed class ConverterState(
         && !string.IsNullOrWhiteSpace(MobileNumber)
         && Problems.Count == 0
         && !IsGenerating
-        && !IsDownloading
-        && !IsSavingToFolder;
+        && !IsSaving;
 
     /// <summary>The name <paramref name="file"/> is saved under: its <see cref="FileNameSanitizer"/> name (ADR-0003 §7).</summary>
     public static string SavedFileName(FileSaveContext file)
@@ -375,7 +380,7 @@ public sealed class ConverterState(
     public async Task DownloadAllAsync()
     {
         var files = GeneratedFiles;
-        if (files.Count == 0 || IsDownloading || IsSavingToFolder)
+        if (files.Count == 0 || IsSaving)
         {
             return;
         }
@@ -408,14 +413,18 @@ public sealed class ConverterState(
     }
 
     /// <summary>
-    /// "Запази в папка…" (ADR-0003 §2, §4): opens the folder picker and writes every generated file into the picked
-    /// folder under a name that is not taken there (<see cref="ClashNaming"/>), then marks the files saved
-    /// (ADR-0003 §8) and keeps the final names in <see cref="FolderSave"/>.
+    /// "Запази в папка…" (ADR-0003 §2, §4, §6): opens the folder picker before awaiting anything, so it keeps the click's
+    /// user activation, and writes every generated file into the picked folder under a name that is not taken there
+    /// (<see cref="ClashNaming"/>); then marks the files saved (ADR-0003 §8) and keeps the final names in
+    /// <see cref="FolderSave"/>. A cancelled picker changes nothing. A blocked picker, or a folder that cannot be
+    /// listed or written, raises <see cref="Error"/> pointing to the downloads and clears the confirmation of an
+    /// earlier save; files already written stay. An edit meanwhile stops the writes of the files it discarded. Nothing
+    /// happens with no generated files or while <see cref="IsSaving"/>.
     /// </summary>
     public async Task SaveToFolderAsync()
     {
         var files = GeneratedFiles;
-        if (files.Count == 0 || IsSavingToFolder || IsDownloading)
+        if (files.Count == 0 || IsSaving)
         {
             return;
         }
@@ -429,12 +438,14 @@ public sealed class ConverterState(
             var pick = await picking;
             if (pick.Outcome == FolderPickOutcome.Blocked)
             {
+                FolderSave = null;
                 OnError(FolderBlockedMessage);
                 return;
             }
 
             if (pick.Folder is null)
             {
+                // Cancelled: nothing happens.
                 return;
             }
 
@@ -461,6 +472,7 @@ public sealed class ConverterState(
         catch (Exception exception)
         {
             logger.LogError(exception, "The order files could not be saved to a folder.");
+            FolderSave = null;
             OnError(FolderSaveFailedMessage);
         }
         finally
@@ -471,8 +483,8 @@ public sealed class ConverterState(
     }
 
     /// <summary>
-    /// The generated files were saved: a download was triggered or, from phase 05, a folder save succeeded
-    /// (ADR-0003 §8); ignored when there are none.
+    /// The generated files were saved: a download was triggered or a folder save succeeded (ADR-0003 §8); ignored
+    /// when there are none.
     /// </summary>
     public void MarkSaved()
     {

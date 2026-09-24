@@ -45,22 +45,29 @@ public enum FolderPickOutcome
     Blocked,
 }
 
-/// <summary>The result of <see cref="IFolderPicker.PickAsync"/>: the <see cref="Folder"/> when it was <see cref="FolderPickOutcome.Picked"/>.</summary>
-public sealed record FolderPick(FolderPickOutcome Outcome, IPickedFolder? Folder)
+/// <summary>
+/// The result of <see cref="IFolderPicker.PickAsync"/>: the <see cref="Folder"/> exactly when it was
+/// <see cref="FolderPickOutcome.Picked"/>.
+/// </summary>
+public sealed class FolderPick
 {
+    private FolderPick(FolderPickOutcome outcome, IPickedFolder? folder)
+    {
+        Outcome = outcome;
+        Folder = folder;
+    }
+
     public static FolderPick Cancelled { get; } = new(FolderPickOutcome.Cancelled, null);
 
     public static FolderPick Blocked { get; } = new(FolderPickOutcome.Blocked, null);
 
+    public FolderPickOutcome Outcome { get; }
+
+    public IPickedFolder? Folder { get; }
+
     public static FolderPick Picked(IPickedFolder folder) =>
         new(FolderPickOutcome.Picked, folder ?? throw new ArgumentNullException(nameof(folder)));
 }
-
-/// <summary>
-/// A folder save that succeeded: the folder's name and the names the files were written under, in order, for the
-/// confirmation (ADR-0003 §4).
-/// </summary>
-public sealed record FolderSave(string FolderName, IReadOnlyList<string> FileNames);
 
 /// <summary>
 /// <see cref="IFolderPicker"/> over <c>wwwroot/js/files.js</c> and the File System Access API

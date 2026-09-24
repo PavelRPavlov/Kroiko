@@ -53,9 +53,10 @@ and the final names), which `OrderHandlingComponent` shows as a success alert: �
 list. A cancel (`AbortError`, which the spec also uses when the operator does not allow writing) does nothing; a blocked
 picker (`SecurityError` / `NotAllowedError`) raises „Браузърът не позволява запис в папка. Изтеглете файловете с „Изтегли
 всички“."; a picker, list or write that fails raises „Файловете не можаха да бъдат записани в папката. Изтеглете ги с
-„Изтегли всички“." and saves nothing (files already written stay; the next save numbers around them). An edit meanwhile
-stops the writes, as it stops the downloads; downloading and saving to a folder never run together, and nothing is generated
-while either runs. `BrowserFolderPicker` calls `files.js`: `canSaveToFolder` (feature detection, and it starts loading the last
+„Изтегли всички“." and saves nothing (files already written stay; the next save numbers around them); both also clear an
+earlier save's confirmation. An edit meanwhile stops the writes, as it stops the downloads, without a message (the generated
+files it discards vanish from the page). Downloading and saving to a folder never run together (`IsSaving`), and nothing is
+generated while either runs. `BrowserFolderPicker` calls `files.js`: `canSaveToFolder` (feature detection, and it starts loading the last
 folder so the click need not wait for it), `pickFolder` (`showDirectoryPicker({ mode: 'readwrite', startIn })` with the last
 folder's handle from IndexedDB — database `kroiko`, store `folders`, key `last` — stored again after each pick; a stored folder
 that no longer exists makes the picker open at its default, per the
@@ -71,8 +72,10 @@ IndexedDB, listing, writing and the confirmation run in Chromium: the files matc
 opens at the last folder and gets ` (2)` names, the stub saw the click's user activation, cancel and blocked behave, and
 without `showDirectoryPicker` only "Изтегли всички" is offered. Its main test runs on a profile on disk
 (`PublishedApp.NewPersistentContextAsync`): in Playwright's off-the-record contexts, reading a file-system handle back from
-IndexedDB crashes the page (found with OPFS handles; whether an InPrivate window does the same with a real folder is unchecked).
-The real picker in Edge stays manual (ADR-0007 §5).
+IndexedDB crashes the page (Chromium 153, OPFS handles; a profile on disk reads it fine). The same crash is
+[reported upstream](https://github.com/andeplane/fem-lab/issues/247) for Chromium 153 with native handles too. Whether an
+Edge InPrivate window crashes after its first folder save is unchecked: check it by hand with the real picker, along with the
+real picker itself in Edge (ADR-0007 §5).
 
 ### 3. Download links and the primary action
 
