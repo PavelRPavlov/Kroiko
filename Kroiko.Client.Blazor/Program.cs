@@ -11,6 +11,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddMudServices();
 builder.Services.AddConfirmationDialog();
 builder.Services.AddDeviceSettingsStore();
+builder.Services.AddFileDownloader();
 builder.Services.AddConverterState();
 
 await builder.Build().RunAsync();

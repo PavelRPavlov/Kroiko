@@ -14,13 +14,16 @@ namespace Kroiko.Client.Blazor.Conversion;
 /// <para>
 /// Components read it directly and re-render on <see cref="Changed"/>. The grids edit the domain details in
 /// <see cref="Files"/> in place and then call <see cref="NotifyInputEdited"/>; every input edit discards the
-/// generated files without asking (ADR-0005 §7). Reading a file, the confirmation, making the files, generating
-/// and the device settings do not throw: a failure is logged, raises <see cref="Error"/> with a Bulgarian message
+/// generated files without asking (ADR-0005 §7). Reading a file, the confirmation, making the files, generating,
+/// the device settings and the downloads do not throw: a failure is logged, raises <see cref="Error"/> with a Bulgarian message
 /// where the operator must know, and leaves the Order as it was (ADR-0006 §4).
 /// </para>
 /// </summary>
 public sealed class ConverterState(
-    IConfirmation confirmation, IDeviceSettingsStore deviceSettings, ILogger<ConverterState> logger)
+    IConfirmation confirmation,
+    IDeviceSettingsStore deviceSettings,
+    IFileDownloader downloader,
+    ILogger<ConverterState> logger)
 {
     internal const string DiscardFilesQuestion =
         "Файловете за поръчка и всички редакции по тях ще бъдат изгубени. Да продължа ли?";
@@ -31,6 +34,7 @@ public sealed class ConverterState(
     internal const string GenerateFailedMessage = "Бланките за поръчка не можаха да бъдат генерирани.";
     internal const string SaveSettingsFailedMessage =
         "Контактите и производителят не можаха да бъдат запомнени на това устройство.";
+    internal const string DownloadFailedMessage = "Файловете за поръчка не можаха да бъдат изтеглени.";
 
     private IReadOnlyList<Detail>? _details;
     private string? _companyName;
@@ -107,6 +111,9 @@ public sealed class ConverterState(
 
     /// <summary>The order files are being generated.</summary>
     public bool IsGenerating { get; private set; }
+
+    /// <summary>"Изтегли всички" is triggering the downloads.</summary>
+    public bool IsDownloading { get; private set; }
 
     /// <summary>
     /// "Генерирай бланки за поръчка" is allowed: there are files, both contact fields are filled (not just
@@ -334,7 +341,51 @@ public sealed class ConverterState(
         }
     }
 
-    /// <summary>A download of the generated files was triggered (ADR-0003 §8); ignored when there are none.</summary>
+    /// <summary>
+    /// "Изтегли всички" (ADR-0003 §5): triggers the download of every generated file, one after another, each under
+    /// its <see cref="FileNameSanitizer"/> name (ADR-0003 §7). The first triggered download marks the files saved
+    /// (ADR-0003 §8). An edit meanwhile stops the downloads of the files it discarded; a download that cannot start
+    /// stops the rest and raises <see cref="Error"/>. Nothing happens with no generated files or while it runs.
+    /// </summary>
+    public async Task DownloadAllAsync()
+    {
+        var files = GeneratedFiles;
+        if (files.Count == 0 || IsDownloading)
+        {
+            return;
+        }
+
+        IsDownloading = true;
+        OnChanged();
+        try
+        {
+            foreach (var file in files)
+            {
+                await downloader.DownloadAsync(FileNameSanitizer.Sanitize(file.FileName), file.Content);
+                if (GeneratedFiles != files)
+                {
+                    return;
+                }
+
+                IsSaved = true;
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "The order files could not be downloaded.");
+            OnError(DownloadFailedMessage);
+        }
+        finally
+        {
+            IsDownloading = false;
+            OnChanged();
+        }
+    }
+
+    /// <summary>
+    /// The generated files were saved: a download was triggered or, from phase 05, a folder save succeeded
+    /// (ADR-0003 §8); ignored when there are none.
+    /// </summary>
     public void MarkSaved()
     {
         IsSaved = GeneratedFiles.Count > 0;
