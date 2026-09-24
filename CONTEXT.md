@@ -119,7 +119,10 @@ real domain and the shared fixtures; no browser, no `Category=E2E`.
 `HEAD` that is not `origin/main` (staging) or `origin/release` checked out as `release` with the pushed tag
 `v<Version>`, no older than any `vX.Y.Z` tag on `origin` (production), and failing tests; then publishes in
 Release and runs `swa deploy <temp>/wwwroot --env <main|production>`. The token comes only from
-`SWA_CLI_DEPLOYMENT_TOKEN`, and only the `swa` call sees it.
+`SWA_CLI_DEPLOYMENT_TOKEN`, and only the `swa` call sees it. [`docs/release-checklist.md`](docs/release-checklist.md)
+has the release procedure (bump, merge `main` into `release`, tag, `-DryRun`, deploy), the manual checks for every
+production release on the installed Edge PWA, and the go-live checks (ADR-0007 §9). Each release's run of them is
+recorded in a "Release vX.Y.Z sign-off" issue.
 
 **`ConverterState`** (`Kroiko.Client.Blazor/Conversion/`) is the app's one Order ([ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §4),
 registered scoped (once for a WASM app) by `AddConverterState()` in `Program.cs`. It depends on `IConfirmation` (a yes/no

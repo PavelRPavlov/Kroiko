@@ -125,6 +125,19 @@ Write it from ADR-0007 §9, with two sections:
   sign-off issue. A bad release is fixed forward: revert, bump, deploy. **Never** redeploy an older
   build (ADR-0002 §8).
 
+Done. [`docs/release-checklist.md`](../release-checklist.md) has three parts, in the order they are used:
+the release procedure (with a `-DryRun` rehearsal before the deploy), every production release, and the
+go-live. The manual checks that earlier phases left open are on it: the update flow from phase 06, the real
+folder picker and downloads from phase 05, and Edge install and offline start. Also on it are phase 01's
+Excel review, phase 02's Server smoke check, and step 4's host checks, which run again against
+`app.kroiko.com`.
+
+Two choices go beyond this step's text:
+
+- The update items are n/a for `v1.0.0`, because it has no earlier production build to update from.
+- `release` is also the branch of the Server's `release_kroiko.yml` workflow, whose `push` trigger is
+  commented out today. The procedure says to check that trigger before pushing.
+
 ### 2. First production release and sign-off
 
 - Set `<Version>1.0.0</Version>`, follow the release procedure, and deploy to production.
@@ -138,7 +151,7 @@ Write it from ADR-0007 §9, with two sections:
 - [x] `scripts/publish-pwa.ps1` refuses dirty trees, wrong branches, unsynced `HEAD`, a missing or mismatched tag, and failing tests; it never prints the token.
 - [ ] The Static Web App exists; `app.kroiko.com` resolves to it over HTTPS.
 - [ ] The `main` staging deploy passes the step-4 checks (07a done).
-- [ ] `docs/release-checklist.md` exists with the go-live, per-release and release-procedure sections.
+- [x] `docs/release-checklist.md` exists with the go-live, per-release and release-procedure sections.
 - [ ] `v1.0.0` is tagged on `release` and deployed to production with the script.
 - [ ] "Release v1.0.0 sign-off" is closed with every box ticked.
 - [ ] The map's destination is reached: operators use the installed PWA.
