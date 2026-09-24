@@ -1,8 +1,10 @@
-@* Static for now; phase 06 adds the version and the update controls (ADR-0002). *@
+@using Kroiko.Client.Blazor.Updates
+@* The version is shown here only (ADR-0002 §5); the update controls follow in phase 06, step 3. *@
 <MudDialog>
     <DialogContent>
         <MudText Typo="Typo.h6">Kroiko</MudText>
         <MudText>Конвертор на списъци за разкрой от Polyboard към бланки за поръчка.</MudText>
+        <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">@AppVersion.Current</MudText>
     </DialogContent>
     <DialogActions>
         <MudButton Color="Color.Primary" OnClick="Close">Затвори</MudButton>
