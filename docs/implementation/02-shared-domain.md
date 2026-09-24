@@ -37,10 +37,10 @@ project, and LargeXlsx is on 2.x.
 
 Done. `User` is `ATAFurniture.Server.DataAccess.User`; the migrations still name the entity
 `Kroiko.Domain.User`, and the model has no pending changes against the snapshot
-(`HasPendingModelChanges()` is false, pinned by `UserModelTests`), so there is no migration. Its
+(`HasPendingModelChanges()` is false, pinned by `UserModelTests` until step 8), so there is no migration. Its
 `LastSelectedCompany` is the Server's `ManufacturerBranch(Name, Translation, Email)` with the same
 columns; `ManufacturerBranches` holds the four branches with today's labels and emails (Kuklensko is a
-branch named `Suliver`), pinned by `ManufacturerBranchesTests`. The domain's `SupportedCompany` is a
+branch named `Suliver`), pinned by `ManufacturerBranchesTests` (by `OrderFormatRegistrationTests` since step 8). The domain's `SupportedCompany` is a
 `(Name, Translation)` record and `ContactInfo` a `(CompanyName, MobileNumber)` record, both nullable
 as the Server may pass a profile without them. The Server's fields bind to `ContactInfoModel` (still
 INPC, so `ConverterContext` keeps re-raising contact edits, and it carries the `Email`), which hands
@@ -220,12 +220,14 @@ resolves its format through `FormatTestData.FormatNamed`, and `Kroiko.Testing`'s
 `Kroiko.Domain.Tests` only. `UPDATE_GOLDEN=1` still records into `Kroiko.Testing/TestData/golden/` in the source
 tree, as `OrderFilesAssertTests` checks from the new project. `GenerationSmokeTests` is gone: its Detail and material
 counts are in `PolyboardParserTests`, its bad line in `DetailsExtractorServiceTests`, its files in the golden tests.
-`ATAFurniture.Server.Tests` keeps four tests: `OrderFormatRegistrationTests` (every `SupportedCompanies` key resolves
-its `IOrderFormat`; every dropdown branch keeps its label and order email and resolves a format, which absorbs
-`ManufacturerBranchesTests`; Kuklensko resolves to the Suliver format with its own email) and
-`DetailsExtractorServiceTests` (a bad-line file → no Details and one error log entry). The adapter's LF-only test is
-gone (the parser's line-ending tests cover it), and so is `UserModelTests`, a step 1 guard: the EF model no longer
-references any domain type. The golden files are unchanged.
+`ATAFurniture.Server.Tests` keeps five tests, each on the Server's wiring onto the domain: `OrderFormatRegistrationTests`
+(every `SupportedCompanies` key resolves its `IOrderFormat`; every dropdown branch keeps its label and order email and
+resolves a format, which absorbs `ManufacturerBranchesTests`; Kuklensko resolves to the Suliver format with its own
+email) and `DetailsExtractorServiceTests` (a bad-line file → no Details and one error log entry; an LF-only file → its
+Details and no log entry, the adapter's only clean-file test now that the golden tests call the parser directly).
+`UserModelTests`, the step 1 guard that moving `User` out of the domain left the schema alone, is gone: it is not a
+wiring test (ADR-0007 §8), and a Server-side model change, e.g. to the owned `ManufacturerBranch`, surfaces when its
+migration is added. The golden files are unchanged.
 
 ### 9. LargeXlsx 2.0.2 (ADR-0008)
 

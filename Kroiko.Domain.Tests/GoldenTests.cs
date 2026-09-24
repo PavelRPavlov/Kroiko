@@ -77,7 +77,7 @@ public sealed class GoldenTests
         OrderFilesAssert.MatchGolden(fixture, "Suliver-different-edge-color", files);
     }
 
-    // The only place that knows how today's Server turns a fixture into order files.
+    // The only place that knows how the Server turns a fixture into order files (the steps below name its components).
     // Phase 02 changes this method's body — and nothing else in the tests.
     private static async Task<IReadOnlyList<FileSaveContext>> RunPipelineAsync(
         string fixture, string manufacturer, string? differentEdgeColor = null, CultureInfo? culture = null)

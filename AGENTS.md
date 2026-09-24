@@ -41,7 +41,7 @@ ATATextConverter/
 Test projects added by the build plan ([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)):
 `Kroiko.Testing` (shared test data, golden files, `OrderFilesAssert`), `Kroiko.Domain.Tests`
 (golden + domain tests), `Kroiko.Client.Tests` (`ConverterState` unit tests + Playwright E2E);
-`ATAFurniture.Server.Tests` shrinks to Server-only tests.
+`ATAFurniture.Server.Tests` holds only Server-only tests (since phase 02 step 8).
 
 ## Build / run / test
 
