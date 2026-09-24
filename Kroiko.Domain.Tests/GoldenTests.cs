@@ -1,15 +1,15 @@
 using System.Globalization;
-using Kroiko.Domain;
 using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.ExcelFilesGeneration;
 using Kroiko.Testing;
 using Xunit;
 
-namespace ATAFurniture.Server.Tests;
+namespace Kroiko.Domain.Tests;
 
 /// <summary>
-/// Characterization tests (01 step 3, ADR-0004 §8): every order file today's Server produces for each
-/// valid fixture × manufacturer matches its golden file in <c>Kroiko.Testing/TestData/golden/</c>.
+/// Characterization tests (01 step 3, ADR-0004 §8): every order file the domain produces for each valid
+/// fixture × manufacturer matches its golden file in <c>Kroiko.Testing/TestData/golden/</c>, the Server's
+/// output as recorded in phase 01 (moved here from <c>ATAFurniture.Server.Tests</c> in 02 step 8).
 /// Re-record with <c>UPDATE_GOLDEN=1</c> only for an intended output change, and explain the diff in the PR.
 /// </summary>
 public sealed class GoldenTests
@@ -97,14 +97,11 @@ public sealed class GoldenTests
 
         // FileDisplayComponent, then OrderHandlingComponent.GenerateFiles, through the manufacturer's
         // IOrderFormat (the Server resolves the same instance by its keyed DI name).
-        var format = OrderFormats.For(Manufacturer(manufacturer));
+        var format = FormatTestData.FormatNamed(manufacturer);
         var files = format.CreateFiles(parsed.Details);
         var contact = new ContactInfo(CompanyName: "Тест ООД", MobileNumber: "0888123456");
 
         // ConverterContext.DifferentEdgeColor starts as string.Empty when the operator leaves it alone.
         return format.Generate(contact, files, differentEdgeColor ?? string.Empty);
     }
-
-    private static SupportedCompany Manufacturer(string name) =>
-        new[] { SupportedCompanies.Lonira, SupportedCompanies.Suliver, SupportedCompanies.MegaTrading }.Single(c => c.Name == name);
 }
