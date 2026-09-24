@@ -106,6 +106,18 @@ proves each builder works with no path and starts every build from a fresh templ
   `ExcelFileGenerator`'s `double.TryParse`, the `.cut_mt` interpolation, the "СДВ" notes.
 - **Un-skip the `bg-BG` golden test.** It must now pass.
 
+Done. Each row provider lists its columns in order as `TableColumn<TDetail>(Value, ContentAlignment)`
+(`Kroiko.Domain/TemplateBuilding/TableColumn.cs`), with numbers written through `TableColumn.Invariant`; Lonira
+maps an empty value to `""`, MegaTrading and Suliver pass it through (`null` stays `null`), and `Rotated` is
+still `True`/`False`. `ExcelFileGenerator` reads a centred value back with `double.TryParse(…, Float |
+AllowThousands, InvariantCulture)`, the invariant form of what the Server's hosts did. The `.cut_mt` rows,
+the "СДВ" notes (still in the Server's `LoniraExtensions`/`SuliverExtensions` until step 5), `Cell.GetCellName`
+and the Suliver/MegaTrading file-name dates are invariant too. The `bg-BG` golden theory runs and passes
+against the unchanged golden files. `TableRowProviderTests` pins each manufacturer's columns, alignments and
+empty-value quirk under `bg-BG`; `GeneratorCultureTests` the `.xlsx` number cells and the `.cut_mt` decimals;
+the Server's `OversizeNoteTests` the notes. A trial build of `Kroiko.Domain` with `-p:IsTrimmable=true
+-p:IsAotCompatible=true` reports no IL warnings (it had two IL2070s).
+
 ### 5. `IOrderFormat` and the Server rewiring
 
 - Add `IOrderFormat` (`Company`, `CreateFiles`, `Generate`) with one implementation per manufacturer,

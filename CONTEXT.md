@@ -32,7 +32,7 @@ downloaded or emailed. Usage is metered with a per-user **credit** system.
 | **Contact info** | The end customer's company name and phone number, written into the order files. Both must be filled before generating; the PWA remembers the last values used per device. The Server edits a `ContactInfoModel` that also carries the user's email. _Avoid_: account info, profile. | `Kroiko.Domain/ContactInfo.cs`, [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) |
 | **Sheet / Cell** | In-memory spreadsheet model. A Cell has an Excel-style name ("A1"), a value, and alignment. | `Kroiko.Domain/TemplateBuilding/` |
 | **TemplateBuilder** | Per-company: fills a fresh copy of its `template.json` (embedded in `Kroiko.Domain`) with static info + detail rows. | `Kroiko.Domain/TemplateBuilding/*/*TemplateBuilder.cs` |
-| **TableRowProvider** | Per-company: maps a detail into a row of Cells (explicit column list; reflection is being removed). | `Kroiko.Domain/TemplateBuilding/*/` |
+| **TableRowProvider** | Per-company: maps a detail into a row of Cells through an explicit column list (value selector + alignment, `TableColumn<TDetail>`), numbers in the invariant culture. | `Kroiko.Domain/TemplateBuilding/*/` |
 | **FileNameProvider** | Per-company: names the produced file. | `Kroiko.Domain/TemplateBuilding/*/` |
 | **Credit** | Unit of metered usage. Consumed on download / successful email. Stored on the Server's `User` row. | `UserContextService`, `KroikoDataRepository` |
 | **FALC** | A special panel operation that adjusts a detail's height/width. | `Models/SuliverExtensions.cs` |
@@ -60,7 +60,7 @@ Browser ──SignalR circuit──► ATAFurniture.Server (Blazor Server, .NET 
                                  └─ SendinBlue/Brevo (email with attachments)
 ```
 
-- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `Kroiko.Testing` (class lib — shared test data: the synthetic Polyboard fixtures in `TestData/polyboard/`, the golden files in `TestData/golden/`, and `OrderFilesAssert.MatchGolden`, which compares generated order files with them or re-records them under `UPDATE_GOLDEN=1`), `ATAFurniture.Server.Tests` (xUnit — generation smoke tests and, for now, `GoldenTests`, which runs every valid fixture × manufacturer through one `RunPipelineAsync` helper, plus the same theory under `bg-BG`, skipped until phase 02 fixes the culture), `Kroiko.Domain.Tests` (xUnit — the domain's own tests, today `PolyboardParserTests`; the golden tests move here in phase 02 step 8 per [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)). PWA tests go in `Kroiko.Client.Tests` per [ADR-0007](docs/adr/0007-parity-and-test-strategy.md).
+- **Projects:** `ATAFurniture.Server` (web), `Kroiko.Domain` (class lib), `Kroiko.Testing` (class lib — shared test data: the synthetic Polyboard fixtures in `TestData/polyboard/`, the golden files in `TestData/golden/`, and `OrderFilesAssert.MatchGolden`, which compares generated order files with them or re-records them under `UPDATE_GOLDEN=1`), `ATAFurniture.Server.Tests` (xUnit — generation smoke tests and, for now, `GoldenTests`, which runs every valid fixture × manufacturer through one `RunPipelineAsync` helper, plus the same theory under `bg-BG`, green since phase 02 step 4), `Kroiko.Domain.Tests` (xUnit — the domain's own tests, today `PolyboardParserTests`; the golden tests move here in phase 02 step 8 per [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)). PWA tests go in `Kroiko.Client.Tests` per [ADR-0007](docs/adr/0007-parity-and-test-strategy.md).
 - **Auth:** Azure AD B2C; per-page `[Authorize]` (global filter is commented out). Claims read in `UserContextService`.
 - **Secrets:** SQL conn string, Azure Storage conn string, SendinBlue API key — all from user-secrets/env (not committed). Sentry DSN **is** committed (should be rotated/moved). *(The Syncfusion license key is gone — Syncfusion + Radzen were replaced with MudBlazor, one fewer secret.)*
 - **Observability:** Serilog (console + rolling file) + Sentry.
@@ -119,12 +119,11 @@ These were found in a code review; several are naturally fixed by the migration.
   → [ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md): ✅ the domain parser accepts any line ending,
   a BOM and whitespace-only lines, in both apps (phase 02 step 2); the PWA rejects bad files listing the bad
   lines (phase 04); the Server keeps the discard.
-- 🟠 **MegaTrading `.cut_mt`:** materials beyond 6 are silently dropped; doubles are
-  formatted with ambient culture (comma decimal on `bg-BG` corrupts the file — pin to
-  `InvariantCulture`). `MegaTradingFileGenerator.cs`. The skipped `bg-BG` golden test pins it: under `bg-BG`
-  only these `.cut_mt` decimals change; the `.xlsx` cells survive because the row providers' `ToString()` and
-  `ExcelFileGenerator`'s `double.TryParse` are both ambient, so they must become invariant together.
-  → Culture fixed by ADR-0004; the PWA blocks MegaTrading orders with more than 6 materials
+- 🟠 **MegaTrading `.cut_mt`:** materials beyond 6 are silently dropped; doubles were
+  formatted with ambient culture (comma decimal on `bg-BG` corrupted the file). `MegaTradingFileGenerator.cs`.
+  → ✅ Culture fixed (ADR-0004 §4, phase 02 step 4): the `.cut_mt` rows, the row providers' values and
+  `ExcelFileGenerator`'s `double.TryParse` are all invariant, as are the "СДВ" notes and the file-name dates;
+  the `bg-BG` golden theory runs and matches the invariant golden files. The PWA blocks MegaTrading orders with more than 6 materials
   via `IOrderFormat.Check` ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)); the Server still truncates.
 - 🟠 **Fire-and-forget** credit consume; **spinners hang** on error paths;
   **`ConverterContext` never disposed** (event-handler leak).
@@ -138,10 +137,10 @@ These were found in a code review; several are naturally fixed by the migration.
 - 🟠 **Browser-safety gaps in `Kroiko.Domain`.**
   ✅ Templates: the three `template.json` files are embedded resources of `Kroiko.Domain`, read with
   `GetManifestResourceStream` through the source-generated `TemplateJsonContext` (phase 02 step 3).
-  Still open: all three `TableRowProvider`s' `Type.GetProperty` reflection is trim-fragile (IL2070).
-  LargeXlsx generation itself is WASM/trim-clean.
+  ✅ Row providers: explicit per-manufacturer column lists replace `Type.GetProperty` (phase 02 step 4); a trial
+  build with `IsTrimmable`/`IsAotCompatible` now reports no IL warnings. LargeXlsx generation itself is WASM/trim-clean.
   → Decided in [ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md): embedded
-  templates + source-generated JSON (done), explicit column mappings, trim analyzers as errors (not yet implemented).
+  templates + source-generated JSON (done), explicit column mappings (done), trim analyzers as errors (not yet implemented).
 
 ## 8. Cross-cutting invariants (do not break)
 
