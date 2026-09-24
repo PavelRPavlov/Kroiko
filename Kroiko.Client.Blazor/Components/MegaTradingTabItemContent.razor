@@ -1,0 +1,95 @@
+@using System.Globalization
+@using Kroiko.Domain
+@using Kroiko.Domain.TemplateBuilding
+@inherits ConverterStateComponentBase
+
+@* The Server's MegaTrading tab without its contact fields (one contact section is above the tabs, ADR-0005 §6)
+   and without MegaTradingViewModel: the grid edits the file's MegaTradingDetails in place (ADR-0005 §3).
+   Editable as on the Server: the four edges, the edge-banding material, the note and the material rename. *@
+@if (TooManyMaterials is { } problem)
+{
+    @* ADR-0006 §3: the .cut_mt header has room for problem.Max materials; ConverterState blocks generating. *@
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
+        Мега Трейдинг приема най-много @problem.Max материала в една поръчка, а тази използва @problem.Materials.Count:
+        @string.Join(", ", problem.Materials).
+        Обединете материали, като ги преименувате в „Използвани материали“ по-долу, или разделете поръчката в Polyboard.
+    </MudAlert>
+}
+
+<MudPaper Class="pa-3" Elevation="0">
+    <MudText Typo="Typo.subtitle1" GutterBottom="true">Използвани материали:</MudText>
+    @foreach (var rename in _renames)
+    {
+        <MudStack @key="rename" Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="my-1 material-rename">
+            <MudText>@rename.OldName</MudText>
+            <MudTextField T="string" @bind-Value="rename.NewName" Immediate="true" />
+        </MudStack>
+    }
+</MudPaper>
+
+<MudStack Class="pa-3">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RenameMaterials">Замести използваните с новите материали</MudButton>
+</MudStack>
+
+@* Numbers in the invariant culture, as in the order files, whatever the browser's culture. *@
+<MudDataGrid T="MegaTradingDetail" Items="@_details" ReadOnly="false" Culture="CultureInfo.InvariantCulture"
+             EditMode="DataGridEditMode.Cell" EditTrigger="DataGridEditTrigger.OnRowClick"
+             CommittedItemChanged="OnDetailCommitted"
+             Bordered="true" Dense="true" Class="pa-3">
+    <Columns>
+        <PropertyColumn Property="x => x.Material" Title="Материал на детайла" Editable="false" />
+        <PropertyColumn Property="x => x.Height" Title="X - фладер" Editable="false" />
+        <PropertyColumn Property="x => x.Width" Title="Y" Editable="false" />
+        <PropertyColumn Property="x => x.Quantity" Title="Брой" Editable="false" />
+        <PropertyColumn Property="x => x.Rotated" Title="Rot." Editable="false" />
+        <PropertyColumn Property="x => x.LeftEdge" Title="Ляво" Editable="true" Required="false" />
+        <PropertyColumn Property="x => x.BottomEdge" Title="Долу" Editable="true" Required="false" />
+        <PropertyColumn Property="x => x.RightEdge" Title="Дясно" Editable="true" Required="false" />
+        <PropertyColumn Property="x => x.TopEdge" Title="Горе" Editable="true" Required="false" />
+        <PropertyColumn Property="x => x.EdgeBandingMaterial" Title="Материал - Кант" Editable="true" Required="false" />
+        <PropertyColumn Property="x => x.Note" Title="Забележка" Editable="true" Required="false" />
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="MegaTradingDetail" PageSizeOptions="new[] { 25, 50, 100 }" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    [Parameter, EditorRequired] public KroikoFile File { get; set; } = default!;
+
+    private KroikoFile? _shownFile;
+    private List<MegaTradingDetail> _details = [];
+
+    // The tab-local rename rows (old → new name), one per material in order of first use.
+    private List<MaterialRename> _renames = [];
+
+    private TooManyMaterials? TooManyMaterials => ConverterState.Problems.OfType<TooManyMaterials>().FirstOrDefault();
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(File, _shownFile))
+        {
+            _shownFile = File;
+            _details = File.Details.Cast<MegaTradingDetail>().ToList();
+            _renames = RenameRows();
+        }
+    }
+
+    private void RenameMaterials()
+    {
+        ConverterState.RenameMaterials(File, _renames.ToDictionary(r => r.OldName, r => r.NewName ?? string.Empty));
+        _renames = RenameRows();
+    }
+
+    private List<MaterialRename> RenameRows() =>
+        _details.Select(d => d.Material).OfType<string>().Distinct().Select(m => new MaterialRename(m)).ToList();
+
+    private void OnDetailCommitted(MegaTradingDetail detail) => ConverterState.NotifyInputEdited();
+
+    private sealed class MaterialRename(string oldName)
+    {
+        public string OldName { get; } = oldName;
+
+        public string? NewName { get; set; } = oldName;
+    }
+}

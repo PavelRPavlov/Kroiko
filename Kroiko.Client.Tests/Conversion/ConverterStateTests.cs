@@ -1,3 +1,4 @@
+using System.Text;
 using FluentAssertions;
 using Kroiko.Client.Blazor.Conversion;
 using Kroiko.Domain;
@@ -17,11 +18,12 @@ public sealed class ConverterStateTests
 {
     private readonly FakeConfirmation _confirmation = new();
     private readonly FakeDeviceSettingsStore _settings = new();
+    private readonly FakeFileDownloader _downloader = new();
     private readonly ConverterState _state;
 
     public ConverterStateTests()
     {
-        _state = new ConverterState(_confirmation, _settings, NullLogger<ConverterState>.Instance);
+        _state = new ConverterState(_confirmation, _settings, _downloader, NullLogger<ConverterState>.Instance);
     }
 
     [Fact]
@@ -257,6 +259,55 @@ public sealed class ConverterStateTests
     }
 
     [Fact]
+    public async Task Renaming_materials_rewrites_the_matching_details_and_runs_Check_again()
+    {
+        await LoadAsync(SupportedCompanies.MegaTrading, "kitchen-8-materials");
+        FillContacts();
+        var parts = Materials().GroupBy(m => m).ToDictionary(g => g.Key, g => g.Count());
+
+        _state.RenameMaterials(_state.Files[0], new Dictionary<string, string> { ["Mirror"] = "Lemon sorbet", ["Med"] = "Lemon sorbet" });
+
+        Materials().Should().NotContain(["Mirror", "Med"]);
+        Materials().Count(m => m == "Lemon sorbet").Should().Be(parts["Lemon sorbet"] + parts["Mirror"] + parts["Med"]);
+        _state.Problems.Should().BeEmpty();
+        _state.CanGenerate.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task A_rename_matches_the_names_before_it_so_two_materials_can_swap()
+    {
+        await LoadAsync(SupportedCompanies.MegaTrading, "kitchen-8-materials");
+        var parts = Materials().GroupBy(m => m).ToDictionary(g => g.Key, g => g.Count());
+
+        _state.RenameMaterials(_state.Files[0], new Dictionary<string, string> { ["Mirror"] = "Med", ["Med"] = "Mirror" });
+
+        Materials().Count(m => m == "Mirror").Should().Be(parts["Med"]);
+        Materials().Count(m => m == "Med").Should().Be(parts["Mirror"]);
+    }
+
+    [Fact]
+    public async Task A_rename_to_the_same_name_is_no_edit()
+    {
+        await GenerateAsync(SupportedCompanies.MegaTrading, "wardrobes-4-materials");
+
+        _state.RenameMaterials(_state.Files[0], new Dictionary<string, string> { ["AGT White"] = "AGT White" });
+
+        _state.GeneratedFiles.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task A_rename_of_a_file_that_is_no_longer_in_the_Order_does_nothing()
+    {
+        await LoadAsync(SupportedCompanies.MegaTrading, "kitchen-8-materials");
+        var oldFile = _state.Files[0];
+        await _state.UploadAsync(Fixture("wardrobes-4-materials"));
+
+        _state.RenameMaterials(oldFile, new Dictionary<string, string> { ["Basic white W908 ST2"] = "Бяло" });
+
+        Materials().Should().Contain("Basic white W908 ST2").And.NotContain("Бяло");
+    }
+
+    [Fact]
     public async Task Generating_makes_the_order_files()
     {
         await LoadAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
@@ -360,7 +411,7 @@ public sealed class ConverterStateTests
         await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
         _state.HasUnsavedWork.Should().BeTrue();
 
-        _state.MarkSaved();
+        await _state.DownloadAllAsync();
 
         _state.IsSaved.Should().BeTrue();
         _state.HasUnsavedWork.Should().BeFalse();
@@ -405,11 +456,12 @@ public sealed class ConverterStateTests
     [InlineData("company name")]
     [InlineData("generate")]
     [InlineData("save")]
+    [InlineData("download all")]
     public async Task Every_change_raises_Changed_once_the_state_has_changed(string change)
     {
         await LoadAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
         FillContacts();
-        if (change == "save")
+        if (change is "save" or "download all")
         {
             await _state.GenerateAsync();
         }
@@ -423,6 +475,7 @@ public sealed class ConverterStateTests
             case "manufacturer": await _state.SelectManufacturerAsync(SupportedCompanies.Suliver); break;
             case "generate": await _state.GenerateAsync(); break;
             case "save": _state.MarkSaved(); break;
+            case "download all": await _state.DownloadAllAsync(); break;
             default: Edit(change); break;
         }
 
@@ -432,7 +485,7 @@ public sealed class ConverterStateTests
 
     private string Snapshot() =>
         $"{_state.Manufacturer?.Name}|{_state.Files.Count}|{_state.Files[0].Details[0].Note}|{_state.CompanyName}" +
-        $"|{_state.GeneratedFiles.Count}|{_state.IsSaved}|{_state.IsUploading}|{_state.IsGenerating}";
+        $"|{_state.GeneratedFiles.Count}|{_state.IsSaved}|{_state.IsUploading}|{_state.IsGenerating}|{_state.IsDownloading}";
 
     [Fact]
     public async Task Uploading_is_busy_while_the_file_is_read_and_parsed()
@@ -599,14 +652,50 @@ public sealed class ConverterStateTests
     }
 
     [Fact]
-    public async Task Device_settings_that_cannot_be_loaded_leave_the_Order_empty()
+    public async Task Device_settings_that_cannot_be_loaded_leave_the_contacts_empty_and_start_on_Lonira()
     {
         _settings.LoadFailure = new InvalidOperationException("storage is blocked");
 
         await _state.Invoking(s => s.LoadDeviceSettingsAsync()).Should().NotThrowAsync();
 
         _state.CompanyName.Should().BeNull();
-        _state.Manufacturer.Should().BeNull();
+        _state.Manufacturer.Should().Be(SupportedCompanies.Lonira);
+    }
+
+    [Fact]
+    public async Task Device_settings_that_cannot_be_loaded_are_not_tried_again()
+    {
+        _settings.LoadFailure = new InvalidOperationException("storage is blocked");
+        await _state.LoadDeviceSettingsAsync();
+        _settings.LoadFailure = null;
+        _settings.Stored = new DeviceSettings(new ContactInfo("Тест ООД", "0888123456"), SupportedCompanies.MegaTrading);
+
+        await _state.LoadDeviceSettingsAsync();
+
+        _state.Manufacturer.Should().Be(SupportedCompanies.Lonira);
+        _state.CompanyName.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task A_device_that_remembers_no_manufacturer_starts_on_Lonira_like_the_Server()
+    {
+        _settings.Stored = new DeviceSettings(new ContactInfo("Тест ООД", "0888123456"), Manufacturer: null);
+
+        await _state.LoadDeviceSettingsAsync();
+
+        _state.Manufacturer.Should().Be(SupportedCompanies.Lonira);
+        _state.CompanyName.Should().Be("Тест ООД");
+    }
+
+    [Fact]
+    public async Task Starting_on_Lonira_after_an_upload_makes_its_files_without_asking()
+    {
+        await _state.UploadAsync(Fixture("wardrobes-4-materials"));
+
+        await _state.LoadDeviceSettingsAsync();
+
+        _state.Files.Should().HaveCount(4);
+        _confirmation.Questions.Should().BeEmpty();
     }
 
     [Fact]
@@ -632,6 +721,135 @@ public sealed class ConverterStateTests
         _state.Manufacturer.Should().Be(SupportedCompanies.Lonira);
         _state.CompanyName.Should().Be("Друга ООД");
         _state.MobileNumber.Should().Be("0888123456");
+    }
+
+    [Fact]
+    public async Task Downloading_all_triggers_every_generated_file_in_order_under_its_sanitised_name()
+    {
+        await _state.SelectManufacturerAsync(SupportedCompanies.Lonira);
+        await _state.UploadAsync(Polyboard(
+            "214.0;247.0;1;Egger W1000: \"бял\";0;0;0;1;0;Model[0];1",
+            "250.0;247.0;1;HDF 3 mm;0;1;1;1;0;Model[0];2"));
+        FillContacts();
+        await _state.GenerateAsync();
+
+        await _state.DownloadAllAsync();
+
+        _downloader.Downloads.Select(d => d.FileName).Should().Equal("Egger W1000_ _бял_.xlsx", "HDF 3 mm.xlsx");
+        _downloader.Downloads.Select(d => d.Content).Should().Equal(_state.GeneratedFiles.Select(f => f.Content));
+    }
+
+    [Fact]
+    public async Task Downloading_all_sets_the_saved_flag()
+    {
+        await GenerateAsync(SupportedCompanies.MegaTrading, "wardrobes-4-materials");
+
+        await _state.DownloadAllAsync();
+
+        _downloader.Downloads.Should().HaveCount(2);
+        _state.IsSaved.Should().BeTrue();
+        _state.HasUnsavedWork.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Downloading_all_with_nothing_generated_does_nothing()
+    {
+        await LoadAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+
+        await _state.DownloadAllAsync();
+
+        _downloader.Downloads.Should().BeEmpty();
+        _state.IsSaved.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Downloading_all_is_busy_until_every_download_is_triggered()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var busy = new List<bool>();
+        _downloader.OnDownload = () => busy.Add(_state.IsDownloading);
+
+        await _state.DownloadAllAsync();
+
+        busy.Should().HaveCount(4).And.OnlyContain(b => b);
+        _state.IsDownloading.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task A_download_that_cannot_start_raises_an_error_and_is_not_saved()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var errors = new List<string>();
+        _state.Error += errors.Add;
+        _downloader.FailAt = 0;
+
+        await _state.DownloadAllAsync();
+
+        errors.Should().Equal("Файловете за поръчка не можаха да бъдат изтеглени.");
+        _state.IsSaved.Should().BeFalse();
+        _state.IsDownloading.Should().BeFalse();
+        _state.GeneratedFiles.Should().HaveCount(4);
+    }
+
+    [Fact]
+    public async Task One_triggered_download_is_saved_even_if_a_later_one_fails()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var errors = new List<string>();
+        _state.Error += errors.Add;
+        _downloader.FailAt = 1;
+
+        await _state.DownloadAllAsync();
+
+        _downloader.Downloads.Should().ContainSingle();
+        errors.Should().ContainSingle();
+        _state.IsSaved.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task An_edit_while_downloading_stops_the_downloads_of_the_old_input()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        _downloader.OnDownload = () =>
+        {
+            if (_downloader.Downloads.Count == 1)
+            {
+                _state.CompanyName = "Друга ООД";
+            }
+        };
+
+        await _state.DownloadAllAsync();
+
+        _downloader.Downloads.Should().ContainSingle();
+        _state.IsSaved.Should().BeFalse();
+        _state.HasUnsavedWork.Should().BeTrue();
+        _state.IsDownloading.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Nothing_can_be_generated_while_downloading()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var canGenerate = new List<bool>();
+        _downloader.OnDownload = () => canGenerate.Add(_state.CanGenerate);
+
+        await _state.DownloadAllAsync();
+
+        canGenerate.Should().HaveCount(4).And.OnlyContain(b => !b);
+        _state.CanGenerate.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task A_second_download_all_while_one_runs_is_ignored()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        Task? second = null;
+        _downloader.OnDownload = () => second ??= _state.DownloadAllAsync();
+
+        await _state.DownloadAllAsync();
+        await second!;
+
+        _downloader.Downloads.Should().HaveCount(4);
     }
 
     private void Edit(string edit)
@@ -685,5 +903,10 @@ public sealed class ConverterStateTests
         (await _state.UploadAsync(Fixture(fixture))).Should().BeTrue();
     }
 
+    private List<string> Materials() => _state.Files.SelectMany(f => f.Details).Select(d => d.Material).ToList();
+
     private static Stream Fixture(string name) => new MemoryStream(File.ReadAllBytes(TestData.Polyboard(name)));
+
+    private static Stream Polyboard(params string[] lines) =>
+        new MemoryStream(Encoding.UTF8.GetBytes(string.Join("\r\n", lines) + "\r\n"));
 }

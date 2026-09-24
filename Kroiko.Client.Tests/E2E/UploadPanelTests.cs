@@ -1,8 +1,7 @@
-using System.Collections.Concurrent;
 using FluentAssertions;
-using Kroiko.Testing;
 using Microsoft.Playwright;
 using Xunit;
+using static Kroiko.Client.Tests.E2E.ConverterPage;
 using static Microsoft.Playwright.Assertions;
 
 namespace Kroiko.Client.Tests.E2E;
@@ -36,9 +35,11 @@ public sealed class UploadPanelTests(PublishedApp app)
         await Expect(alert.GetByRole(AriaRole.Listitem).Last).ToHaveTextAsync("…и още 2");
         await Expect(page.GetByRole(AriaRole.Link, new() { Name = "ТУК" })).ToHaveAttributeAsync("href", "configuration");
 
-        // Nothing was loaded: with no files, switching manufacturer does not ask.
+        // Nothing was loaded: no tabs or contacts, and with no files, switching manufacturer does not ask.
+        await Expect(page.GetByRole(AriaRole.Tab)).ToHaveCountAsync(0);
+        await Expect(page.GetByText("Контакти на клиента")).ToHaveCountAsync(0);
         await PickAsync(page, "Мега Трейдинг, гр.София");
-        await Expect(page.Locator(".mud-select").First.Locator("input")).ToHaveValueAsync("Мега Трейдинг, гр.София");
+        await Expect(ManufacturerPicker(page)).ToHaveValueAsync("Мега Трейдинг, гр.София");
         await Expect(page.GetByRole(AriaRole.Dialog)).ToHaveCountAsync(0);
         console.Should().BeEmpty();
     }
@@ -50,7 +51,7 @@ public sealed class UploadPanelTests(PublishedApp app)
         var page = await context.NewPageAsync();
         var console = ConsoleErrors(page);
         await page.GotoAsync("/");
-        var picker = page.Locator(".mud-select").First;
+        var picker = ManufacturerPicker(page);
 
         // No files yet: neither picking a manufacturer nor uploading asks.
         await PickAsync(page, "Лонира, гр.София");
@@ -64,19 +65,32 @@ public sealed class UploadPanelTests(PublishedApp app)
         await Expect(dialog).ToContainTextAsync(DiscardQuestion);
         await dialog.GetByRole(AriaRole.Button, new() { Name = "Не" }).ClickAsync();
         await Expect(dialog).ToHaveCountAsync(0);
-        await Expect(picker.Locator("input")).ToHaveValueAsync("Лонира, гр.София");
+        await Expect(picker).ToHaveValueAsync("Лонира, гр.София");
 
         // "Да" switches.
         await PickAsync(page, "Мега Трейдинг, гр.София");
         await dialog.GetByRole(AriaRole.Button, new() { Name = "Да" }).ClickAsync();
         await Expect(dialog).ToHaveCountAsync(0);
-        await Expect(picker.Locator("input")).ToHaveValueAsync("Мега Трейдинг, гр.София");
+        await Expect(picker).ToHaveValueAsync("Мега Трейдинг, гр.София");
 
         // Uploading again asks too.
         await UploadAsync(page, "kitchen-8-materials");
         await Expect(dialog).ToContainTextAsync(DiscardQuestion);
         await dialog.GetByRole(AriaRole.Button, new() { Name = "Не" }).ClickAsync();
         await Expect(dialog).ToHaveCountAsync(0);
+        console.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task The_picker_starts_on_Lonira_on_a_first_visit()
+    {
+        await using var context = await app.NewContextAsync();
+        var page = await context.NewPageAsync();
+        var console = ConsoleErrors(page);
+
+        await page.GotoAsync("/");
+
+        await Expect(ManufacturerPicker(page)).ToHaveValueAsync("Лонира, гр.София");
         console.Should().BeEmpty();
     }
 
@@ -93,30 +107,8 @@ public sealed class UploadPanelTests(PublishedApp app)
 
         await page.GotoAsync("/");
 
-        await Expect(page.Locator(".mud-select").First.Locator("input"))
+        await Expect(ManufacturerPicker(page))
             .ToHaveValueAsync("Съливер, гр.Пловдив (бул.Васил Априлов)");
         console.Should().BeEmpty();
-    }
-
-    private static Task UploadAsync(IPage page, string fixture) =>
-        page.Locator("input[type=file]").SetInputFilesAsync(TestData.Polyboard(fixture));
-
-    private static async Task PickAsync(IPage page, string manufacturer)
-    {
-        await page.Locator(".mud-select").First.ClickAsync();
-        await page.GetByRole(AriaRole.Option, new() { Name = manufacturer }).ClickAsync();
-    }
-
-    // Errors the app logs to the console, e.g. an unhandled exception in a component.
-    private static ConcurrentQueue<string> ConsoleErrors(IPage page)
-    {
-        var errors = new ConcurrentQueue<string>();
-        page.Console += (_, message) =>
-        {
-            if (message.Type == "error")
-                errors.Enqueue(message.Text);
-        };
-        page.PageError += (_, error) => errors.Enqueue(error);
-        return errors;
     }
 }

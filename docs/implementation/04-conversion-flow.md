@@ -1,6 +1,6 @@
 # 04 — Conversion flow
 
-- **Status:** In progress
+- **Status:** Done
 - **Depends on:** [02 Shared domain](02-shared-domain.md), [03 Client shell](03-client-shell.md)  **Can run alongside:** —
 - **ADRs:** [0005](../adr/0005-copy-conversion-ui-into-pwa.md), [0006](../adr/0006-known-conversion-bugs-in-pwa.md) §2–4, [0003](../adr/0003-save-order-files-to-picked-folder.md) §1, §5, §7–8, [0002](../adr/0002-pwa-updates-reload-prompt.md) §7–8, [0007](../adr/0007-parity-and-test-strategy.md) §4–5
 
@@ -101,13 +101,13 @@ Add to `Kroiko.Client.Tests` (ADR-0007 §5):
 
 - [x] `ConverterState` holds the Order app-wide; every rule in step 1 has a unit test.
 - [x] Device settings carry `schemaVersion`, with forward migrations and newer-schema fallback, and are unit-tested.
-- [ ] Upload, picker, tabs and the contact section are copied and stripped from the Server; no auth, credits, Blob Storage or email code remains.
-- [ ] Grids edit the domain details directly; `MegaTradingViewModel` is not in the client.
-- [ ] "Генерирай бланки за поръчка" is disabled on empty contacts or `Check` problems.
-- [ ] "Изтегли всички" downloads sanitised file names and sets the saved flag.
-- [ ] The three manufacturer E2E scenarios match the golden files under both `bg-BG` and `en-US`.
-- [ ] The bad-lines, device-storage and offline-conversion E2E scenarios pass.
-- [ ] Every row of [CONTEXT.md §9](../../CONTEXT.md) that this phase implements names its actual test.
+- [x] Upload, picker, tabs and the contact section are copied and stripped from the Server; no auth, credits, Blob Storage or email code remains.
+- [x] Grids edit the domain details directly; `MegaTradingViewModel` is not in the client.
+- [x] "Генерирай бланки за поръчка" is disabled on empty contacts or `Check` problems.
+- [x] "Изтегли всички" downloads sanitised file names and sets the saved flag.
+- [x] The three manufacturer E2E scenarios match the golden files under both `bg-BG` and `en-US`.
+- [x] The bad-lines, device-storage and offline-conversion E2E scenarios pass.
+- [x] Every row of [CONTEXT.md §9](../../CONTEXT.md) that this phase implements names its actual test.
 
 ## Out of this phase
 
