@@ -257,6 +257,49 @@ public sealed class ConverterStateTests
     }
 
     [Fact]
+    public async Task Renaming_materials_rewrites_the_matching_details_and_runs_Check_again()
+    {
+        await LoadAsync(SupportedCompanies.MegaTrading, "kitchen-8-materials");
+        FillContacts();
+
+        _state.RenameMaterials(new Dictionary<string, string> { ["Mirror"] = "Lemon sorbet", ["Med"] = "Lemon sorbet" });
+
+        var materials = _state.Files.SelectMany(f => f.Details).Select(d => d.Material).ToList();
+        materials.Should().NotContain(["Mirror", "Med"]);
+        materials.Count(m => m == "Lemon sorbet").Should().Be(2 + 8 + 1);
+        _state.Problems.Should().BeEmpty();
+        _state.CanGenerate.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task A_rename_maps_from_the_names_before_it_so_two_materials_can_swap()
+    {
+        await LoadAsync(SupportedCompanies.MegaTrading, "kitchen-8-materials");
+
+        _state.RenameMaterials(new Dictionary<string, string> { ["Mirror"] = "Med", ["Med"] = "Mirror" });
+
+        var materials = _state.Files.SelectMany(f => f.Details).Select(d => d.Material).ToList();
+        materials.Count(m => m == "Mirror").Should().Be(8);
+        materials.Count(m => m == "Med").Should().Be(1);
+    }
+
+    [Fact]
+    public async Task A_new_name_is_trimmed_and_a_blank_or_unchanged_one_renames_nothing()
+    {
+        await GenerateAsync(SupportedCompanies.MegaTrading, "wardrobes-4-materials");
+
+        _state.RenameMaterials(new Dictionary<string, string> { ["AGT White"] = "  ", ["HDF 3 mm"] = " HDF 3 mm " });
+
+        _state.Files.SelectMany(f => f.Details).Select(d => d.Material).Should().Contain(["AGT White", "HDF 3 mm"]);
+        _state.GeneratedFiles.Should().NotBeEmpty("renaming nothing is no edit");
+
+        _state.RenameMaterials(new Dictionary<string, string> { ["AGT White"] = " Бяло " });
+
+        _state.Files.SelectMany(f => f.Details).Select(d => d.Material).Should().Contain("Бяло").And.NotContain("AGT White");
+        _state.GeneratedFiles.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task Generating_makes_the_order_files()
     {
         await LoadAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");

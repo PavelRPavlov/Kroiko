@@ -52,12 +52,16 @@ public sealed class PublishedApp : IAsyncLifetime
         }
     }
 
-    /// <summary>A fresh browser context (own service worker, caches and storage) whose relative URLs resolve against the app.</summary>
-    public Task<IBrowserContext> NewContextAsync() =>
+    /// <summary>
+    /// A fresh browser context (own service worker, caches and storage) whose relative URLs resolve against the app,
+    /// with the browser's <paramref name="locale"/> (e.g. <c>bg-BG</c>) or Chromium's default.
+    /// </summary>
+    public Task<IBrowserContext> NewContextAsync(string? locale = null) =>
         (_browser ?? throw NotStarted()).NewContextAsync(new BrowserNewContextOptions
         {
             BaseURL = BaseAddress.ToString(),
             ServiceWorkers = ServiceWorkerPolicy.Allow,
+            Locale = locale,
         });
 
     private static async Task PublishAsync(string outputDir)

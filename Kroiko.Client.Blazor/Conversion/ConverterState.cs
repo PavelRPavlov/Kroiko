@@ -234,10 +234,39 @@ public sealed class ConverterState(
     }
 
     /// <summary>
-    /// A grid cell, a material rename or a file name in <see cref="Files"/> was edited in place: the generated
+    /// A grid cell or a file name in <see cref="Files"/> was edited in place: the generated
     /// files are discarded and <see cref="IOrderFormat.Check"/> runs again.
     /// </summary>
     public void NotifyInputEdited() => InputChanged();
+
+    /// <summary>
+    /// The MegaTrading material rename (ADR-0005 §3): rewrites <c>Material</c> on every detail in
+    /// <see cref="Files"/> whose material is a key of <paramref name="newNames"/> (old → new name). Every detail
+    /// is matched by its name before the rename, so two materials can swap; a new name is trimmed, and a blank or
+    /// unchanged one renames nothing. Renaming anything is an input edit.
+    /// </summary>
+    public void RenameMaterials(IReadOnlyDictionary<string, string> newNames)
+    {
+        ArgumentNullException.ThrowIfNull(newNames);
+
+        var renamed = false;
+        foreach (var detail in Files.SelectMany(f => f.Details))
+        {
+            if (detail.Material is not null
+                && newNames.TryGetValue(detail.Material, out var newName)
+                && !string.IsNullOrWhiteSpace(newName)
+                && newName.Trim() != detail.Material)
+            {
+                detail.Material = newName.Trim();
+                renamed = true;
+            }
+        }
+
+        if (renamed)
+        {
+            InputChanged();
+        }
+    }
 
     /// <summary>
     /// Generates the order files, if <see cref="CanGenerate"/>, and remembers the contacts and the manufacturer
