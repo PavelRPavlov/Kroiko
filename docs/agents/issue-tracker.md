@@ -3,11 +3,9 @@
 > Repo-scoped tracker configuration for agents (applies to **this repository only**).
 
 - **Tracker:** GitHub Issues on [PavelRPavlov/Kroiko](https://github.com/PavelRPavlov/Kroiko/issues).
-- **Board:** every issue an agent creates is also added to the GitHub Project
-  [PavelRPavlov / projects / 3](https://github.com/users/PavelRPavlov/projects/3).
+- **No project board:** issues live only in the repo — do not add them to any GitHub Project.
 - **Do not** fall back to local markdown tickets — the GitHub repo is the tracker.
-- **CLI:** `gh` (needs scopes `repo` and `project`; if `project` is missing, the human runs
-  `gh auth refresh -s project` — agents never run auth flows themselves).
+- **CLI:** `gh` (needs scope `repo`; agents never run auth flows themselves).
 - The repo is **public**: never put secrets, customer data, or real Polyboard files in issues.
 
 Shell snippets below are Git Bash. `R=PavelRPavlov/Kroiko`.
@@ -23,7 +21,6 @@ Used by the `/wayfinder` skill.
 | **Claim** | Assign the ticket to the driving dev (`gh issue edit N --add-assignee @me`) **before** any work. |
 | **Blocking** | GitHub's **native issue dependencies** ("blocked by"), so the frontier shows in the UI. |
 | **Resolution** | Post the answer as a comment, close the issue, append a line to the map's *Decisions so far*. |
-| **Board** | Add the map and every ticket to Project 3. |
 
 ### Labels (create once)
 
@@ -44,7 +41,6 @@ url=$(gh issue create -R $R -t "<title>" -l wayfinder:grilling -F body.md)
 num=${url##*/}
 id=$(gh api repos/$R/issues/$num -q .id)
 gh api -X POST repos/$R/issues/$MAP/sub_issues -F sub_issue_id=$id
-gh project item-add 3 --owner PavelRPavlov --url "$url"
 ```
 
 ### Wire blocking (second pass, once all ids exist)
