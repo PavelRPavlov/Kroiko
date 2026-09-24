@@ -14,6 +14,18 @@ internal sealed class MegaTradingOrderFormat()
     public override IReadOnlyList<KroikoFile> CreateFiles(IReadOnlyList<Detail> details) =>
         OneFile("MegaTrading", details, ToMegaTradingDetail);
 
+    // Counts materials as the .cut_mt header does (distinct Material values, in order of first use), after any
+    // rename the operator made, so a rename that merges two materials frees a header row.
+    public override IReadOnlyList<OrderProblem> Check(IReadOnlyList<KroikoFile> files)
+    {
+        ArgumentNullException.ThrowIfNull(files);
+
+        var materials = files.SelectMany(f => f.Details).Select(d => d.Material).Distinct().ToList();
+        return materials.Count > MegaTradingFileGenerator.MaxMaterials
+            ? [new TooManyMaterials(MegaTradingFileGenerator.MaxMaterials, materials)]
+            : [];
+    }
+
     // The .cut_mt comes first, then the .xlsx.
     public override IReadOnlyList<FileSaveContext> Generate(ContactInfo contact, IReadOnlyList<KroikoFile> files, string? differentEdgeColor)
     {

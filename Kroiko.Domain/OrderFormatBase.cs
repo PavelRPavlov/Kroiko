@@ -22,6 +22,13 @@ internal abstract class OrderFormatBase(ITemplateBuilder templateBuilder, IFileN
             ? []
             : [new KroikoFile { FileName = fileName, Details = details.Select(toManufacturerDetail).ToList() }];
 
+    /// <summary>No problems: only a format with a limit of its own overrides this.</summary>
+    public virtual IReadOnlyList<OrderProblem> Check(IReadOnlyList<KroikoFile> files)
+    {
+        ArgumentNullException.ThrowIfNull(files);
+        return [];
+    }
+
     public virtual IReadOnlyList<FileSaveContext> Generate(ContactInfo contact, IReadOnlyList<KroikoFile> files, string? differentEdgeColor)
     {
         ArgumentNullException.ThrowIfNull(contact);

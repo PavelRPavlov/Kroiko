@@ -15,6 +15,13 @@ internal static class MegaTradingFileGenerator {
     // Never AppendLine / Environment.NewLine, which is LF on Linux and in WASM.
     private const string LineEnding = "\r\n";
 
+    /// <summary>
+    /// The header lists exactly this many materials, blank rows filling the rest. A material beyond them is left
+    /// out of the header while its parts are still written, so MegaTrading's <c>Check</c> refuses more
+    /// (ADR-0006 §3); the Server does not check and keeps the truncated header.
+    /// </summary>
+    public const int MaxMaterials = 6;
+
     public static List<FileSaveContext> CreateTextBasedFile(ContactInfo contactInfo, IEnumerable<KroikoFile> files)
     {
         var materials = files.SelectMany(f => f.Details.Cast<MegaTradingDetail>())
@@ -23,8 +30,8 @@ internal static class MegaTradingFileGenerator {
         
         CreateFirstRow(builder);
         
-        // there should always be exactly 6 rows, containing different materials
-        for (var i = 0; i <= 5; i++)
+        // always exactly MaxMaterials rows, one per material, blank when there are fewer
+        for (var i = 0; i < MaxMaterials; i++)
         {
             if (i >= materials.Count)
             {
@@ -63,7 +70,6 @@ internal static class MegaTradingFileGenerator {
     }
     private static void CreateMaterialRow(StringBuilder builder, MegaTradingDetail? detail = null)
     {
-        // there should always be exactly 6 rows, containing different materials
         var material = detail == null ? string.Empty : detail.Material;
         var thickness = detail == null ? 18.0 : detail.Thickness;
         AppendRow(builder, string.Create(CultureInfo.InvariantCulture, $"{material}{S}{thickness}{S}True{S}True{S}2800{S}2070{S}"));

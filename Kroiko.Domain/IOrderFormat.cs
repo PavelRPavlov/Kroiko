@@ -22,6 +22,13 @@ public interface IOrderFormat
     IReadOnlyList<KroikoFile> CreateFiles(IReadOnlyList<Detail> details);
 
     /// <summary>
+    /// The reasons this format refuses to generate <paramref name="files"/> as they are now, after the
+    /// operator's edits (ADR-0006 §3); empty when they can be generated. Only MegaTrading has any: more
+    /// materials than its <c>.cut_mt</c> header can list. <see cref="Generate"/> does not call it.
+    /// </summary>
+    IReadOnlyList<OrderProblem> Check(IReadOnlyList<KroikoFile> files);
+
+    /// <summary>
     /// Writes the order files for <paramref name="files"/>: one <c>.xlsx</c> per file for Lonira, one
     /// <c>.xlsx</c> for Suliver, and a <c>.cut_mt</c> then an <c>.xlsx</c> for MegaTrading.
     /// <paramref name="differentEdgeColor"/> fills the template's "different edge colour" cell, if it has one.
