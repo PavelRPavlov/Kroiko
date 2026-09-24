@@ -108,8 +108,9 @@ branch-model refusals, the exact `swa deploy` command, the dry run, and that the
 
 **Deploys** are manual: `scripts/publish-pwa.ps1 -Environment main|production [-DryRun]` refuses a dirty tree, a
 `HEAD` that is not `origin/main` (staging) or `origin/release` checked out as `release` with the pushed tag
-`v<Version>` (production), and failing tests; then publishes in Release and runs
-`swa deploy <temp>/wwwroot --env <main|production>`. The token comes only from `SWA_CLI_DEPLOYMENT_TOKEN`.
+`v<Version>`, no older than any `vX.Y.Z` tag on `origin` (production), and failing tests; then publishes in
+Release and runs `swa deploy <temp>/wwwroot --env <main|production>`. The token comes only from
+`SWA_CLI_DEPLOYMENT_TOKEN`, and only the `swa` call sees it.
 
 ## 6. Decision log
 

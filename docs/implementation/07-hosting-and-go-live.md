@@ -60,15 +60,18 @@ It is a plain, readable script (no encoded commands, per [AGENTS.md](../../AGENT
 As built:
 
 - It fetches `origin` first, so "equals `origin/…`" means the remote as it is now. For production the tag must
-  also be on `origin` (the same tag object), so every production deploy is a pushed, tagged release.
+  also be on `origin` (the same tag object), so every production deploy is a pushed, tagged release; `<Version>`
+  must be `X.Y.Z`; and it must not be older than any `vX.Y.Z` tag on `origin`, so an older build is never
+  redeployed (ADR-0002 §8). Redeploying the newest version is allowed.
 - It passes `--env` explicitly (the CLI's default is `preview`) and `--swa-config-location <temp>/wwwroot`, and runs
   `swa` from the publish folder, away from the repo's `.github/workflows/`, which the CLI would otherwise read
   ([`swa deploy` options](https://learn.microsoft.com/en-us/azure/static-web-apps/static-web-apps-cli-deploy#options)).
-- The CLI reads the token from the environment and logs it only under `SWA_CLI_DEBUG=silly`, so the script
-  clears that variable for the call and masks the token in everything the CLI prints. The CLI can exit `0` after
-  a failure, so success is its `Project deployed to <url>` line; without it the script fails.
+- Only the `swa` call sees the token: the script takes it out of the environment for git, the tests and the
+  build, and puts it back when it ends. The CLI logs it only under `SWA_CLI_DEBUG=silly`, so the script clears
+  that variable for the call and masks the token in each line the CLI prints. The CLI can exit `0` after a
+  failure, so success is its `Project deployed to <url>` line; without it the script fails.
 - `-DryRun` runs every check, the tests and the publish, then prints the `swa` command, file count and size
-  instead of deploying. It needs neither the token nor the CLI.
+  instead of deploying, and removes the publish folder. It needs neither the token nor the CLI.
 - `Kroiko.Client.Tests/PublishScript/` runs the script against a throwaway repository with stubbed `dotnet` and
   `swa` (see [CONTEXT.md](../../CONTEXT.md) §5).
 - The tree must be clean, untracked files included: a local tool folder such as `.claude/` belongs in

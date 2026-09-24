@@ -18,7 +18,8 @@ public sealed class PublishScriptProductionTests(PublishScriptTemplate template)
 
         run.ExitCode.Should().Be(0, run.Output);
         run.DotnetCalls.First().Should().StartWith("dotnet test ");
-        run.SwaCalls.Should().ContainSingle().Which.Should().Contain(" --env production ");
+        run.SwaCalls.Should().Equal(run.ExpectedSwaDeploy("production"));
+        run.Output.Should().Contain("Deployed v1.2.3 (").And.Contain("https://app.kroiko.com");
     }
 
     [Fact]
@@ -81,7 +82,51 @@ public sealed class PublishScriptProductionTests(PublishScriptTemplate template)
         var run = Repo.Run("production");
 
         run.ExitCode.Should().NotBe(0);
-        run.Output.Should().Contain("no <Version>");
+        run.Output.Should().Contain("<Version> must be X.Y.Z");
+        run.Calls.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Refuses_production_when_the_csproj_version_is_not_X_Y_Z()
+    {
+        ReleaseVersion("1.2", tag: "v1.2");
+
+        var run = Repo.Run("production");
+
+        run.ExitCode.Should().NotBe(0);
+        run.Output.Should().Contain("<Version> must be X.Y.Z (found: '1.2')");
+        run.Calls.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Refuses_production_when_origin_holds_a_different_tag_of_that_name()
+    {
+        ReleaseVersion("1.2.3", tag: "v1.2.3");
+        Repo.Git("tag", "-d", "v1.2.3");
+        Repo.Git("tag", "-a", "v1.2.3", "-m", "re-tagged locally");
+
+        var run = Repo.Run("production");
+
+        run.ExitCode.Should().NotBe(0);
+        run.Output.Should().Contain("origin's differs");
+        run.Calls.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Refuses_to_deploy_a_version_older_than_the_newest_tag_on_origin()
+    {
+        // Roll forward, never back (ADR-0002 §8): release went back to an older version after v1.3.0 shipped.
+        ReleaseVersion("1.3.0", tag: "v1.3.0");
+        Repo.SetVersion("1.2.9");
+        Repo.Commit("back to 1.2.9");
+        Repo.Git("tag", "-a", "v1.2.9", "-m", "v1.2.9");
+        Repo.Push("release");
+        Repo.Push("v1.2.9");
+
+        var run = Repo.Run("production");
+
+        run.ExitCode.Should().NotBe(0);
+        run.Output.Should().Contain("v1.2.9 is older than v1.3.0 on origin");
         run.Calls.Should().BeEmpty();
     }
 

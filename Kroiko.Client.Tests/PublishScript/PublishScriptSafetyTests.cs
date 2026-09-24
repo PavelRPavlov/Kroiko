@@ -47,6 +47,8 @@ public sealed class PublishScriptSafetyTests(PublishScriptTemplate template) : P
 
         run.ExitCode.Should().Be(0, run.Output);
         run.Calls.Should().Contain("swa-token-present True").And.Contain("swa-debug ''");
+        run.Calls.Where(c => c.StartsWith("dotnet-token-present", StringComparison.Ordinal))
+            .Should().Equal(["dotnet-token-present False", "dotnet-token-present False"], "the tests and the build never see it");
         run.SwaCalls.Should().ContainSingle().Which.Should().NotContain(Repo.Token);
         run.Output.Should().NotContain(Repo.Token);
     }
@@ -58,6 +60,7 @@ public sealed class PublishScriptSafetyTests(PublishScriptTemplate template) : P
 
         run.ExitCode.Should().NotBe(0);
         run.Output.Should().Contain("swa deploy failed");
+        Directory.Exists(Path.GetDirectoryName(run.WebRoot)).Should().BeFalse("the temporary publish folder is removed");
     }
 
     [Fact]
@@ -79,8 +82,7 @@ public sealed class PublishScriptSafetyTests(PublishScriptTemplate template) : P
         run.DotnetCalls.Should().HaveCount(2);
         run.SwaCalls.Should().BeEmpty("a dry run deploys nothing");
 
-        var webRoot = Path.Combine(run.DotnetCalls.Last().Split(' ').Last(), "wwwroot");
-        run.Output.Should().Contain($"swa deploy {webRoot} --env main --swa-config-location {webRoot}");
+        run.Output.Should().Contain(run.ExpectedSwaDeploy("main"));
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
@@ -107,6 +108,7 @@ internal sealed class PublishScriptSandbox : IDisposable
         Git("commit", "--quiet", "--allow-empty", "-m", message);
     }
 
+
     public string Git(params string[] args) => RunGit(WorkTree, args);
 
     public ScriptRun Run(string environment, RunOptions? options = null)
@@ -114,20 +116,11 @@ internal sealed class PublishScriptSandbox : IDisposable
         options ??= new RunOptions();
         File.Delete(CallLogPath);
 
-        var psi = new ProcessStartInfo("pwsh")
-        {
-            WorkingDirectory = WorkTree,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-        };
-        foreach (var arg in new[] { "-NoProfile", "-NonInteractive", "-File", Path.Combine(WorkTree, "scripts", "publish-pwa.ps1"), "-Environment", environment })
-            psi.ArgumentList.Add(arg);
+        var psi = StartInfo("pwsh", WorkTree,
+            "-NoProfile", "-NonInteractive", "-File", Path.Combine(WorkTree, "scripts", "publish-pwa.ps1"), "-Environment", environment);
         if (options.DryRun)
             psi.ArgumentList.Add("-DryRun");
 
-        IsolateGit(psi);
         psi.Environment["PATH"] = StubsPath + Path.PathSeparator + Environment.GetEnvironmentVariable("PATH");
         psi.Environment["SANDBOX_CALL_LOG"] = CallLogPath;
         psi.Environment["SANDBOX_TESTS_EXIT"] = options.TestsExitCode.ToString(CultureInfo.InvariantCulture);
@@ -139,17 +132,9 @@ internal sealed class PublishScriptSandbox : IDisposable
         else
             psi.Environment.Remove("SWA_CLI_DEPLOYMENT_TOKEN");
 
-        using var process = Process.Start(psi)!;
-        var stderr = process.StandardError.ReadToEndAsync();
-        var stdout = process.StandardOutput.ReadToEnd();
-        if (!process.WaitForExit(TimeSpan.FromMinutes(2)))
-        {
-            process.Kill(entireProcessTree: true);
-            throw new TimeoutException("publish-pwa.ps1 did not finish in 2 minutes.");
-        }
-
+        var (exitCode, stdout, stderr) = RunProcess(psi, "PowerShell 7 (pwsh) is needed to test scripts/publish-pwa.ps1");
         var calls = File.Exists(CallLogPath) ? File.ReadAllLines(CallLogPath) : [];
-        return new ScriptRun(process.ExitCode, stdout + stderr.Result, calls);
+        return new ScriptRun(exitCode, stdout + stderr, calls);
     }
 
     public void Dispose() => DeleteDirectory(_root);
@@ -170,37 +155,68 @@ internal sealed class PublishScriptSandbox : IDisposable
             File.Copy(file, Path.Combine(target, Path.GetRelativePath(source, file)));
     }
 
-    private void IsolateGit(ProcessStartInfo psi)
-    {
-        psi.Environment["GIT_CONFIG_GLOBAL"] = GitConfigPath;
-        psi.Environment["GIT_CONFIG_NOSYSTEM"] = "1";
-        psi.Environment["GIT_TERMINAL_PROMPT"] = "0";
-    }
-
     private string RunGit(string workingDirectory, params string[] args)
     {
-        var psi = new ProcessStartInfo("git")
+        var (exitCode, stdout, stderr) = RunProcess(StartInfo("git", workingDirectory, args), "git is needed on PATH");
+        if (exitCode != 0)
+            throw new InvalidOperationException($"git {string.Join(' ', args)} failed: {stderr}");
+        return stdout.Trim();
+    }
+
+    /// <summary>A process whose git reads only the sandbox's config and repository, never the caller's.</summary>
+    private ProcessStartInfo StartInfo(string fileName, string workingDirectory, params string[] args)
+    {
+        var psi = new ProcessStartInfo(fileName)
         {
             WorkingDirectory = workingDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
         };
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
-        IsolateGit(psi);
 
-        using var process = Process.Start(psi)!;
-        var stderr = process.StandardError.ReadToEndAsync();
-        var stdout = process.StandardOutput.ReadToEnd();
-        process.WaitForExit();
-        if (process.ExitCode != 0)
-            throw new InvalidOperationException($"git {string.Join(' ', args)} failed: {stderr.Result}");
-        return stdout.Trim();
+        psi.Environment["GIT_CONFIG_GLOBAL"] = GitConfigPath;
+        psi.Environment["GIT_CONFIG_NOSYSTEM"] = "1";
+        psi.Environment["GIT_TERMINAL_PROMPT"] = "0";
+        // Set when the tests run from a git hook; they would point git at the real repository.
+        foreach (var variable in new[] { "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES" })
+            psi.Environment.Remove(variable);
+        return psi;
     }
 
-    // Logs "dotnet <args>". `test` exits with SANDBOX_TESTS_EXIT; `publish -o <dir>` writes a tiny wwwroot.
+    private static (int ExitCode, string Stdout, string Stderr) RunProcess(ProcessStartInfo psi, string whenMissing)
+    {
+        Process process;
+        try
+        {
+            process = Process.Start(psi)!;
+        }
+        catch (Win32Exception e)
+        {
+            throw new InvalidOperationException($"{whenMissing}: could not start '{psi.FileName}'.", e);
+        }
+
+        using (process)
+        {
+            var stdoutTask = process.StandardOutput.ReadToEndAsync();
+            var stderrTask = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit(TimeSpan.FromMinutes(2)))
+            {
+                process.Kill(entireProcessTree: true);
+                throw new TimeoutException($"{psi.FileName} {string.Join(' ', psi.ArgumentList)} did not finish in 2 minutes.");
+            }
+
+            return (process.ExitCode, stdoutTask.GetAwaiter().GetResult(), stderrTask.GetAwaiter().GetResult());
+        }
+    }
+
+    // Logs "dotnet <args>" and whether the token reached it. `test` exits with SANDBOX_TESTS_EXIT;
+    // `publish -o <dir>` writes a tiny wwwroot.
     private const string DotnetStub = """
         Add-Content -LiteralPath $env:SANDBOX_CALL_LOG -Value ("dotnet " + ($args -join ' '))
+        Add-Content -LiteralPath $env:SANDBOX_CALL_LOG -Value ("dotnet-token-present " + [bool]$env:SWA_CLI_DEPLOYMENT_TOKEN)
         if ($args[0] -eq 'test') { exit [int]$env:SANDBOX_TESTS_EXIT }
         if ($args[0] -eq 'publish') {
             $out = $args[[array]::IndexOf($args, '-o') + 1]
@@ -213,13 +229,13 @@ internal sealed class PublishScriptSandbox : IDisposable
 
     // Logs "swa <args>", whether the token reached it, and SWA_CLI_DEBUG; echoes the token the way
     // `SWA_CLI_DEBUG=silly` would, to prove the script masks it; reports a URL like the real CLI.
-    private const string SwaStub = """
+    private const string SwaStub = $$"""
         Add-Content -LiteralPath $env:SANDBOX_CALL_LOG -Value ("swa " + ($args -join ' '))
         Add-Content -LiteralPath $env:SANDBOX_CALL_LOG -Value ("swa-token-present " + [bool]$env:SWA_CLI_DEPLOYMENT_TOKEN)
         Add-Content -LiteralPath $env:SANDBOX_CALL_LOG -Value ("swa-debug '" + $env:SWA_CLI_DEBUG + "'")
         Write-Output "Deployment token found in Environment Variables: $env:SWA_CLI_DEPLOYMENT_TOKEN"
         if ($env:SANDBOX_SWA_PRINTS_URL -eq '1') {
-            Write-Output ([char]0x2714 + " Project deployed to https://kroiko-stub-main.1.azurestaticapps.net " + [char]::ConvertFromUtf32(0x1F680))
+            Write-Output ([char]0x2714 + " Project deployed to {{StubUrl}} " + [char]::ConvertFromUtf32(0x1F680))
         }
         exit [int]$env:SANDBOX_SWA_EXIT
         """;
@@ -249,10 +265,16 @@ internal sealed record RunOptions
     public string SwaCliDebug { get; init; } = "";
 }
 
-/// <param name="Calls">One line per stubbed call: <c>dotnet …</c>, <c>swa …</c> and what <c>swa</c> saw.</param>
+/// <param name="Calls">One line per stubbed call (<c>dotnet …</c>, <c>swa …</c>) and what each stub saw.</param>
 internal sealed record ScriptRun(int ExitCode, string Output, IReadOnlyList<string> Calls)
 {
     public IEnumerable<string> DotnetCalls => Calls.Where(c => c.StartsWith("dotnet ", StringComparison.Ordinal));
 
     public IEnumerable<string> SwaCalls => Calls.Where(c => c.StartsWith("swa ", StringComparison.Ordinal));
+
+    /// <summary>The <c>wwwroot</c> of the temporary folder the script published to (the stub's <c>-o</c> argument).</summary>
+    public string WebRoot => Path.Combine(DotnetCalls.Single(c => c.StartsWith("dotnet publish ", StringComparison.Ordinal)).Split(' ').Last(), "wwwroot");
+
+    /// <summary>The <c>swa</c> call the script makes for <paramref name="environment"/> (ADR-0001: never the CLI's default <c>preview</c>).</summary>
+    public string ExpectedSwaDeploy(string environment) => $"swa deploy {WebRoot} --env {environment} --swa-config-location {WebRoot}";
 }

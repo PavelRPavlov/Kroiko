@@ -16,10 +16,8 @@ public sealed class PublishScriptMainTests(PublishScriptTemplate template) : Pub
         run.DotnetCalls.First().Should().StartWith("dotnet test ").And.EndWith("TextConverter.sln", "the whole solution, E2E included");
         run.DotnetCalls.Last().Should().MatchRegex(@"^dotnet publish \S+Kroiko\.Client\.Blazor\.csproj -c Release -o \S+$");
 
-        var publishDir = run.DotnetCalls.Last().Split(' ').Last();
-        var webRoot = Path.Combine(publishDir, "wwwroot");
-        run.SwaCalls.Should().Equal($"swa deploy {webRoot} --env main --swa-config-location {webRoot}");
-        Directory.Exists(publishDir).Should().BeFalse("the temporary publish folder is removed");
+        run.SwaCalls.Should().Equal(run.ExpectedSwaDeploy("main"));
+        Directory.Exists(Path.GetDirectoryName(run.WebRoot)).Should().BeFalse("the temporary publish folder is removed");
     }
 
     [Fact]
