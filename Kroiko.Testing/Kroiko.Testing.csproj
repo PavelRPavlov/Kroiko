@@ -8,6 +8,8 @@
 
     <ItemGroup>
       <InternalsVisibleTo Include="Kroiko.Domain.Tests" />
+      <!-- The E2E tests compare with the golden files without ever recording them. -->
+      <InternalsVisibleTo Include="Kroiko.Client.Tests" />
     </ItemGroup>
 
     <ItemGroup>

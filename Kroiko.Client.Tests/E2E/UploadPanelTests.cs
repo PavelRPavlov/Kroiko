@@ -35,9 +35,11 @@ public sealed class UploadPanelTests(PublishedApp app)
         await Expect(alert.GetByRole(AriaRole.Listitem).Last).ToHaveTextAsync("…и още 2");
         await Expect(page.GetByRole(AriaRole.Link, new() { Name = "ТУК" })).ToHaveAttributeAsync("href", "configuration");
 
-        // Nothing was loaded: with no files, switching manufacturer does not ask.
+        // Nothing was loaded: no tabs or contacts, and with no files, switching manufacturer does not ask.
+        await Expect(page.GetByRole(AriaRole.Tab)).ToHaveCountAsync(0);
+        await Expect(page.GetByText("Контакти на клиента")).ToHaveCountAsync(0);
         await PickAsync(page, "Мега Трейдинг, гр.София");
-        await Expect(page.Locator(".mud-select").First.Locator("input")).ToHaveValueAsync("Мега Трейдинг, гр.София");
+        await Expect(ManufacturerPicker(page)).ToHaveValueAsync("Мега Трейдинг, гр.София");
         await Expect(page.GetByRole(AriaRole.Dialog)).ToHaveCountAsync(0);
         console.Should().BeEmpty();
     }
@@ -49,7 +51,7 @@ public sealed class UploadPanelTests(PublishedApp app)
         var page = await context.NewPageAsync();
         var console = ConsoleErrors(page);
         await page.GotoAsync("/");
-        var picker = page.Locator(".mud-select").First;
+        var picker = ManufacturerPicker(page);
 
         // No files yet: neither picking a manufacturer nor uploading asks.
         await PickAsync(page, "Лонира, гр.София");
@@ -63,13 +65,13 @@ public sealed class UploadPanelTests(PublishedApp app)
         await Expect(dialog).ToContainTextAsync(DiscardQuestion);
         await dialog.GetByRole(AriaRole.Button, new() { Name = "Не" }).ClickAsync();
         await Expect(dialog).ToHaveCountAsync(0);
-        await Expect(picker.Locator("input")).ToHaveValueAsync("Лонира, гр.София");
+        await Expect(picker).ToHaveValueAsync("Лонира, гр.София");
 
         // "Да" switches.
         await PickAsync(page, "Мега Трейдинг, гр.София");
         await dialog.GetByRole(AriaRole.Button, new() { Name = "Да" }).ClickAsync();
         await Expect(dialog).ToHaveCountAsync(0);
-        await Expect(picker.Locator("input")).ToHaveValueAsync("Мега Трейдинг, гр.София");
+        await Expect(picker).ToHaveValueAsync("Мега Трейдинг, гр.София");
 
         // Uploading again asks too.
         await UploadAsync(page, "kitchen-8-materials");
@@ -88,7 +90,7 @@ public sealed class UploadPanelTests(PublishedApp app)
 
         await page.GotoAsync("/");
 
-        await Expect(page.Locator(".mud-select").First.Locator("input")).ToHaveValueAsync("Лонира, гр.София");
+        await Expect(ManufacturerPicker(page)).ToHaveValueAsync("Лонира, гр.София");
         console.Should().BeEmpty();
     }
 
@@ -105,7 +107,7 @@ public sealed class UploadPanelTests(PublishedApp app)
 
         await page.GotoAsync("/");
 
-        await Expect(page.Locator(".mud-select").First.Locator("input"))
+        await Expect(ManufacturerPicker(page))
             .ToHaveValueAsync("Съливер, гр.Пловдив (бул.Васил Априлов)");
         console.Should().BeEmpty();
     }

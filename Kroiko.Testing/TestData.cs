@@ -1,8 +1,11 @@
+using Kroiko.Domain;
+
 namespace Kroiko.Testing;
 
 /// <summary>
 /// Paths to the shared test data under <c>TestData/</c>, which is copied to the output of every
-/// test project that references <c>Kroiko.Testing</c> (ADR-0007 §2).
+/// test project that references <c>Kroiko.Testing</c> (ADR-0007 §2), and the operator's input the golden files were
+/// recorded with.
 /// </summary>
 public static class TestData
 {
@@ -14,6 +17,12 @@ public static class TestData
     /// </summary>
     public static string Polyboard(string fixture) =>
         Path.Combine(Root, "polyboard", fixture + ".txt");
+
+    /// <summary>The contact info every golden file was recorded with; a test that must reproduce them fills these.</summary>
+    public static ContactInfo GoldenContact { get; } = new(CompanyName: "Тест ООД", MobileNumber: "0888123456");
+
+    /// <summary>The "Кантиране с друг цвят" text of the <c>cabinet-23-field/Suliver-different-edge-color</c> golden files.</summary>
+    public const string GoldenDifferentEdgeColor = "Бял гланц";
 
     /// <summary>The output copy of the golden files, which <see cref="OrderFilesAssert"/> compares with.</summary>
     internal static string GoldenRoot => Path.Combine(Root, "golden");

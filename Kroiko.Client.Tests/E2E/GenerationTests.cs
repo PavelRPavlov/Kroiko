@@ -1,6 +1,5 @@
 using System.Text;
 using FluentAssertions;
-using Kroiko.Testing;
 using Microsoft.Playwright;
 using Xunit;
 using static Kroiko.Client.Tests.E2E.ConverterPage;
@@ -44,7 +43,34 @@ public sealed class GenerationTests(PublishedApp app)
 
         // The golden helper's contacts, so the downloads are the Server's order files.
         var files = await DownloadAllAsync(page, count: 4);
-        OrderFilesAssert.MatchGolden("wardrobes-4-materials", "Lonira", files);
+        MatchGolden("wardrobes-4-materials", "Lonira", files);
+        console.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task After_generating_a_reload_pre_fills_the_contacts_and_the_manufacturer()
+    {
+        await using var context = await app.NewContextAsync();
+        var page = await context.NewPageAsync();
+        var console = ConsoleErrors(page);
+        await page.GotoAsync("/");
+        var picker = ManufacturerPicker(page);
+        const string suliver = "Съливер, гр.Пловдив (бул.Васил Априлов)";
+
+        // Suliver, not the first-visit default, so a pre-filled picker is the remembered manufacturer.
+        await PickAsync(page, suliver);
+        await UploadAsync(page, "cabinet-23-field");
+        await FillContactsAsync(page, "Мебели ООД", "0888 765 432");
+        await GenerateButton(page).ClickAsync();
+        await Expect(page.GetByRole(AriaRole.Listitem)).ToHaveCountAsync(1);
+
+        await page.ReloadAsync();
+
+        await Expect(picker).ToHaveValueAsync(suliver);
+        await UploadAsync(page, "cabinet-23-field");
+        await Expect(page.GetByLabel("Име на клиента")).ToHaveValueAsync("Мебели ООД");
+        await Expect(page.GetByLabel("Телефон за връзка")).ToHaveValueAsync("0888 765 432");
+        await Expect(GenerateButton(page)).ToBeEnabledAsync();
         console.Should().BeEmpty();
     }
 
