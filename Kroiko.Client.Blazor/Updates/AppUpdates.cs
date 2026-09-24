@@ -82,7 +82,8 @@ public sealed class AppUpdates(IJSRuntime js, ILogger<AppUpdates> logger) : IAsy
 
     /// <summary>
     /// Activates the waiting version; the page reloads once it has taken over (ADR-0002 §1). The caller asks first
-    /// when the Order has unsaved work (ADR-0002 §2). <c>false</c> when it could not be applied.
+    /// when the Order has unsaved work (ADR-0002 §2). <c>false</c> when it could not be applied, or did not take over
+    /// within <c>updates.js</c>' timeout, and the page stays.
     /// </summary>
     public async Task<bool> ApplyUpdateAsync()
     {

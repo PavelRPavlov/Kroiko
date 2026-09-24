@@ -198,7 +198,9 @@ worker that controls the page (on load, or on `updatefound` → `installed`; a f
 `registration.update()` every 60 minutes, when the window becomes visible and on `online` — never while `navigator.onLine` is
 false, and failures are swallowed. `applyUpdate()` posts `SKIP_WAITING` to the waiting worker, whose only change to the template's
 `service-worker.published.js` is to answer it with `skipWaiting()`, and reloads once on `controllerchange` (with nothing waiting,
-because another window applied it, it just reloads; a waiting worker replaced by a newer one hands over to that one). Other open
+because another window applied it, it just reloads; a waiting worker replaced by a newer one hands over to that one). If the page
+has not started to reload within 10 seconds, `applyUpdate()` fails, so a worker that never takes over (e.g. the development
+no-op worker waiting behind a published one on the same origin) leaves the offer usable instead of its buttons disabled for good. Other open
 windows are not reloaded (ADR-0002 §1: never forced): they keep their offer, and their "Презареди" reloads into the new version.
 `checkNow()` answers `upToDate`, `downloading` (a newer worker is installing or already waits — About shows a waiting
 one as ready) or `offline` (offline, or the check failed); it reads the registration directly, because `register()` and

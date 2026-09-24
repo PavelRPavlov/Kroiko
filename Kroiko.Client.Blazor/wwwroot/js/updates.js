@@ -8,6 +8,9 @@
 // ADR-0002 §4: on top of the browser's own check at each launch.
 const checkIntervalMs = 60 * 60 * 1000;
 
+// How long "Презареди" waits for the new version to take over before it reports a failure.
+const applyTimeoutMs = 10 * 1000;
+
 // The registration start() watches: null until it is started, and when registering failed.
 let registration = Promise.resolve(null);
 let started = false;
@@ -37,24 +40,15 @@ export function unsubscribe() {
     subscriber = null;
 }
 
-// Activates the waiting version and reloads once it controls the page (controllerchange), so the page runs from one
-// cache only. A page no worker controls reloads once the version is activated instead. With nothing waiting (another
-// window of the app already applied it), a reload is all it takes; a waiting version that a newer one replaced before
-// it could activate hands over to that newer one.
+// Activates the waiting version and reloads the page (see handOver). Settles only when the page has not started to
+// reload within applyTimeoutMs, and then fails: a version that never takes over (the development service worker
+// ignores SKIP_WAITING) must not leave "Презареди" and "По-късно" disabled for good.
 export async function applyUpdate() {
-    const waiting = (await registration)?.waiting;
-    if (!waiting) {
-        reload();
-        return;
-    }
-    navigator.serviceWorker.addEventListener('controllerchange', reload);
-    waiting.addEventListener('statechange', () => {
-        if (waiting.state === 'activated')
-            reload();
-        else if (waiting.state === 'redundant' && !reloading)
-            applyUpdate();
-    });
-    waiting.postMessage('SKIP_WAITING');
+    await handOver();
+    await new Promise((_, reject) => setTimeout(() => {
+        if (!reloading)
+            reject(new Error('The new version did not take over in time.'));
+    }, applyTimeoutMs));
 }
 
 // The manual check (ADR-0002 §4): 'upToDate', 'downloading' (a newer version is installing or already waits; a
@@ -112,6 +106,26 @@ async function tryUpdate(current) {
     } catch {
         return false;
     }
+}
+
+// Activates the waiting version and reloads once it controls the page (controllerchange), so the page runs from one
+// cache only. A page no worker controls reloads once the version is activated instead. With nothing waiting (another
+// window of the app already applied it), a reload is all it takes; a waiting version that a newer one replaced before
+// it could activate hands over to that newer one.
+async function handOver() {
+    const waiting = (await registration)?.waiting;
+    if (!waiting) {
+        reload();
+        return;
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', reload);
+    waiting.addEventListener('statechange', () => {
+        if (waiting.state === 'activated')
+            reload();
+        else if (waiting.state === 'redundant' && !reloading)
+            handOver();
+    });
+    waiting.postMessage('SKIP_WAITING');
 }
 
 function notify() {
