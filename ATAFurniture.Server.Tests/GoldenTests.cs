@@ -67,6 +67,21 @@ public sealed class GoldenTests
         OrderFilesAssert.MatchGolden(fixture, manufacturer, files);
     }
 
+    // 01 step 4 (ADR-0004 §8): a bg-BG host must produce the same order files as the invariant recording.
+    // Today it does not: MegaTradingFileGenerator interpolates doubles with the ambient culture, so the
+    // .cut_mt of every fixture with a fractional size gets "609,18" for "609.18" (CONTEXT.md §7). The row
+    // providers' ToString() is ambient too, but ExcelFileGenerator parses it back with the same culture,
+    // so the .xlsx files match. Checked when recorded: only those decimal commas differ.
+    [Theory(Skip = "Un-skipped in phase 02 step 4 — invariant culture")]
+    [MemberData(nameof(EveryValidFixtureAndManufacturer))]
+    public async Task Order_files_under_bg_BG_match_the_golden_files(string fixture, string manufacturer)
+    {
+        var files = await RunPipelineAsync(fixture, manufacturer, culture: CultureInfo.GetCultureInfo("bg-BG"));
+
+        // Always compare, even under UPDATE_GOLDEN=1: the golden files are the invariant-culture recording.
+        OrderFilesAssert.MatchGolden(fixture, manufacturer, files, TestData.GoldenRoot, update: false);
+    }
+
     [Fact]
     public async Task Suliver_with_a_different_edge_color_matches_the_golden_files()
     {
@@ -81,12 +96,13 @@ public sealed class GoldenTests
     // The only place that knows how today's Server turns a fixture into order files.
     // Phase 02 changes this method's body — and nothing else in the tests.
     private static async Task<IReadOnlyList<FileSaveContext>> RunPipelineAsync(
-        string fixture, string manufacturer, string? differentEdgeColor = null)
+        string fixture, string manufacturer, string? differentEdgeColor = null, CultureInfo? culture = null)
     {
-        var culture = CultureInfo.CurrentCulture;
-        var uiCulture = CultureInfo.CurrentUICulture;
-        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
-        CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
+        // The host's culture for this run: invariant unless a test says otherwise (the bg-BG test).
+        var previousCulture = CultureInfo.CurrentCulture;
+        var previousUiCulture = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentCulture = culture ?? CultureInfo.InvariantCulture;
+        CultureInfo.CurrentUICulture = culture ?? CultureInfo.InvariantCulture;
         try
         {
             // FileUploadComponent.razor: parse the uploaded file into ConverterContext.Details.
@@ -141,8 +157,8 @@ public sealed class GoldenTests
         }
         finally
         {
-            CultureInfo.CurrentCulture = culture;
-            CultureInfo.CurrentUICulture = uiCulture;
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUiCulture;
         }
     }
 
