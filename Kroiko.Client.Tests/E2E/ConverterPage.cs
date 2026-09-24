@@ -55,6 +55,10 @@ internal static class ConverterPage
             await page.GetByRole(AriaRole.Button, new() { Name = "Изтегли всички" }).ClickAsync();
             await all.Task.WaitAsync(TimeSpan.FromSeconds(30));
         }
+        catch (TimeoutException e)
+        {
+            throw new TimeoutException($"Only {downloads.Count} of {count} downloads started within 30 s.", e);
+        }
         finally
         {
             page.Download -= OnDownload;

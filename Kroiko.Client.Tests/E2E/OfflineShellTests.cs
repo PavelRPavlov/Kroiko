@@ -1,6 +1,8 @@
 using FluentAssertions;
+using Kroiko.Testing;
 using Microsoft.Playwright;
 using Xunit;
+using static Kroiko.Client.Tests.E2E.ConverterPage;
 using static Microsoft.Playwright.Assertions;
 
 namespace Kroiko.Client.Tests.E2E;
@@ -49,5 +51,32 @@ public sealed class OfflineShellTests(PublishedApp app)
         (await page.EvaluateAsync<string[]>(
                 "() => [...document.fonts].filter(f => f.family.replace(/[\"']/g, '') === 'Roboto' && f.status === 'loaded').map(f => f.weight)"))
             .Should().Contain("400", "the regular Roboto face must load from the offline cache");
+    }
+
+    [Fact]
+    public async Task After_an_offline_start_a_Lonira_conversion_matches_the_golden_files()
+    {
+        // docs/implementation/04-conversion-flow.md, step 6: the conversion needs nothing the offline cache lacks.
+        await using var context = await app.NewContextAsync("bg-BG");
+        var requests = new RequestLog(context, app.BaseAddress);
+        var page = await context.NewPageAsync();
+        var console = ConsoleErrors(page);
+
+        await page.GotoAsync("/");
+        (await page.WaitForOfflineCacheAsync()).Should().BePositive();
+
+        await context.SetOfflineAsync(true);
+        requests.StartRecordingFailures();
+        await page.ReloadAsync();
+
+        await UploadAsync(page, "wardrobes-4-materials");
+        await FillContactsAsync(page, "Тест ООД", "0888123456");
+        await GenerateButton(page).ClickAsync();
+        await Expect(page.GetByRole(AriaRole.Listitem)).ToHaveCountAsync(4);
+        var files = await DownloadAllAsync(page, count: 4);
+
+        OrderFilesAssert.MatchGolden("wardrobes-4-materials", "Lonira", files);
+        requests.Failed.Should().BeEmpty("the conversion must work offline without a failed request");
+        console.Should().BeEmpty();
     }
 }

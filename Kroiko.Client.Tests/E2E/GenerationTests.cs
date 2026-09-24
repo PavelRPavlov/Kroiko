@@ -49,6 +49,33 @@ public sealed class GenerationTests(PublishedApp app)
     }
 
     [Fact]
+    public async Task After_generating_a_reload_pre_fills_the_contacts_and_the_manufacturer()
+    {
+        await using var context = await app.NewContextAsync();
+        var page = await context.NewPageAsync();
+        var console = ConsoleErrors(page);
+        await page.GotoAsync("/");
+        var picker = page.Locator(".mud-select").First.Locator("input");
+        const string suliver = "Съливер, гр.Пловдив (бул.Васил Априлов)";
+
+        // Suliver, not the first-visit default, so a pre-filled picker is the remembered manufacturer.
+        await PickAsync(page, suliver);
+        await UploadAsync(page, "cabinet-23-field");
+        await FillContactsAsync(page, "Мебели ООД", "0888 765 432");
+        await GenerateButton(page).ClickAsync();
+        await Expect(page.GetByRole(AriaRole.Listitem)).ToHaveCountAsync(1);
+
+        await page.ReloadAsync();
+
+        await Expect(picker).ToHaveValueAsync(suliver);
+        await UploadAsync(page, "cabinet-23-field");
+        await Expect(page.GetByLabel("Име на клиента")).ToHaveValueAsync("Мебели ООД");
+        await Expect(page.GetByLabel("Телефон за връзка")).ToHaveValueAsync("0888 765 432");
+        await Expect(GenerateButton(page)).ToBeEnabledAsync();
+        console.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task An_edit_after_generating_discards_the_generated_files()
     {
         await using var context = await app.NewContextAsync();

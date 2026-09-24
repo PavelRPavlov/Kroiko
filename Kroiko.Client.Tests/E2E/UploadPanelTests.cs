@@ -35,7 +35,9 @@ public sealed class UploadPanelTests(PublishedApp app)
         await Expect(alert.GetByRole(AriaRole.Listitem).Last).ToHaveTextAsync("…и още 2");
         await Expect(page.GetByRole(AriaRole.Link, new() { Name = "ТУК" })).ToHaveAttributeAsync("href", "configuration");
 
-        // Nothing was loaded: with no files, switching manufacturer does not ask.
+        // Nothing was loaded: no tabs or contacts, and with no files, switching manufacturer does not ask.
+        await Expect(page.GetByRole(AriaRole.Tab)).ToHaveCountAsync(0);
+        await Expect(page.GetByText("Контакти на клиента")).ToHaveCountAsync(0);
         await PickAsync(page, "Мега Трейдинг, гр.София");
         await Expect(page.Locator(".mud-select").First.Locator("input")).ToHaveValueAsync("Мега Трейдинг, гр.София");
         await Expect(page.GetByRole(AriaRole.Dialog)).ToHaveCountAsync(0);
