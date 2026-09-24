@@ -11,9 +11,9 @@
                    ToStringFunc="@(c => c?.Translation)"
                    Dense="true"
                    Variant="Variant.Outlined">
-            @foreach (var company in _supportedCompanies)
+            @foreach (var branch in _branches)
             {
-                <MudSelectItem Value="@company">@company.Translation</MudSelectItem>
+                <MudSelectItem Value="@branch">@branch.Translation</MudSelectItem>
             }
         </MudSelect>
     </MudStack>
@@ -23,11 +23,11 @@
     [Parameter] public UserContextService UserContextService { get; set; }
     [Parameter] public ConverterContext Context { get; set; }
 
-    readonly IReadOnlyList<ManufacturerBranch> _supportedCompanies = ManufacturerBranches.All;
+    readonly IReadOnlyList<ManufacturerBranch> _branches = ManufacturerBranches.All;
 
-    private async Task OnUserSelection(ManufacturerBranch company)
+    private async Task OnUserSelection(ManufacturerBranch branch)
     {
-        Context.TargetCompany = company;
+        Context.TargetCompany = branch;
         await UserContextService.UpdateSelectedCompanyAsync(Context.TargetCompany);
     }
 }

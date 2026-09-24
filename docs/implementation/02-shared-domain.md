@@ -35,7 +35,7 @@ project, and LargeXlsx is on 2.x.
 
 Done. `User` is `ATAFurniture.Server.DataAccess.User`; the migrations still name the entity
 `Kroiko.Domain.User`, and the model has no pending changes against the snapshot
-(`HasPendingModelChanges()` is false, checked once by hand), so there is no migration. Its
+(`HasPendingModelChanges()` is false, pinned by `UserModelTests`), so there is no migration. Its
 `LastSelectedCompany` is the Server's `ManufacturerBranch(Name, Translation, Email)` with the same
 columns; `ManufacturerBranches` holds the four branches with today's labels and emails (Kuklensko is a
 branch named `Suliver`), pinned by `ManufacturerBranchesTests`. The domain's `SupportedCompany` is a
