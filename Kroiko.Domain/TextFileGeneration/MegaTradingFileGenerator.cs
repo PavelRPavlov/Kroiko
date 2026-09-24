@@ -69,7 +69,9 @@ internal static class MegaTradingFileGenerator {
         AppendRow(builder, $"{S}{S}True");
     }
 
-    // The one place a .cut_mt line ends. It ends with Environment.NewLine, as it always has (CRLF on the
-    // Windows hosts the golden files were recorded on); whether to pin it is an open decision.
-    private static void AppendRow(StringBuilder builder, string row) => builder.AppendLine(row);
+    // Every .cut_mt line ends in CRLF on every host, Windows, Linux or the browser (ADR-0009).
+    private const string LineEnding = "\r\n";
+
+    // The one place a .cut_mt line ends. Never AppendLine / Environment.NewLine: that is LF on Linux and in WASM.
+    private static void AppendRow(StringBuilder builder, string row) => builder.Append(row).Append(LineEnding);
 }

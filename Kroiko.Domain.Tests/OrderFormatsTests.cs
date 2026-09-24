@@ -1,3 +1,4 @@
+using System.Text;
 using FluentAssertions;
 using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.TemplateBuilding;
@@ -78,6 +79,23 @@ public sealed class OrderFormatsTests
     public void No_details_make_no_files(string manufacturer)
     {
         FormatNamed(manufacturer).CreateFiles([]).Should().BeEmpty();
+    }
+
+    // ADR-0009: every .cut_mt line ends in CRLF on every host (Windows, Linux, the browser), not in
+    // Environment.NewLine. One part makes 9 lines: the first row, 6 material rows, the column sizes, the part.
+    [Fact]
+    public void MegaTrading_ends_every_cut_mt_line_with_CRLF_whatever_the_OS()
+    {
+        var format = OrderFormats.For(SupportedCompanies.MegaTrading);
+        var files = format.CreateFiles([Part("MELA_BL")]);
+
+        var cutMt = format.Generate(new ContactInfo("Тест ООД", "0888123456"), files, differentEdgeColor: null)
+            .Should().ContainSingle(f => f.FileName.EndsWith(".cut_mt")).Subject;
+        var text = Encoding.UTF8.GetString(cutMt.Content);
+
+        text.Should().EndWith("\r\n");
+        text.Split("\r\n").Should().HaveCount(10, "9 lines, each ending in CRLF");
+        text.Replace("\r\n", "").Should().NotContain("\n").And.NotContain("\r");
     }
 
     // The "СДВ с краен размер" note writes the finished size in the invariant culture (ADR-0004 §4):

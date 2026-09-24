@@ -69,7 +69,7 @@ public sealed class GeneratorCultureTests
             text = Encoding.UTF8.GetString(file.Content);
         }
 
-        text.Should().Contain($"{Environment.NewLine}MELA_BL{s}18.5{s}True{s}True{s}2800{s}2070{s}{Environment.NewLine}");
-        text.Should().Contain($"{Environment.NewLine}MELA_BL{s}609.18{s}300.5{s}3{s}Yes{s}MELA_BL/0.5{s}{s}{s}{s}MELA_BL{s}{s}{Environment.NewLine}");
+        text.Should().Contain($"\r\nMELA_BL{s}18.5{s}True{s}True{s}2800{s}2070{s}\r\n");
+        text.Should().Contain($"\r\nMELA_BL{s}609.18{s}300.5{s}3{s}Yes{s}MELA_BL/0.5{s}{s}{s}{s}MELA_BL{s}{s}\r\n");
     }
 }
