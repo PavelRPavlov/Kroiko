@@ -1,6 +1,6 @@
 {
-  "name": "Kroiko.Client.Blazor",
-  "short_name": "Kroiko.Client.Blazor",
+  "name": "Kroiko",
+  "short_name": "Kroiko",
   "id": "./",
   "start_url": "./",
   "display": "standalone",

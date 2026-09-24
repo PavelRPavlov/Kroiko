@@ -90,6 +90,28 @@ browser-safe**), `ATAFurniture.Server` (maintained), and the test projects `Kroi
 ([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0009](docs/adr/README.md).
 Build order: [docs/implementation/00-overview.md](docs/implementation/00-overview.md).
 
+**`Kroiko.Client.Tests`** (xUnit, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §5) tests the shipped
+artifact: its `PublishedApp` collection fixture runs `dotnet publish Kroiko.Client.Blazor -c Release` once per
+test run into a temp folder and serves that `wwwroot` from an in-process Kestrel (`StaticSiteHost`: loopback
+port, Blazor MIME types, precompressed `.br`/`.gz` negotiation, SPA fallback, no rewriting); the tests drive
+the Chromium pinned by `Microsoft.Playwright`, headless unless `HEADED=1`, one browser context per test. Browser
+tests are tagged `[Trait("Category", "E2E")]` and join `[Collection(E2ECollection.Name)]`; `OfflineShellTests`
+proves the offline start (service worker activated → offline reload: app bar, `/configuration`, Roboto, no failed
+and no cross-origin requests). The host and the missing-browser message have their own browser-free tests.
+`Conversion/ConverterStateTests` unit-tests the Order rules through `ConverterState`'s public API with the
+confirmation and the device settings faked (`Conversion/Fakes.cs`, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §4), on the
+real domain and the shared fixtures; no browser, no `Category=E2E`.
+
+**`ConverterState`** (`Kroiko.Client.Blazor/Conversion/`) is the app's one Order ([ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §4),
+registered scoped (once for a WASM app) by `AddConverterState()`; `Program.cs` calls it once both interfaces have
+implementations (phase 04 steps 2–3). It depends on `IConfirmation` (a yes/no question before files are discarded)
+and `IDeviceSettingsStore` (the last `ContactInfo` and manufacturer: loaded once per app start into whatever the
+operator has not chosen yet, saved after each successful generation). Components read it and re-render on `Changed`;
+grids edit the domain details in `Files` in place and call `NotifyInputEdited()`; an edit made while generating
+drops that generation's output. Failures of reading, the dialog, making files, generating and device storage are
+logged and raise `Error` with a Bulgarian message instead of throwing. `HasUnsavedWork` = a file is loaded and its current input has not been generated and saved (at least
+one download triggered, `MarkSaved()`).
+
 ## 6. Decision log
 
 Architectural decisions are recorded as **ADRs** in [docs/adr/](docs/adr/) — that folder
@@ -136,6 +158,8 @@ These were found in a code review; several are naturally fixed by the migration.
 - 🟠 **Fire-and-forget** credit consume; **spinners hang** on error paths;
   **`ConverterContext` never disposed** (event-handler leak).
   → PWA rule: busy flags clear in `finally`, errors show a snackbar ([ADR-0006](docs/adr/0006-known-conversion-bugs-in-pwa.md)).
+  ✅ `ConverterState` (phase 04 step 1) clears `IsUploading`/`IsGenerating` in `finally` and raises its `Error` event
+  with a Bulgarian message instead of throwing; the snackbar that shows it is phase 04 step 5.
 - 🟡 **Dead code:** `INotifyPropertyChanged` plumbing on immutable records/entities;
   empty test project; dead UWP project; stale `<Compile Remove Cosmos…>` entries.
   → ✅ The domain has no INPC left (phase 02 step 1); the Server keeps it only where its UI listens.
@@ -163,6 +187,9 @@ These were found in a code review; several are naturally fixed by the migration.
 - **`Kroiko.Domain` must stay browser-safe** ([ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)) — no server-only APIs
   (no direct EF, no `System.Net` server calls, no file-system assumptions).
 - **Secrets never ship to the browser.** The PWA has none; DB/email/blob credentials live only in the Server.
+- **The PWA makes no cross-origin requests** and must start fully offline ([ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §5–6): every asset (incl. the
+  self-hosted Roboto in `wwwroot/fonts/`) is same-origin and matched by the service worker's
+  `offlineAssetsInclude`. Adding an asset of a new file type means extending that list.
 - **Two Polyboard formats** (11 and 23 fields) must both keep parsing.
 
 ## 9. Intended differences from the Server (PWA)
@@ -175,11 +202,11 @@ Server's output. The manual acceptance check (`docs/release-checklist.md`) walks
 | Difference (PWA vs Server) | ADR | Pinned by |
 |---|---|---|
 | No login, user accounts, credits or email; nothing leaves the device | Map scope | — (absent features) |
-| A file with bad lines is rejected and the first 10 bad lines are listed (Server: generic alert, nothing loaded) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §2 | `ConverterState` unit test + Playwright "bad lines" |
-| MegaTrading orders with more than 6 materials cannot be generated (Server: `.cut_mt` header truncated) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §3 | `Check` domain test + `ConverterState` unit test |
-| Both contact fields must be filled before generating; last values and manufacturer remembered per device | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §6 | `ConverterState` unit test + Playwright "device storage" |
-| Any input edit clears the generated files (Server: stale output kept) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §7 | `ConverterState` unit test |
-| Switching manufacturer or re-uploading asks before discarding files (Server: silent rebuild) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §5 | `ConverterState` unit test |
-| Order persists across in-app navigation (Server: lost when leaving the Converter page) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §4 | `ConverterState` unit test |
+| A file with bad lines is rejected and the first 10 bad lines are listed (Server: generic alert, nothing loaded) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §2 | `ConverterStateTests.A_file_with_bad_lines_loads_nothing_and_lists_the_first_ten` + Playwright "bad lines" |
+| MegaTrading orders with more than 6 materials cannot be generated (Server: `.cut_mt` header truncated) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §3 | `Check` domain test + `ConverterStateTests.More_than_six_MegaTrading_materials_is_a_problem_that_cannot_generate` |
+| Both contact fields must be filled before generating; last values and manufacturer remembered per device | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §6 | `ConverterStateTests.An_empty_contact_field_cannot_generate`, `…Generating_remembers_the_contacts_and_the_manufacturer_on_the_device` + Playwright "device storage" |
+| Any input edit clears the generated files (Server: stale output kept) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §7 | `ConverterStateTests.Any_input_edit_clears_the_generated_files_and_the_saved_flag_without_asking` |
+| Switching manufacturer or re-uploading asks before discarding files (Server: silent rebuild) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §5 | `ConverterStateTests.Switching_manufacturer_when_files_exist_asks_and_no_changes_nothing`, `…Uploading_again_when_files_exist_asks_and_no_changes_nothing` |
+| Order persists across in-app navigation (Server: lost when leaving the Converter page) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §4 | `ConverterStateRegistrationTests.Every_page_of_the_app_gets_the_same_Order`, `ConverterStateTests.The_device_settings_are_loaded_once_so_returning_to_the_page_keeps_the_Order` |
 | Files are saved to a picked folder or downloaded; clashes get ` (n)`; names pass through `FileNameSanitizer` (Server: Blob Storage links) | [0003](docs/adr/0003-save-order-files-to-picked-folder.md) | `FileNameSanitizer` domain test; picker manual |
-| Busy spinners always clear; errors show a snackbar (Server: generate spinner can hang) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §4 | `ConverterState` unit test |
+| Busy spinners always clear; errors show a snackbar (Server: generate spinner can hang) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §4 | `ConverterStateTests.A_failed_generation_raises_an_error_and_leaves_the_Order_as_it_was`, `…A_file_that_cannot_be_read_raises_an_error_and_leaves_the_Order_as_it_was` |

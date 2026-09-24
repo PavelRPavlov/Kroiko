@@ -1,0 +1,71 @@
+@page "/configuration"
+
+<MudStack Spacing="3">
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+        За използването на този конвертор е необходимо PolyBoard да се конфигурира по определен начин. В противен случай, няма как да се подсигури правилна комуникация между двата софтуера
+    </MudAlert>
+
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudIcon Icon="@Icons.Material.Filled.ArrowRight" Size="Size.Small" />
+        <span>Go to <b>Cutting Lists</b> --> <b>Cutting Lists Options...</b></span>
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudIcon Icon="@Icons.Material.Filled.ArrowRight" Size="Size.Small" />
+        <span>Under <b>ASCII Options</b> --> <b>Format</b> click on the tree dots at the end</span>
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudIcon Icon="@Icons.Material.Filled.ArrowRight" Size="Size.Small" />
+        <span>Select <b>Format...</b></span>
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudIcon Icon="@Icons.Material.Filled.ArrowRight" Size="Size.Small" />
+        <span>Use the arrow buttons to set the order of items as follows:</span>
+    </MudStack>
+    <MudPaper Class="pa-4">
+        <ol>
+            @foreach (var step in polyboardFormatOrder)
+            {
+                <li>@step</li>
+            }
+        </ol>
+    </MudPaper>
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudIcon Icon="@Icons.Material.Filled.ArrowRight" Size="Size.Small" />
+        <span>Set the separator to be <b>;</b></span>
+    </MudStack>
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <MudIcon Icon="@Icons.Material.Filled.ArrowRight" Size="Size.Small" />
+        <span>Click <b>OK</b> to apply the settings</span>
+    </MudStack>
+</MudStack>
+
+@code {
+
+    private List<string> polyboardFormatOrder =
+    [
+        "Height",
+        "Width",
+        "Quantity",
+        "Material",
+        "Grain Direction",
+        "Top Edge Present",
+        "Bottom Edge Present",
+        "Right Edge Present",
+        "Left Edge Present",
+        "Cabinet",
+        "Cutting Number",
+        "Thickness",
+        "Top Edge Thickness",
+        "Bottom Edge Thickness",
+        "Right Edge Thickness",
+        "Left Edge Thickness",
+        "Reference",
+        "Top Edge Material",
+        "Bottom Edge Material",
+        "Right Edge Material",
+        "Left Edge Material",
+        "Oversizing Height",
+        "Oversizing Width"
+    ];
+
+}

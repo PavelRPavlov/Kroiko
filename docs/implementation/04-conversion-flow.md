@@ -1,6 +1,6 @@
 # 04 — Conversion flow
 
-- **Status:** Not started
+- **Status:** In progress
 - **Depends on:** [02 Shared domain](02-shared-domain.md), [03 Client shell](03-client-shell.md)  **Can run alongside:** —
 - **ADRs:** [0005](../adr/0005-copy-conversion-ui-into-pwa.md), [0006](../adr/0006-known-conversion-bugs-in-pwa.md) §2–4, [0003](../adr/0003-save-order-files-to-picked-folder.md) §1, §5, §7–8, [0002](../adr/0002-pwa-updates-reload-prompt.md) §7–8, [0007](../adr/0007-parity-and-test-strategy.md) §4–5
 
@@ -16,7 +16,10 @@ per-file links; phase 06 adds updates.
 
 ### 1. `ConverterState` and its unit tests
 
-A plain C# service in `Kroiko.Client.Blazor` (no Razor), registered once for the app (ADR-0005 §4).
+A plain C# service in `Kroiko.Client.Blazor` (no Razor), registered once for the app (ADR-0005 §4) by
+`AddConverterState()` — scoped, which is once per app in WebAssembly and lets it use MudBlazor's scoped dialogs.
+`Program.cs` calls it in the step that registers the last of its two interfaces (steps 2–3): the WASM host
+validates the container in Development, so it cannot be registered before them.
 It holds the Order: parse result, manufacturer, `KroikoFile`s, contact info, different-edge-colour
 text, the current `Check` problems, the generated files and a **saved** flag. It raises one
 `Changed` event.
@@ -35,9 +38,10 @@ text, the current `Check` problems, the generated files and a **saved** flag. It
   - `CanGenerate` is false while either contact field is empty/whitespace or `Check` reports any
     problem. `Check` runs on every change (ADR-0005 §6, ADR-0006 §3).
   - Successful generation stores the contact info and the manufacturer through device settings.
-  - `HasUnsavedWork` is true when a file is loaded, generated files exist, and they were not saved
-    since the last generation. The **saved** flag is set by "at least one download triggered"
-    (ADR-0003 §8; phase 05 adds "folder save succeeded").
+  - `HasUnsavedWork` is true when a file is loaded and its current input has not been generated and
+    saved since — so also before the first generation and after an edit (ADR-0002 §2, ADR-0005 §7).
+    The **saved** flag is set by "at least one download triggered" (ADR-0003 §8; phase 05 adds
+    "folder save succeeded").
   - Busy flags clear in `finally`. An exception in parsing or generation surfaces as an error
     message for a snackbar and leaves the Order as it was (ADR-0006 §4).
 

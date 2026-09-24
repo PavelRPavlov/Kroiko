@@ -50,13 +50,14 @@ dotnet restore TextConverter.sln
 dotnet build TextConverter.sln
 dotnet run --project ATAFurniture.Server      # Server app (needs user-secrets configured)
 dotnet run --project Kroiko.Client.Blazor     # PWA (dev server; the service worker is a no-op in dev)
-dotnet test                                   # everything, incl. Playwright E2E once it exists
+dotnet test                                   # everything, incl. the Playwright E2E (publishes the PWA in Release)
 dotnet test --filter Category!=E2E            # fast loop, no browser
 ```
 
 - **SDK:** .NET 10, pinned by `global.json`. All projects target `net10.0`.
-- **E2E:** the Playwright tests need a one-time `playwright.ps1 install chromium`
-  (the failing test prints the exact command).
+- **E2E:** the Playwright tests need a one-time browser install after a build — from `Kroiko.Client.Tests/`,
+  `pwsh bin/Debug/net10.0/playwright.ps1 install chromium` (a missing browser fails the tests with this
+  command). `HEADED=1` shows the browser.
 - **Local secrets (Server only):** the Server reads SQL/Storage/SendinBlue values from
   user-secrets/env. Never hardcode or commit them. The PWA has no secrets.
 

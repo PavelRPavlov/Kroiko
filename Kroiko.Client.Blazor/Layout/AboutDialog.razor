@@ -1,0 +1,16 @@
+@* Static for now; phase 06 adds the version and the update controls (ADR-0002). *@
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6">Kroiko</MudText>
+        <MudText>Конвертор на списъци за разкрой от Polyboard към бланки за поръчка.</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Close">Затвори</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance Dialog { get; set; } = default!;
+
+    private void Close() => Dialog.Close();
+}
