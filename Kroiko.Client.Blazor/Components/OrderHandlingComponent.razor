@@ -1,4 +1,4 @@
-@using Kroiko.Domain
+@using Kroiko.Client.Blazor.Conversion
 @inherits ConverterStateComponentBase
 
 @* The Server's OrderHandlingComponent, stripped (ADR-0005 §1): no email, credits or Blob Storage links. The files
@@ -20,7 +20,7 @@
         <ul class="py-2">
             @foreach (var file in ConverterState.GeneratedFiles)
             {
-                <li class="py-1">@FileNameSanitizer.Sanitize(file.FileName)</li>
+                <li class="py-1">@ConverterState.SavedFileName(file)</li>
             }
         </ul>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"

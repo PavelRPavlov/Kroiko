@@ -25,7 +25,7 @@ public sealed class GenerationTests(PublishedApp app)
         var page = await context.NewPageAsync();
         var console = ConsoleErrors(page);
         await page.GotoAsync("/");
-        var generate = page.GetByRole(AriaRole.Button, new() { Name = "Генерирай бланки за поръчка" });
+        var generate = GenerateButton(page);
 
         // A first visit: Lonira, and no contacts to pre-fill.
         await UploadAsync(page, "wardrobes-4-materials");
@@ -60,7 +60,7 @@ public sealed class GenerationTests(PublishedApp app)
 
         await UploadAsync(page, "wardrobes-4-materials");
         await FillContactsAsync(page, "Тест ООД", "0888123456");
-        await page.GetByRole(AriaRole.Button, new() { Name = "Генерирай бланки за поръчка" }).ClickAsync();
+        await GenerateButton(page).ClickAsync();
         await Expect(generated).ToHaveCountAsync(4);
         await Expect(downloadAll).ToBeVisibleAsync();
 
@@ -85,7 +85,7 @@ public sealed class GenerationTests(PublishedApp app)
         await UploadAsync(page, "kitchen-8-materials");
         await FillContactsAsync(page, "Тест ООД", "0888123456");
 
-        await Expect(page.GetByRole(AriaRole.Button, new() { Name = "Генерирай бланки за поръчка" })).ToBeDisabledAsync();
+        await Expect(GenerateButton(page)).ToBeDisabledAsync();
         console.Should().BeEmpty();
     }
 
@@ -105,7 +105,7 @@ public sealed class GenerationTests(PublishedApp app)
             Buffer = Encoding.UTF8.GetBytes("214.0;247.0;1;CON;0;0;0;1;0;Model[0];1\r\n250.0;247.0;1;Egger W1000: \"бял\";0;0;0;1;0;Model[0];2\r\n"),
         });
         await FillContactsAsync(page, "Тест ООД", "0888123456");
-        await page.GetByRole(AriaRole.Button, new() { Name = "Генерирай бланки за поръчка" }).ClickAsync();
+        await GenerateButton(page).ClickAsync();
         await Expect(page.GetByRole(AriaRole.Listitem)).ToHaveTextAsync(["_CON.xlsx", "Egger W1000_ _бял_.xlsx"]);
 
         var files = await DownloadAllAsync(page, count: 2);

@@ -30,6 +30,10 @@ internal static class ConverterPage
         await page.GetByLabel("Телефон за връзка").FillAsync(mobileNumber);
     }
 
+    /// <summary>The "Генерирай бланки за поръчка" button.</summary>
+    public static ILocator GenerateButton(IPage page) =>
+        page.GetByRole(AriaRole.Button, new() { Name = "Генерирай бланки за поръчка" });
+
     /// <summary>
     /// Clicks "Изтегли всички" and collects the <paramref name="count"/> downloads it triggers, in the order they
     /// started, as the order files they saved: the browser's suggested name and the downloaded bytes.

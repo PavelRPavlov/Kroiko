@@ -82,8 +82,7 @@ Confirmations use a `MudDialog` implementation of the confirmation interface, in
 - **"Изтегли всички"** downloads every file one after another: `Blob` + `<a download>`, streamed
   through `DotNetStreamReference`. Each name first passes through `FileNameSanitizer` (ADR-0003
   §5, §7). Triggering it sets the saved flag. Keep the download JS in one module, `wwwroot/js/files.js`;
-  phase 05 extends it. `ConverterState` reaches the browser download through a third small interface,
-  `IFileDownloader`, so the naming and saved-flag rules are unit-tested like the step 1 rules.
+  phase 05 extends it.
 - Errors show a Bulgarian `MudSnackbar`; spinners always clear.
 
 ### 6. E2E parity scenarios

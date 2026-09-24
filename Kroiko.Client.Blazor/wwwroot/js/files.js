@@ -12,6 +12,5 @@ export async function downloadFile(fileName, contentStreamReference) {
     anchor.href = url;
     anchor.download = fileName;
     anchor.click();
-    anchor.remove();
     setTimeout(() => URL.revokeObjectURL(url), blobUrlLifetimeMs);
 }

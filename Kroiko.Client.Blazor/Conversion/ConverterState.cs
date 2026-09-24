@@ -117,14 +117,23 @@ public sealed class ConverterState(
 
     /// <summary>
     /// "Генерирай бланки за поръчка" is allowed: there are files, both contact fields are filled (not just
-    /// whitespace) and <see cref="Problems"/> is empty (ADR-0005 §6, ADR-0006 §3).
+    /// whitespace) and <see cref="Problems"/> is empty (ADR-0005 §6, ADR-0006 §3), and nothing is being generated
+    /// or downloaded.
     /// </summary>
     public bool CanGenerate =>
         Files.Count > 0
         && !string.IsNullOrWhiteSpace(CompanyName)
         && !string.IsNullOrWhiteSpace(MobileNumber)
         && Problems.Count == 0
-        && !IsGenerating;
+        && !IsGenerating
+        && !IsDownloading;
+
+    /// <summary>The name <paramref name="file"/> is saved under: its <see cref="FileNameSanitizer"/> name (ADR-0003 §7).</summary>
+    public static string SavedFileName(FileSaveContext file)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+        return FileNameSanitizer.Sanitize(file.FileName);
+    }
 
     /// <summary>The order files of the last generation; cleared by any change to the input.</summary>
     public IReadOnlyList<FileSaveContext> GeneratedFiles { get; private set; } = [];
@@ -145,7 +154,7 @@ public sealed class ConverterState(
     /// Fills what the operator has not chosen yet — the contact fields and the manufacturer — from the device
     /// settings (ADR-0005 §6). A device that remembers no manufacturer starts on <see cref="DefaultManufacturer"/>.
     /// Runs once per app start, so returning to the Converter page keeps the Order as the operator left it;
-    /// settings that cannot be loaded leave the contacts as they are and are tried again on the next call.
+    /// settings that cannot be loaded count as a device that remembers nothing, and are not tried again.
     /// </summary>
     public async Task LoadDeviceSettingsAsync()
     {
@@ -154,11 +163,11 @@ public sealed class ConverterState(
             return;
         }
 
+        _deviceSettingsLoaded = true;
         DeviceSettings settings;
         try
         {
             settings = await deviceSettings.LoadAsync();
-            _deviceSettingsLoaded = true;
         }
         catch (Exception exception)
         {
@@ -343,7 +352,7 @@ public sealed class ConverterState(
 
     /// <summary>
     /// "Изтегли всички" (ADR-0003 §5): triggers the download of every generated file, one after another, each under
-    /// its <see cref="FileNameSanitizer"/> name (ADR-0003 §7). The first triggered download marks the files saved
+    /// <see cref="SavedFileName"/>. The first triggered download marks the files saved
     /// (ADR-0003 §8). An edit meanwhile stops the downloads of the files it discarded; a download that cannot start
     /// stops the rest and raises <see cref="Error"/>. Nothing happens with no generated files or while it runs.
     /// </summary>
@@ -361,7 +370,7 @@ public sealed class ConverterState(
         {
             foreach (var file in files)
             {
-                await downloader.DownloadAsync(FileNameSanitizer.Sanitize(file.FileName), file.Content);
+                await downloader.DownloadAsync(SavedFileName(file), file.Content);
                 if (GeneratedFiles != files)
                 {
                     return;

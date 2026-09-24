@@ -663,6 +663,20 @@ public sealed class ConverterStateTests
     }
 
     [Fact]
+    public async Task Device_settings_that_cannot_be_loaded_are_not_tried_again()
+    {
+        _settings.LoadFailure = new InvalidOperationException("storage is blocked");
+        await _state.LoadDeviceSettingsAsync();
+        _settings.LoadFailure = null;
+        _settings.Stored = new DeviceSettings(new ContactInfo("Тест ООД", "0888123456"), SupportedCompanies.MegaTrading);
+
+        await _state.LoadDeviceSettingsAsync();
+
+        _state.Manufacturer.Should().Be(SupportedCompanies.Lonira);
+        _state.CompanyName.Should().BeNull();
+    }
+
+    [Fact]
     public async Task A_device_that_remembers_no_manufacturer_starts_on_Lonira_like_the_Server()
     {
         _settings.Stored = new DeviceSettings(new ContactInfo("Тест ООД", "0888123456"), Manufacturer: null);
@@ -810,6 +824,19 @@ public sealed class ConverterStateTests
         _state.IsSaved.Should().BeFalse();
         _state.HasUnsavedWork.Should().BeTrue();
         _state.IsDownloading.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Nothing_can_be_generated_while_downloading()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+        var canGenerate = new List<bool>();
+        _downloader.OnDownload = () => canGenerate.Add(_state.CanGenerate);
+
+        await _state.DownloadAllAsync();
+
+        canGenerate.Should().HaveCount(4).And.OnlyContain(b => !b);
+        _state.CanGenerate.Should().BeTrue();
     }
 
     [Fact]
