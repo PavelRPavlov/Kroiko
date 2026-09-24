@@ -16,11 +16,9 @@ internal sealed class SuliverOrderFormat()
 
     public override SupportedCompany Company => SupportedCompanies.Suliver;
 
+    // TODO what is the required file name
     public override IReadOnlyList<KroikoFile> CreateFiles(IReadOnlyList<Detail> details) =>
-        details.Count == 0
-            ? []
-            // TODO what is the required file name
-            : [new KroikoFile { FileName = "Suliver", Details = details.Select(ToSuliverDetail).ToList() }];
+        OneFile("Suliver", details, ToSuliverDetail);
 
     private static IKroikoDetail ToSuliverDetail(Detail detail)
     {
@@ -35,12 +33,12 @@ internal sealed class SuliverOrderFormat()
             MaterialThickness = detail.MaterialThickness,
             IsGrainDirectionReversed = detail.IsGrainDirectionReversed ? (byte)2 : (byte)1,
         };
-        SetSaliverEdges(d, detail);
-        CreateSaliverNote(d, detail);
+        SetSuliverEdges(d, detail);
+        CreateSuliverNote(d, detail);
         return d;
     }
 
-    private static void SetSaliverEdges(SuliverDetail suliverDetail, Detail detail)
+    private static void SetSuliverEdges(SuliverDetail suliverDetail, Detail detail)
     {
         if (detail.Width > detail.Height)
         {
@@ -80,7 +78,7 @@ internal sealed class SuliverOrderFormat()
         }
     }
 
-    private static void CreateSaliverNote(SuliverDetail suliverDetail, Detail detail)
+    private static void CreateSuliverNote(SuliverDetail suliverDetail, Detail detail)
     {
         var note = new StringBuilder();
         if (detail.OversizingHeight.Equals(detail.OversizingWidth) && detail.OversizingHeight > 0)

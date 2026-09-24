@@ -21,6 +21,11 @@ public sealed class OrderFormatsTests
         Reference: "1", TopEdgeMaterial: "", BottomEdgeMaterial: "", RightEdgeMaterial: "", LeftEdgeMaterial: "",
         OversizingHeight: 0, OversizingWidth: 0);
 
+    // Theories name the manufacturer, as InlineData cannot hold a SupportedCompany.
+    private static IOrderFormat FormatNamed(string manufacturer) =>
+        OrderFormats.For(new[] { SupportedCompanies.Lonira, SupportedCompanies.Suliver, SupportedCompanies.MegaTrading }
+            .Single(c => c.Name == manufacturer));
+
     [Fact]
     public void There_is_one_format_per_manufacturer()
     {
@@ -59,9 +64,7 @@ public sealed class OrderFormatsTests
     [InlineData(nameof(SupportedCompanies.MegaTrading), typeof(MegaTradingDetail))]
     public void Suliver_and_MegaTrading_make_one_file_with_every_part(string manufacturer, Type detailType)
     {
-        var format = OrderFormats.All.Single(f => f.Company.Name == manufacturer);
-
-        var files = format.CreateFiles([Part("MELA_BL"), Part("OAK_18"), Part("")]);
+        var files = FormatNamed(manufacturer).CreateFiles([Part("MELA_BL"), Part("OAK_18"), Part("")]);
 
         var file = files.Should().ContainSingle().Subject;
         file.FileName.Should().Be(manufacturer);
@@ -74,7 +77,7 @@ public sealed class OrderFormatsTests
     [InlineData(nameof(SupportedCompanies.MegaTrading))]
     public void No_details_make_no_files(string manufacturer)
     {
-        OrderFormats.All.Single(f => f.Company.Name == manufacturer).CreateFiles([]).Should().BeEmpty();
+        FormatNamed(manufacturer).CreateFiles([]).Should().BeEmpty();
     }
 
     // The "СДВ с краен размер" note writes the finished size in the invariant culture (ADR-0004 §4):
@@ -90,7 +93,7 @@ public sealed class OrderFormatsTests
         IReadOnlyList<KroikoFile> files;
         using (CultureScope.BgBg())
         {
-            files = OrderFormats.All.Single(f => f.Company.Name == manufacturer).CreateFiles([oversized]);
+            files = FormatNamed(manufacturer).CreateFiles([oversized]);
         }
 
         files.Should().ContainSingle().Which.Details.Should().ContainSingle()

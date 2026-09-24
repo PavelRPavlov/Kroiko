@@ -87,7 +87,8 @@
             return;
         }
 
-        // The order format maps and groups the details (ADR-0004 §1; Lonira: one file per material).
+        // The order format maps and groups the details (ADR-0004 §1; Lonira: one file per material). A name
+        // with no format (none today) gives no files, as the old switch's default did.
         var format = ServiceProvider.GetKeyedService<IOrderFormat>(Context.TargetCompany.Name);
         var result = format?.CreateFiles(Context.Details) ?? [];
 

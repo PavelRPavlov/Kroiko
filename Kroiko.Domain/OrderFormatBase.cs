@@ -15,6 +15,13 @@ internal abstract class OrderFormatBase(ITemplateBuilder templateBuilder, IFileN
 
     public abstract IReadOnlyList<KroikoFile> CreateFiles(IReadOnlyList<Detail> details);
 
+    /// <summary>One file named <paramref name="fileName"/> holding every detail, or none for no details.</summary>
+    protected static IReadOnlyList<KroikoFile> OneFile(
+        string fileName, IReadOnlyList<Detail> details, Func<Detail, IKroikoDetail> toManufacturerDetail) =>
+        details.Count == 0
+            ? []
+            : [new KroikoFile { FileName = fileName, Details = details.Select(toManufacturerDetail).ToList() }];
+
     public virtual IReadOnlyList<FileSaveContext> Generate(ContactInfo contact, IReadOnlyList<KroikoFile> files, string? differentEdgeColor)
     {
         ArgumentNullException.ThrowIfNull(contact);

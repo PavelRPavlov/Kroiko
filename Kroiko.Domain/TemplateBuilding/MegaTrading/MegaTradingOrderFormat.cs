@@ -10,11 +10,9 @@ internal sealed class MegaTradingOrderFormat()
 {
     public override SupportedCompany Company => SupportedCompanies.MegaTrading;
 
+    // TODO what is the required file name
     public override IReadOnlyList<KroikoFile> CreateFiles(IReadOnlyList<Detail> details) =>
-        details.Count == 0
-            ? []
-            // TODO what is the required file name
-            : [new KroikoFile { FileName = "MegaTrading", Details = details.Select(ToMegaTradingDetail).ToList() }];
+        OneFile("MegaTrading", details, ToMegaTradingDetail);
 
     // The .cut_mt comes first, then the .xlsx.
     public override IReadOnlyList<FileSaveContext> Generate(ContactInfo contact, IReadOnlyList<KroikoFile> files, string? differentEdgeColor)
