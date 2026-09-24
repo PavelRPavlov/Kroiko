@@ -28,7 +28,7 @@ public sealed class UpdateOfferTests : IAsyncDisposable
     {
         _updates = new AppUpdates(_js, NullLogger<AppUpdates>.Instance);
         _order = new ConverterState(_confirmation, new FakeDeviceSettingsStore(), new FakeFileDownloader(),
-            NullLogger<ConverterState>.Instance);
+            new FakeFolderPicker(), NullLogger<ConverterState>.Instance);
         _offer = new UpdateOffer(_updates, _order, _confirmation, NullLogger<UpdateOffer>.Instance);
     }
 
@@ -180,6 +180,7 @@ public sealed class UpdateOfferTests : IAsyncDisposable
             .AddScoped<IConfirmation, FakeConfirmation>()
             .AddScoped<IDeviceSettingsStore, FakeDeviceSettingsStore>()
             .AddScoped<IFileDownloader, FakeFileDownloader>()
+            .AddScoped<IFolderPicker, FakeFolderPicker>()
             .AddConverterState()
             .AddAppUpdates();
         await using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
