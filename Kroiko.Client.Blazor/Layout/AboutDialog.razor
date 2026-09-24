@@ -10,7 +10,7 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+    [CascadingParameter] private IMudDialogInstance Dialog { get; set; } = default!;
 
-    private void Close() => MudDialog.Close();
+    private void Close() => Dialog.Close();
 }

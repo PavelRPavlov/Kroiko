@@ -12,14 +12,13 @@
             <img src="Assets/kroiko.png" alt="Kroiko" height="40" />
         </a>
         @* Text links from sm up; icon-only on phones, where the labels do not fit. *@
-        <MudButton Href="" Color="Color.Inherit" Class="d-none d-sm-flex"
-                   StartIcon="@Icons.Material.Filled.ReceiptLong">Converter</MudButton>
-        <MudButton Href="configuration" Color="Color.Inherit" Class="d-none d-sm-flex"
-                   StartIcon="@Icons.Material.Filled.Settings">Configuration</MudButton>
-        <MudIconButton Href="" Color="Color.Inherit" Class="d-flex d-sm-none"
-                       Icon="@Icons.Material.Filled.ReceiptLong" aria-label="Converter" />
-        <MudIconButton Href="configuration" Color="Color.Inherit" Class="d-flex d-sm-none"
-                       Icon="@Icons.Material.Filled.Settings" aria-label="Configuration" />
+        @foreach (var link in NavLinks)
+        {
+            <MudButton Href="@link.Href" Color="Color.Inherit" Class="d-none d-sm-flex"
+                       StartIcon="@link.Icon">@link.Label</MudButton>
+            <MudIconButton Href="@link.Href" Color="Color.Inherit" Class="d-flex d-sm-none"
+                           Icon="@link.Icon" aria-label="@link.Label" />
+        }
         <MudSpacer />
         <MudIconButton Icon="@Icons.Material.Filled.Info" Color="Color.Inherit"
                        aria-label="Относно" OnClick="OpenAboutAsync" />
@@ -33,6 +32,14 @@
 </MudLayout>
 
 @code {
+    private sealed record NavLinkItem(string Href, string Icon, string Label);
+
+    private static readonly NavLinkItem[] NavLinks =
+    [
+        new("./", Icons.Material.Filled.ReceiptLong, "Converter"), // not "": MudBlazor renders an empty Href as a <button>
+        new("configuration", Icons.Material.Filled.Settings, "Configuration"),
+    ];
+
     private Task OpenAboutAsync() =>
         DialogService.ShowAsync<AboutDialog>("Относно", new DialogOptions { CloseButton = true });
 }
