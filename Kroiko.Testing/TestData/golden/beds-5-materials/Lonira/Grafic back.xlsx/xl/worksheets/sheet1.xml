@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView showGridLines="1" showRowColHeaders="1" rightToLeft="0" workbookViewId="0">
+</sheetView></sheetViews>
+<cols><col min="1" max="1" width="25" customWidth="1"/>
+<col min="2" max="2" width="25" customWidth="1"/>
+<col min="3" max="3" width="15" customWidth="1"/>
+<col min="4" max="4" width="20" customWidth="1"/>
+<col min="5" max="5" width="20" customWidth="1"/>
+</cols>
+<sheetData>
+<row r="1">
+<c r="A1" t="inlineStr"><is><t>Име на клиента</t></is></c>
+<c r="B1" t="inlineStr"><is><t>Тест ООД</t></is></c>
+</row>
+<row r="2">
+<c r="A2" t="inlineStr"><is><t>Телефон за връзка</t></is></c>
+<c r="B2" t="inlineStr"><is><t>0888123456</t></is></c>
+</row>
+<row r="3">
+<c r="A3" t="inlineStr"><is><t>Материал</t></is></c>
+<c r="B3" t="inlineStr"><is><t>Grafic back</t></is></c>
+</row>
+<row r="5">
+<c r="A5" t="inlineStr"><is><t>Размер по фладер [мм]</t></is></c>
+<c r="B5" t="inlineStr"><is><t>Размер срещу фладер [мм]</t></is></c>
+<c r="C5" t="inlineStr"><is><t>Брой детайли</t></is></c>
+<c r="D5" t="inlineStr"><is><t>Кантиране</t></is></c>
+<c r="E5" t="inlineStr"><is><t>Забележка</t></is></c>
+</row>
+<row r="6">
+<c r="A6" s="1"><v>620</v></c>
+<c r="B6" s="1"><v>2350</v></c>
+<c r="C6" s="1"><v>1</v></c>
+<c r="D6" t="inlineStr"><is><t>1 k 1 d</t></is></c>
+<c r="E6" t="inlineStr"><is><t></t></is></c>
+</row>
+</sheetData>
+</worksheet>
