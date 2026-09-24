@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The device-settings tests run the schema migrations on an imagined history (ADR-0002 §7). -->
+    <!-- The tests reach internals, e.g. the device-settings store with other schema migrations. -->
     <InternalsVisibleTo Include="Kroiko.Client.Tests" />
   </ItemGroup>
 

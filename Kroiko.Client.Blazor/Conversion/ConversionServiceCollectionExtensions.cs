@@ -23,7 +23,7 @@ public static class ConversionServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
         return services
-            .AddScoped<IBrowserStorage, LocalStorage>()
+            .AddScoped<IBrowserStorage, BrowserLocalStorage>()
             .AddScoped<IDeviceSettingsStore, LocalStorageDeviceSettingsStore>();
     }
 }

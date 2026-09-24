@@ -19,7 +19,7 @@ public interface IBrowserStorage
 /// <see cref="IBrowserStorage"/> over <c>window.localStorage</c>. It throws what the browser throws: storage can
 /// be disabled, blocked by privacy settings or full.
 /// </summary>
-public sealed class LocalStorage(IJSRuntime js) : IBrowserStorage
+public sealed class BrowserLocalStorage(IJSRuntime js) : IBrowserStorage
 {
     public ValueTask<string?> GetItemAsync(string key) => js.InvokeAsync<string?>("localStorage.getItem", key);
 

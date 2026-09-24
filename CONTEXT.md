@@ -117,7 +117,7 @@ in `localStorage` under `kroiko.deviceSettings`: `{"schemaVersion":1,"companyNam
 the manufacturer by `SupportedCompany.Name` (an unknown name loads as none). Loading runs the forward migrations
 (oldest first, one per `schemaVersion` step; none yet) before anything is read, and never throws: a newer
 `schemaVersion`, an unreadable document, or storage that is missing or throws load the defaults and leave storage
-untouched until the next save ([ADR-0002](docs/adr/0002-pwa-updates-reload-prompt.md) §7–8). Only the two
+untouched until the operator edits the settings (committed by the next successful generation, which saves them) ([ADR-0002](docs/adr/0002-pwa-updates-reload-prompt.md) §7–8). Only the two
 `localStorage` calls are interop (`IBrowserStorage`); `LocalStorageDeviceSettingsStoreTests` covers the rest.
 
 ## 6. Decision log

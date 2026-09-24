@@ -19,8 +19,8 @@ public delegate void DeviceSettingsMigration(JsonObject document);
 /// <para>
 /// Loading never throws. Older documents pass through the forward migrations before anything is read. A document
 /// from a newer app, one this app cannot read, and storage that is missing or throws all load
-/// <see cref="DeviceSettings.Default"/> and leave storage as it is; only saving (the operator's next successful
-/// generation) replaces it. Saving throws what the storage throws; <see cref="ConverterState"/> reports it.
+/// <see cref="DeviceSettings.Default"/> and leave storage as it is until the operator edits the settings — which
+/// takes effect when the next successful generation saves them. Saving throws what the storage throws; <see cref="ConverterState"/> reports it.
 /// </para>
 /// </summary>
 public sealed class LocalStorageDeviceSettingsStore : IDeviceSettingsStore
@@ -96,7 +96,7 @@ public sealed class LocalStorageDeviceSettingsStore : IDeviceSettingsStore
             : throw new FormatException("The stored device settings have no numeric schemaVersion.");
         if (schemaVersion < 1)
         {
-            throw new FormatException($"The stored device settings have schemaVersion {schemaVersion}.");
+            throw new FormatException(FormattableString.Invariant($"The stored device settings have schemaVersion {schemaVersion}."));
         }
 
         if (schemaVersion > SchemaVersion)
@@ -117,7 +117,7 @@ public sealed class LocalStorageDeviceSettingsStore : IDeviceSettingsStore
         var manufacturerName = ReadString(document, "manufacturer");
         return new DeviceSettings(
             new ContactInfo(ReadString(document, "companyName"), ReadString(document, "mobileNumber")),
-            OrderFormats.All.Select(format => format.Company).FirstOrDefault(company => company.Name == manufacturerName));
+            OrderFormats.All.FirstOrDefault(format => format.Company.Name == manufacturerName)?.Company);
     }
 
     // A missing or null property is a missing value; a value of any other kind than a string is unreadable.
