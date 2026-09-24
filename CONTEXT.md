@@ -93,11 +93,15 @@ Build order: [docs/implementation/00-overview.md](docs/implementation/00-overvie
 **`Kroiko.Client.Tests`** (xUnit, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §5) tests the shipped
 artifact: its `PublishedApp` collection fixture runs `dotnet publish Kroiko.Client.Blazor -c Release` once per
 test run into a temp folder and serves that `wwwroot` from an in-process Kestrel (`StaticSiteHost`: loopback
-port, Blazor MIME types, precompressed `.br`/`.gz` negotiation, SPA fallback, no rewriting); the tests drive
+port, Blazor MIME types, precompressed `.br`/`.gz` negotiation, SPA fallback, no rewriting, and like SWA a 404
+for `staticwebapp.config.json`); the tests drive
 the Chromium pinned by `Microsoft.Playwright`, headless unless `HEADED=1`, one browser context per test. Browser
 tests are tagged `[Trait("Category", "E2E")]` and join `[Collection(E2ECollection.Name)]`; `OfflineShellTests`
 proves the offline start (service worker activated → offline reload: app bar, `/configuration`, Roboto, no failed
 and no cross-origin requests). The host and the missing-browser message have their own browser-free tests.
+`Hosting/` checks the Azure Static Web Apps config, `Kroiko.Client.Blazor/wwwroot/staticwebapp.config.json`
+(fallback excludes, `no-cache` routes, MIME types), and against the publish output that it is published at the
+root, that the service worker does not precache it, and that every precached asset is excluded from the fallback.
 
 ## 6. Decision log
 
