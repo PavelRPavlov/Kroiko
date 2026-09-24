@@ -1,6 +1,6 @@
 # 07 — Hosting & go-live
 
-- **Status:** Not started
+- **Status:** In progress
 - **Depends on:** 07a — [03 Client shell](03-client-shell.md); 07b — [05 Saving](05-saving.md), [06 Updates & About](06-updates-and-about.md) and 07a
 - **ADRs:** [0001](../adr/0001-host-pwa-on-azure-static-web-apps.md), [0002](../adr/0002-pwa-updates-reload-prompt.md) §6, §8, [0006](../adr/0006-known-conversion-bugs-in-pwa.md) §5, [0007](../adr/0007-parity-and-test-strategy.md) §9
 
@@ -30,6 +30,17 @@ Add it to `Kroiko.Client.Blazor/wwwroot/` so it is published with the app:
 - `mimeTypes` for `.webmanifest` (`application/manifest+json`), `.dat` (`application/octet-stream`),
   `.wasm` (`application/wasm`) and `.woff2` (`font/woff2`).
 - No auth, no API, no routes beyond these.
+- SWA reads the file but never serves it, so `service-worker.published.js` lists it in
+  `offlineAssetsExclude`: precaching it would 404 and fail the whole service-worker install
+  ([Azure/static-web-apps#259](https://github.com/Azure/static-web-apps/issues/259),
+  [#490](https://github.com/Azure/static-web-apps/issues/490)). The test `StaticSiteHost` also 404s it.
+- `Kroiko.Client.Tests/Hosting/` checks the config, and against the publish output that it sits at the
+  `wwwroot` root, is not precached, and that every precached asset is excluded from the fallback.
+- SWA applies no route rules to a fallback response
+  ([configuration](https://learn.microsoft.com/en-us/azure/static-web-apps/configuration#fallback-routes)), so a
+  deep link such as `/configuration` gets `index.html` without the `no-cache` header, while `/` and
+  `/index.html` get it. Step 4 checks it on those two. Once the service worker is installed it answers every
+  navigation itself, so only a first visit through a deep link depends on SWA's default caching.
 
 ### 2. `scripts/publish-pwa.ps1`
 
@@ -62,7 +73,9 @@ Deploy the phase 03 shell with `-Environment main`, then check it by hand on the
 - `curl -sI -H "Accept-Encoding: br" <url>/_framework/<a .wasm file>` → `Content-Encoding: br`
   and `Content-Type: application/wasm`;
 - `/manifest.webmanifest`, a `.dat` file and a font return the MIME types above;
-- `/configuration` and an unknown route both serve the app; a missing `/_framework/x.js` is a 404;
+- `/configuration` and an unknown route both serve the app; a missing `/_framework/x.js` is a 404, and so
+  is a missing `/_content/MudBlazor/x.css` (only the `*.{…}` extension exclude covers it; the tests match it
+  the way the SWA CLI emulator does, so this is its check against the real service);
 - `index.html` and `service-worker.js` carry `Cache-Control: no-cache`;
 - Edge installs it, and after one online visit it starts offline.
 
@@ -100,7 +113,7 @@ Write it from ADR-0007 §9, with two sections:
 
 ## Done criteria
 
-- [ ] `staticwebapp.config.json` is in the published output with the fallback excludes, `no-cache` headers and MIME types.
+- [x] `staticwebapp.config.json` is in the published output with the fallback excludes, `no-cache` headers and MIME types.
 - [ ] `scripts/publish-pwa.ps1` refuses dirty trees, wrong branches, unsynced `HEAD`, a missing or mismatched tag, and failing tests; it never prints the token.
 - [ ] The Static Web App exists; `app.kroiko.com` resolves to it over HTTPS.
 - [ ] The `main` staging deploy passes the step-4 checks (07a done).
