@@ -93,7 +93,8 @@ Build order: [docs/implementation/00-overview.md](docs/implementation/00-overvie
 **`Kroiko.Client.Tests`** (xUnit, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §5) tests the shipped
 artifact: its `PublishedApp` collection fixture runs `dotnet publish Kroiko.Client.Blazor -c Release` once per
 test run into a temp folder and serves that `wwwroot` from an in-process Kestrel (`StaticSiteHost`: loopback
-port, Blazor MIME types, precompressed `.br`/`.gz` negotiation, SPA fallback, no rewriting); the tests drive
+port, Blazor MIME types, precompressed `.br`/`.gz` negotiation, SPA fallback, no rewriting, and like SWA a 404
+for `staticwebapp.config.json`); the tests drive
 the Chromium pinned by `Microsoft.Playwright`, headless unless `HEADED=1`, one browser context per test. Browser
 tests are tagged `[Trait("Category", "E2E")]` and join `[Collection(E2ECollection.Name)]`; `OfflineShellTests`
 proves the offline start (service worker activated → offline reload: app bar, `/configuration`, Roboto, no failed
@@ -104,9 +105,21 @@ the golden files via `OrderFilesAssert.MatchGolden`, under the browser locales `
 different edge colour; it also checks that ICU data loaded, without which .NET ignores the browser's locale. The E2E
 tests compare with the golden files through `ConverterPage.MatchGolden`, which never records, even under `UPDATE_GOLDEN=1`:
 only the domain tests record the Server's output. The host and the missing-browser message have their own browser-free tests.
+`Hosting/` checks the Azure Static Web Apps config, `Kroiko.Client.Blazor/wwwroot/staticwebapp.config.json`
+(fallback excludes, `no-cache` routes, MIME types), and against the publish output that it is published at the
+root, that the service worker does not precache it, and that every precached asset is excluded from the fallback.
+`PublishScript/` runs the real `scripts/publish-pwa.ps1` (the manual deploy, phase 07) in `pwsh` against a
+throwaway git repository with a bare `origin`, with `dotnet` and `swa` replaced by logging stubs on `PATH`: the
+branch-model refusals, the exact `swa deploy` command, the dry run, and that the token is never printed.
 `Conversion/ConverterStateTests` unit-tests the Order rules through `ConverterState`'s public API with the
 confirmation and the device settings faked (`Conversion/Fakes.cs`, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §4), on the
 real domain and the shared fixtures; no browser, no `Category=E2E`.
+
+**Deploys** are manual: `scripts/publish-pwa.ps1 -Environment main|production [-DryRun]` refuses a dirty tree, a
+`HEAD` that is not `origin/main` (staging) or `origin/release` checked out as `release` with the pushed tag
+`v<Version>`, no older than any `vX.Y.Z` tag on `origin` (production), and failing tests; then publishes in
+Release and runs `swa deploy <temp>/wwwroot --env <main|production>`. The token comes only from
+`SWA_CLI_DEPLOYMENT_TOKEN`, and only the `swa` call sees it.
 
 **`ConverterState`** (`Kroiko.Client.Blazor/Conversion/`) is the app's one Order ([ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §4),
 registered scoped (once for a WASM app) by `AddConverterState()` in `Program.cs`. It depends on `IConfirmation` (a yes/no
@@ -122,6 +135,8 @@ drops that generation's output. `DownloadAllAsync` ("Изтегли всички
 edit meanwhile stops the downloads of the files it discarded. Failures of reading, the dialog, making files, generating, device storage and
 downloads are logged and raise `Error` with a Bulgarian message instead of throwing. `HasUnsavedWork` = a file is loaded and its current input
 has not been generated and saved (at least one download triggered; `MarkSaved()` for phase 05's folder save).
+`ClashNaming.FinalNames` (pure, for phase 05's folder save) gives each sanitised name ` (2)`, ` (3)`, … before its extension when the folder
+(ignoring case) or an earlier file of the same save already has it ([ADR-0003](docs/adr/0003-save-order-files-to-picked-folder.md) §4).
 
 **Conversion UI** (`Kroiko.Client.Blazor/Components/`, copied from the Server and stripped, [ADR-0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §1): components
 inherit `ConverterStateComponentBase` (injects `ConverterState`, re-renders on `Changed`). The Converter page (`/`) loads the device
@@ -259,5 +274,5 @@ Server's output. The manual acceptance check (`docs/release-checklist.md`) walks
 | Any input edit clears the generated files (Server: stale output kept) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §7 | `ConverterStateTests.Any_input_edit_clears_the_generated_files_and_the_saved_flag_without_asking` + Playwright `GenerationTests.An_edit_after_generating_discards_the_generated_files` |
 | Switching manufacturer or re-uploading asks before discarding files (Server: silent rebuild) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §5 | `ConverterStateTests.Switching_manufacturer_when_files_exist_asks_and_no_changes_nothing`, `…Uploading_again_when_files_exist_asks_and_no_changes_nothing` + Playwright `UploadPanelTests.Switching_manufacturer_or_uploading_again_asks_first_and_no_keeps_the_Order` |
 | Order persists across in-app navigation (Server: lost when leaving the Converter page) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §4 | `ConverterStateRegistrationTests.Every_page_of_the_app_gets_the_same_Order`, `ConverterStateTests.The_device_settings_are_loaded_once_so_returning_to_the_page_keeps_the_Order` |
-| Files are saved to a picked folder or downloaded; clashes get ` (n)`; names pass through `FileNameSanitizer` (Server: Blob Storage links) | [0003](docs/adr/0003-save-order-files-to-picked-folder.md) | `FileNameSanitizerTests` (every case), `ConverterStateTests.Downloading_all_triggers_every_generated_file_in_order_under_its_sanitised_name` + Playwright `GenerationTests.The_files_are_listed_and_downloaded_under_their_sanitised_names`; picker manual |
+| Files are saved to a picked folder or downloaded; clashes get ` (n)`; names pass through `FileNameSanitizer` (Server: Blob Storage links) | [0003](docs/adr/0003-save-order-files-to-picked-folder.md) | `FileNameSanitizerTests` (every case), `ClashNamingTests` (every case), `ConverterStateTests.Downloading_all_triggers_every_generated_file_in_order_under_its_sanitised_name` + Playwright `GenerationTests.The_files_are_listed_and_downloaded_under_their_sanitised_names`; picker manual |
 | Busy spinners always clear; errors show a snackbar (Server: generate spinner can hang) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §4 | `ConverterStateTests.A_failed_generation_raises_an_error_and_leaves_the_Order_as_it_was`, `…A_file_that_cannot_be_read_raises_an_error_and_leaves_the_Order_as_it_was`, `…A_download_that_cannot_start_raises_an_error_and_is_not_saved` |

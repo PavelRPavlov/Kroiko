@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Headers;
+using Kroiko.Client.Tests.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -18,11 +19,13 @@ namespace Kroiko.Client.Tests.E2E;
 /// Serves a published <c>wwwroot</c> the way a static host (Azure Static Web Apps) would, from an in-process
 /// Kestrel on a free loopback port (ADR-0007 §5). <c>http://127.0.0.1</c> is a secure context, so the service
 /// worker registers without a certificate. The files are served byte for byte (no rewriting): precompressed
-/// <c>.br</c>/<c>.gz</c> siblings are negotiated by <c>Accept-Encoding</c>, and app routes without a file
-/// extension fall back to <c>index.html</c>.
+/// <c>.br</c>/<c>.gz</c> siblings are negotiated by <c>Accept-Encoding</c>, app routes without a file
+/// extension fall back to <c>index.html</c>, and <c>staticwebapp.config.json</c> is a 404, as on SWA.
 /// </summary>
 internal sealed class StaticSiteHost : IAsyncDisposable
 {
+    private const string ConfigFilePath = "/" + StaticWebAppConfig.FileName;
+
     // Preferred first, as a static host would.
     private static readonly (string Encoding, string Extension)[] Precompressed = [("br", ".br"), ("gzip", ".gz")];
 
@@ -57,6 +60,13 @@ internal sealed class StaticSiteHost : IAsyncDisposable
 
         app.Use((context, next) =>
         {
+            // SWA reads its config file but never serves it (Azure/static-web-apps#259, #490).
+            if (context.Request.Path.Equals(ConfigFilePath, StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.StatusCode = StatusCodes.Status404NotFound;
+                return Task.CompletedTask;
+            }
+
             NegotiatePrecompressed(context, files, contentTypes);
             return next(context);
         });
