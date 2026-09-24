@@ -9,8 +9,8 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddMudServices();
-// AddConverterState() follows once IConfirmation has its dialog (phase 04 step 3): the host validates the
-// container in Development, so ConverterState cannot be registered before both of its interfaces.
+builder.Services.AddConfirmationDialog();
 builder.Services.AddDeviceSettingsStore();
+builder.Services.AddConverterState();
 
 await builder.Build().RunAsync();
