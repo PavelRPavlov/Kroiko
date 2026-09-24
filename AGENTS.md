@@ -4,7 +4,7 @@
 > **Domain & architecture context:** [CONTEXT.md](CONTEXT.md).
 > **Architecture decisions (ADRs):** [docs/adr/](docs/adr/).
 > **Build plan (PWA):** [docs/implementation/00-overview.md](docs/implementation/00-overview.md).
-> **Issue tracker (agents, incl. /wayfinder):** [docs/agents/issue-tracker.md](docs/agents/issue-tracker.md) — GitHub Issues + Project 3, this repo only.
+> **Issue tracker (agents, incl. /wayfinder):** [docs/agents/issue-tracker.md](docs/agents/issue-tracker.md) — GitHub Issues only (no project board), this repo only.
 
 ---
 
