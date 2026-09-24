@@ -113,7 +113,7 @@ so the `.cut_mt` bodies are ASCII plus `╪` (UTF-8, no BOM) and Cyrillic appear
 `Тест ООД.cut_mt` file name. The `.cut_mt` golden files were recorded on Windows and carry CRLF
 (`AppendLine`), so the five MegaTrading cases failed on Linux/macOS until the line ending was pinned.
 It is now pinned to CRLF on every host ([ADR-0009](../adr/0009-cut-mt-line-endings-crlf.md), step 02.5b),
-so they pass on any OS with the golden files unchanged.
+so they no longer depend on the OS that runs them; the golden files are unchanged.
 
 ### 4. The culture test (recorded, expected to fail today)
 

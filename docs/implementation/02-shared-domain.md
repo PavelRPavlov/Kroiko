@@ -19,7 +19,9 @@ project, and LargeXlsx is on 2.x.
 - The golden tests' `RunPipeline` helper is the only test code that follows the refactor. Its
   **body** changes as calls move into the domain, its signature does not.
 - Server behaviour stays as it is today, including its known quirks: bad lines → empty list and a
-  log entry; no `Check`; the >6-material truncation.
+  log entry; no `Check`; the >6-material truncation. Exception: the `.cut_mt` line ending is
+  CRLF on every host since 02.5b ([ADR-0009](../adr/0009-cut-mt-line-endings-crlf.md)), so a Linux-hosted
+  Server's `.cut_mt` changes from LF to CRLF.
 
 ## Steps
 
@@ -154,7 +156,7 @@ keeps only the view-model conversions. `RunPipelineAsync` is now `PolyboardParse
 `SupportedCompanies` key and every dropdown branch resolves a format, and that Kuklensko resolves to the Suliver
 format with its own email. The golden files are unchanged. **02.5b:** `AppendRow` appends `"\r\n"` instead of
 calling `AppendLine`, so the `.cut_mt` is CRLF on every host instead of the host's `Environment.NewLine` (LF on
-Linux and in WASM), and the CRLF golden files pass on any OS
+Linux and in WASM), and the CRLF golden files no longer depend on the OS that runs the tests
 ([ADR-0009](../adr/0009-cut-mt-line-endings-crlf.md)); an `OrderFormatsTests` case asserts CRLF explicitly.
 **Still to do:** the manual smoke check of the rewired
 UI against the golden files, once per manufacturer.

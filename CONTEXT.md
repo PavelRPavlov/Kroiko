@@ -154,7 +154,7 @@ These were found in a code review; several are naturally fixed by the migration.
   Hosts and browsers may be `bg-BG` (comma decimal) — ambient culture corrupts both
   the Polyboard parse and the `.cut_mt` output.
 - **`.cut_mt` line endings are CRLF** on every host ([ADR-0009](docs/adr/0009-cut-mt-line-endings-crlf.md)) —
-  never `AppendLine` / `Environment.NewLine` in generated order files.
+  never `AppendLine` / `Environment.NewLine` in the `.cut_mt`.
 - **`Kroiko.Domain` must stay browser-safe** ([ADR-0004](docs/adr/0004-shared-browser-safe-conversion-domain.md)) — no server-only APIs
   (no direct EF, no `System.Net` server calls, no file-system assumptions).
 - **Secrets never ship to the browser.** The PWA has none; DB/email/blob credentials live only in the Server.

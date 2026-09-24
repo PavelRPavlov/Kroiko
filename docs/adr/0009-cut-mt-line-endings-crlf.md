@@ -38,7 +38,8 @@ The golden files do not change: they are already CRLF.
 ## Consequences
 
 - ✅ The `.cut_mt` is the same bytes wherever it is generated, so the PWA and the Server agree and the
-  golden files are OS-independent: the MegaTrading golden cases pass on Linux/macOS and in a Linux CI.
+  golden files are OS-independent: the MegaTrading golden cases no longer depend on the OS that runs
+  them (Linux/macOS, a future Linux CI).
 - ✅ Phase 04's browser parity scenario can compare the `.cut_mt` bytes with the golden files as they are.
 - ⚠️ **If production runs on Linux, the Server's `.cut_mt` changes from LF to CRLF** on its next deploy
   with the shared domain. Nothing else in the file changes. This is accepted: CRLF is what a

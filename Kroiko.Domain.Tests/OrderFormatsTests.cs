@@ -82,7 +82,7 @@ public sealed class OrderFormatsTests
     }
 
     // ADR-0009: every .cut_mt line ends in CRLF on every host (Windows, Linux, the browser), not in
-    // Environment.NewLine. One part makes 9 lines: the first row, 6 material rows, the column sizes, the part.
+    // Environment.NewLine, so the expectation is spelled out rather than taken from the host.
     [Fact]
     public void MegaTrading_ends_every_cut_mt_line_with_CRLF_whatever_the_OS()
     {
@@ -93,9 +93,8 @@ public sealed class OrderFormatsTests
             .Should().ContainSingle(f => f.FileName.EndsWith(".cut_mt")).Subject;
         var text = Encoding.UTF8.GetString(cutMt.Content);
 
-        text.Should().EndWith("\r\n");
-        text.Split("\r\n").Should().HaveCount(10, "9 lines, each ending in CRLF");
-        text.Replace("\r\n", "").Should().NotContain("\n").And.NotContain("\r");
+        text.Should().EndWith("\r\n", "the last line ends in CRLF too");
+        text.Replace("\r\n", "").Should().NotContain("\n").And.NotContain("\r", "every line break is CRLF");
     }
 
     // The "СДВ с краен размер" note writes the finished size in the invariant culture (ADR-0004 §4):

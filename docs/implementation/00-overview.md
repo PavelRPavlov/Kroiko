@@ -74,6 +74,7 @@ flowchart LR
 - **Intended differences.** A new PWA-vs-Server difference needs an ADR, a row in
   [CONTEXT.md §9](../../CONTEXT.md) and a test, all in the same PR (ADR-0007 §7).
 - **Invariants.** `CultureInfo.InvariantCulture` for every number↔string conversion in the domain;
+  the `.cut_mt` ends every line in CRLF on every host ([ADR-0009](../adr/0009-cut-mt-line-endings-crlf.md));
   `Kroiko.Domain` stays browser-safe; nothing secret in the client; MudBlazor only (never Syncfusion
   or Radzen); the Bulgarian UI text is kept as the Server has it.
 - **The Server is maintained, not developed.** Change `ATAFurniture.Server` only where phase 02

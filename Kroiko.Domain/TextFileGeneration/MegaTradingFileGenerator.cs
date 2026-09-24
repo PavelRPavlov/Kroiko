@@ -10,6 +10,11 @@ internal static class MegaTradingFileGenerator {
 
     // this is a special separator symbol required by the integration destination
     private const string S = "\u256a";
+
+    // Every .cut_mt line ends in CRLF on every host: Windows, Linux or the browser (ADR-0009).
+    // Never AppendLine / Environment.NewLine, which is LF on Linux and in WASM.
+    private const string LineEnding = "\r\n";
+
     public static List<FileSaveContext> CreateTextBasedFile(ContactInfo contactInfo, IEnumerable<KroikoFile> files)
     {
         var materials = files.SelectMany(f => f.Details.Cast<MegaTradingDetail>())
@@ -69,9 +74,6 @@ internal static class MegaTradingFileGenerator {
         AppendRow(builder, $"{S}{S}True");
     }
 
-    // Every .cut_mt line ends in CRLF on every host, Windows, Linux or the browser (ADR-0009).
-    private const string LineEnding = "\r\n";
-
-    // The one place a .cut_mt line ends. Never AppendLine / Environment.NewLine: that is LF on Linux and in WASM.
+    // The one place a .cut_mt line ends.
     private static void AppendRow(StringBuilder builder, string row) => builder.Append(row).Append(LineEnding);
 }
