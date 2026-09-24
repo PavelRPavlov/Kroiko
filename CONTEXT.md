@@ -97,7 +97,11 @@ port, Blazor MIME types, precompressed `.br`/`.gz` negotiation, SPA fallback, no
 the Chromium pinned by `Microsoft.Playwright`, headless unless `HEADED=1`, one browser context per test. Browser
 tests are tagged `[Trait("Category", "E2E")]` and join `[Collection(E2ECollection.Name)]`; `OfflineShellTests`
 proves the offline start (service worker activated → offline reload: app bar, `/configuration`, Roboto, no failed
-and no cross-origin requests). The host and the missing-browser message have their own browser-free tests.
+and no cross-origin requests) and a Lonira conversion after it that matches the golden files. `ParityTests` proves parity of
+the trimmed build: for each manufacturer (Lonira `wardrobes-4-materials` and MegaTrading `bathroom-4-materials`, 11 fields;
+Suliver `cabinet-23-field`, 23 fields) upload → the golden helper's contacts → generate → "Изтегли всички" → the downloads match
+the golden files via `OrderFilesAssert.MatchGolden`, under the browser locales `bg-BG` and `en-US`, plus Suliver with a
+different edge colour. The host and the missing-browser message have their own browser-free tests.
 `Conversion/ConverterStateTests` unit-tests the Order rules through `ConverterState`'s public API with the
 confirmation and the device settings faked (`Conversion/Fakes.cs`, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §4), on the
 real domain and the shared fixtures; no browser, no `Category=E2E`.
@@ -134,8 +138,8 @@ contact fields are not copied: once there are files, `ContactInfoComponent` ("К
 credits and Blob Storage) has "Генерирай бланки за поръчка", enabled by `CanGenerate`, a spinner while generating, and then the generated
 files listed under their sanitised names with "Изтегли всички". `E2E/UploadPanelTests` covers the alert, the discard confirmation, the Lonira default and the remembered manufacturer;
 `E2E/ConversionTabsTests` the three tabs, the rename and invariant numbers under `bg-BG`; `E2E/GenerationTests` the contact guard,
-the `Check` guard, an edit discarding the generated files, sanitised download names and a Lonira order downloaded under `bg-BG` that
-matches the golden files. `Conversion/FileDownloaderRegistrationTests` pins the `files.js` interop with a faked JS runtime.
+the `Check` guard, an edit discarding the generated files, sanitised download names, a Lonira order downloaded under `bg-BG` that
+matches the golden files, and the contacts and manufacturer pre-filled after a reload (device storage). `Conversion/FileDownloaderRegistrationTests` pins the `files.js` interop with a faked JS runtime.
 
 **Device settings** (`LocalStorageDeviceSettingsStore`, registered by `AddDeviceSettingsStore()`) are one JSON document
 in `localStorage` under `kroiko.deviceSettings`: `{"schemaVersion":1,"companyName":…,"mobileNumber":…,"manufacturer":"Lonira"}`,
@@ -242,7 +246,7 @@ Server's output. The manual acceptance check (`docs/release-checklist.md`) walks
 | No login, user accounts, credits or email; nothing leaves the device | Map scope | — (absent features) |
 | A file with bad lines is rejected and the first 10 bad lines are listed (Server: generic alert, nothing loaded) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §2 | `ConverterStateTests.A_file_with_bad_lines_loads_nothing_and_lists_the_first_ten` + Playwright `UploadPanelTests.A_file_with_bad_lines_shows_the_first_ten_and_links_to_the_configuration` |
 | MegaTrading orders with more than 6 materials cannot be generated (Server: `.cut_mt` header truncated) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §3 | `Check` domain test + `ConverterStateTests.More_than_six_MegaTrading_materials_is_a_problem_that_cannot_generate` + Playwright `ConversionTabsTests.MegaTrading_names_too_many_materials_and_the_rename_can_merge_them` |
-| Both contact fields must be filled before generating; last values and manufacturer remembered per device | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §6 | `ConverterStateTests.An_empty_contact_field_cannot_generate`, `…Generating_remembers_the_contacts_and_the_manufacturer_on_the_device` + Playwright `GenerationTests.Generating_needs_both_contacts_and_downloading_all_saves_the_order_files`, "device storage" |
+| Both contact fields must be filled before generating; last values and manufacturer remembered per device | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §6 | `ConverterStateTests.An_empty_contact_field_cannot_generate`, `…Generating_remembers_the_contacts_and_the_manufacturer_on_the_device` + Playwright `GenerationTests.Generating_needs_both_contacts_and_downloading_all_saves_the_order_files`, `…After_generating_a_reload_pre_fills_the_contacts_and_the_manufacturer` |
 | The MegaTrading material rename matches each part by its material before the rename, so renames never chain and two materials can swap (Server: checks each later row against the already-renamed material, so A→B then B→C renames A to C, and a swap merges both into one) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §3 ("rewrites `Material` on the matching details") | `ConverterStateTests.A_rename_matches_the_names_before_it_so_two_materials_can_swap` |
 | Any input edit clears the generated files (Server: stale output kept) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §7 | `ConverterStateTests.Any_input_edit_clears_the_generated_files_and_the_saved_flag_without_asking` + Playwright `GenerationTests.An_edit_after_generating_discards_the_generated_files` |
 | Switching manufacturer or re-uploading asks before discarding files (Server: silent rebuild) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §5 | `ConverterStateTests.Switching_manufacturer_when_files_exist_asks_and_no_changes_nothing`, `…Uploading_again_when_files_exist_asks_and_no_changes_nothing` + Playwright `UploadPanelTests.Switching_manufacturer_or_uploading_again_asks_first_and_no_keeps_the_Order` |
