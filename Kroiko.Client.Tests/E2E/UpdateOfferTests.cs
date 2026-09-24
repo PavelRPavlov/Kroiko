@@ -90,7 +90,7 @@ public sealed class UpdateOfferTests(PublishedApp app)
         await snackbar.GetByRole(AriaRole.Button, new() { Name = "По-късно" }).ClickAsync();
 
         await Expect(snackbar).ToHaveCountAsync(0);
-        var about = await OpenAboutAsync(page);
+        var about = await page.OpenAboutAsync();
         await Expect(about).ToContainTextAsync("Нова версия е налична");
         await Expect(about.GetByRole(AriaRole.Button, new() { Name = "Провери за обновления" })).ToHaveCountAsync(0);
         await about.GetByRole(AriaRole.Button, new() { Name = "Презареди" }).ClickAsync();
@@ -104,7 +104,7 @@ public sealed class UpdateOfferTests(PublishedApp app)
     {
         var (context, page, console) = await OpenAsync();
         await using var _ = context;
-        var about = await OpenAboutAsync(page);
+        var about = await page.OpenAboutAsync();
         var check = about.GetByRole(AriaRole.Button, new() { Name = "Провери за обновления" });
         var report = about.GetByRole(AriaRole.Status);
 
@@ -147,14 +147,6 @@ public sealed class UpdateOfferTests(PublishedApp app)
 
     private static ILocator UpdateSnackbar(IPage page) =>
         page.Locator(".mud-snackbar").Filter(new() { HasText = "Нова версия е налична" });
-
-    private static async Task<ILocator> OpenAboutAsync(IPage page)
-    {
-        await page.Locator("header.mud-appbar").GetByRole(AriaRole.Button, new() { Name = "Относно" }).ClickAsync();
-        var about = page.GetByRole(AriaRole.Dialog);
-        await Expect(about).ToContainTextAsync("Kroiko");
-        return about;
-    }
 
     // Waits for the count to be reached, then checks it was not exceeded (0: nothing was applied by now).
     private static async Task ExpectAppliedAsync(IPage page, int times)

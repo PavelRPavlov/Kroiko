@@ -67,11 +67,10 @@
         UpdateOffer.Error -= OnUpdateOfferError;
     }
 
-    // The offer also changes from a JS callback, so through InvokeAsync; event handlers, hence async void.
-    private async void OnUpdateOfferChanged() => await InvokeAsync(ShowOrHideUpdateSnackbar);
+    // WebAssembly runs on one thread, JS callbacks included, so the layout can show snackbars directly.
+    private void OnUpdateOfferChanged() => ShowOrHideUpdateSnackbar();
 
-    private async void OnUpdateOfferError(string message) =>
-        await InvokeAsync(() => Snackbar.Add(message, Severity.Error));
+    private void OnUpdateOfferError(string message) => Snackbar.Add(message, Severity.Error);
 
     // A persistent snackbar (ADR-0002 §1) until "По-късно": no timeout, no close icon; its buttons are its only actions.
     private void ShowOrHideUpdateSnackbar()

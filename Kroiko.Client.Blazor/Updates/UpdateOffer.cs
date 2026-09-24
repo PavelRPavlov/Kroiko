@@ -35,8 +35,8 @@ public sealed class UpdateOffer : IDisposable
     }
 
     /// <summary>
-    /// Something about the offer changed; re-render. Raised from a JS callback too, so a component handles it through
-    /// <c>InvokeAsync</c>.
+    /// Something about the offer changed; re-render. Also raised from a JS callback, which WebAssembly runs on its one
+    /// thread, so a component can re-render directly (as <c>ConverterStateComponentBase</c> does).
     /// </summary>
     public event Action? Changed;
 

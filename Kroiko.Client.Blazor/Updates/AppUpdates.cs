@@ -22,8 +22,8 @@ public sealed class AppUpdates(IJSRuntime js, ILogger<AppUpdates> logger) : IAsy
     public bool IsUpdateReady { get; private set; }
 
     /// <summary>
-    /// <see cref="IsUpdateReady"/> turned true. Raised once, from a JS callback, so a component handles it through
-    /// <c>InvokeAsync</c>.
+    /// <see cref="IsUpdateReady"/> turned true. Raised once, from a JS callback, which WebAssembly runs on its one thread;
+    /// the app hears it through <see cref="UpdateOffer.Changed"/>.
     /// </summary>
     public event Action? UpdateReady;
 

@@ -21,9 +21,8 @@ public sealed partial class AboutDialogTests(PublishedApp app)
         var page = await context.NewPageAsync();
         await page.GotoAsync("/");
 
-        await page.Locator("header.mud-appbar").GetByRole(AriaRole.Button, new() { Name = "Относно" }).ClickAsync();
+        var about = await page.OpenAboutAsync();
 
-        var about = page.GetByRole(AriaRole.Dialog);
         await Expect(about).ToContainTextAsync("Конвертор на списъци за разкрой от Polyboard към бланки за поръчка.");
         // Built from the git repo, Source Link appends the commit, so the sha is there; the published app and the one
         // these tests reference are built from the same commit.
@@ -39,8 +38,7 @@ public sealed partial class AboutDialogTests(PublishedApp app)
         await page.GotoAsync("/");
         await page.WaitForOfflineCacheAsync();
 
-        await page.Locator("header.mud-appbar").GetByRole(AriaRole.Button, new() { Name = "Относно" }).ClickAsync();
-        var about = page.GetByRole(AriaRole.Dialog);
+        var about = await page.OpenAboutAsync();
         await about.GetByRole(AriaRole.Button, new() { Name = "Провери за обновления" }).ClickAsync();
 
         // docs/implementation/06-updates-and-about.md, step 3; the other outcomes: E2E/UpdateOfferTests.

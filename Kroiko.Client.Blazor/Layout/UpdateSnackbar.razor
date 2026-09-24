@@ -16,6 +16,6 @@
 
     public void Dispose() => Offer.Changed -= OnOfferChanged;
 
-    // The offer also changes from a JS callback, so through InvokeAsync; an event handler, hence async void.
-    private async void OnOfferChanged() => await InvokeAsync(StateHasChanged);
+    // WebAssembly runs on one thread, JS callbacks included, so the component can re-render directly.
+    private void OnOfferChanged() => StateHasChanged();
 }

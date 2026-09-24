@@ -100,6 +100,7 @@ public sealed class UpdateOfferTests : IAsyncDisposable
         _js.Module.Applied.Should().Be(0);
         _order.IsFileLoaded.Should().BeTrue();
         _offer.ShowsSnackbar.Should().BeTrue();
+        _offer.IsReloading.Should().BeFalse();
     }
 
     [Fact]
