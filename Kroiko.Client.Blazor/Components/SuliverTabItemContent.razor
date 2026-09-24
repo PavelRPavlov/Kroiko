@@ -1,0 +1,59 @@
+@using System.Globalization
+@using Kroiko.Domain.TemplateBuilding
+@inherits ConverterStateComponentBase
+
+@* The Server's Suliver tab without its contact fields (one contact section is above the tabs, ADR-0005 §6). The
+   grid edits the file's SuliverDetails in place; editable as on the Server: the note, and "Кантиране с друг цвят"
+   when a part has a different edge colour. *@
+@if (_hasDifferentEdgeColor)
+{
+    <MudGrid Class="pa-3">
+        <MudItem xs="12" sm="6">
+            <MudTextField T="string" @bind-Value="ConverterState.DifferentEdgeColor" Label="Кантиране с друг цвят" />
+        </MudItem>
+    </MudGrid>
+}
+
+@* Numbers in the invariant culture, as in the order files, whatever the browser's culture. *@
+<MudDataGrid T="SuliverDetail" Items="@_details" ReadOnly="false" Culture="CultureInfo.InvariantCulture"
+             EditMode="DataGridEditMode.Cell" EditTrigger="DataGridEditTrigger.OnRowClick"
+             CommittedItemChanged="OnDetailCommitted"
+             Bordered="true" Dense="true" Class="pa-3">
+    <Columns>
+        <PropertyColumn Property="x => x.Material" Title="Материал" Editable="false" />
+        <PropertyColumn Property="x => x.MaterialThickness" Title="Деб. (мм)" Editable="false" />
+        <PropertyColumn Property="x => x.IsGrainDirectionReversed" Title="Рот*" Editable="false" />
+        <PropertyColumn Property="x => x.Height" Title="Дължина (мм)" Editable="false" />
+        <PropertyColumn Property="x => x.Width" Title="Ширина (мм)" Editable="false" />
+        <PropertyColumn Property="x => x.Quantity" Title="Брой" Editable="false" />
+        <PropertyColumn Property="x => x.Cabinet" Title="Име Дет." Editable="false" />
+        <PropertyColumn Property="x => x.LongEdge" Title="Дъл." Editable="false" />
+        <PropertyColumn Property="x => x.LongEdge2" Title="Дъл.2" Editable="false" />
+        <PropertyColumn Property="x => x.ShortEdge" Title="Шир." Editable="false" />
+        <PropertyColumn Property="x => x.ShortEdge2" Title="Шир.2" Editable="false" />
+        <PropertyColumn Property="x => x.Note" Title="Забележка" Editable="true" Required="false" />
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="SuliverDetail" PageSizeOptions="new[] { 25, 50, 100 }" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    [Parameter, EditorRequired] public KroikoFile File { get; set; } = default!;
+
+    private KroikoFile? _shownFile;
+    private List<SuliverDetail> _details = [];
+    private bool _hasDifferentEdgeColor;
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(File, _shownFile))
+        {
+            _shownFile = File;
+            _details = File.Details.Cast<SuliverDetail>().ToList();
+            _hasDifferentEdgeColor = _details.Any(d => d.IsEdgeColorDifferent);
+        }
+    }
+
+    private void OnDetailCommitted(SuliverDetail detail) => ConverterState.NotifyInputEdited();
+}

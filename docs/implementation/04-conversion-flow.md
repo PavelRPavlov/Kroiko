@@ -102,7 +102,7 @@ Add to `Kroiko.Client.Tests` (ADR-0007 §5):
 - [x] `ConverterState` holds the Order app-wide; every rule in step 1 has a unit test.
 - [x] Device settings carry `schemaVersion`, with forward migrations and newer-schema fallback, and are unit-tested.
 - [ ] Upload, picker, tabs and the contact section are copied and stripped from the Server; no auth, credits, Blob Storage or email code remains.
-- [ ] Grids edit the domain details directly; `MegaTradingViewModel` is not in the client.
+- [x] Grids edit the domain details directly; `MegaTradingViewModel` is not in the client.
 - [ ] "Генерирай бланки за поръчка" is disabled on empty contacts or `Check` problems.
 - [ ] "Изтегли всички" downloads sanitised file names and sets the saved flag.
 - [ ] The three manufacturer E2E scenarios match the golden files under both `bg-BG` and `en-US`.

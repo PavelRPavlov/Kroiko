@@ -1,8 +1,7 @@
-using System.Collections.Concurrent;
 using FluentAssertions;
-using Kroiko.Testing;
 using Microsoft.Playwright;
 using Xunit;
+using static Kroiko.Client.Tests.E2E.ConverterPage;
 using static Microsoft.Playwright.Assertions;
 
 namespace Kroiko.Client.Tests.E2E;
@@ -96,27 +95,5 @@ public sealed class UploadPanelTests(PublishedApp app)
         await Expect(page.Locator(".mud-select").First.Locator("input"))
             .ToHaveValueAsync("Съливер, гр.Пловдив (бул.Васил Априлов)");
         console.Should().BeEmpty();
-    }
-
-    private static Task UploadAsync(IPage page, string fixture) =>
-        page.Locator("input[type=file]").SetInputFilesAsync(TestData.Polyboard(fixture));
-
-    private static async Task PickAsync(IPage page, string manufacturer)
-    {
-        await page.Locator(".mud-select").First.ClickAsync();
-        await page.GetByRole(AriaRole.Option, new() { Name = manufacturer }).ClickAsync();
-    }
-
-    // Errors the app logs to the console, e.g. an unhandled exception in a component.
-    private static ConcurrentQueue<string> ConsoleErrors(IPage page)
-    {
-        var errors = new ConcurrentQueue<string>();
-        page.Console += (_, message) =>
-        {
-            if (message.Type == "error")
-                errors.Enqueue(message.Text);
-        };
-        page.PageError += (_, error) => errors.Enqueue(error);
-        return errors;
     }
 }
