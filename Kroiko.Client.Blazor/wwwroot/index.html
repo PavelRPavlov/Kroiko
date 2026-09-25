@@ -14,6 +14,20 @@
     <link href="manifest.webmanifest" rel="manifest" />
     <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+    <script>
+        {
+            // Before anything paints, the theme the app will start in, so the loading screen is in it too (ADR-0014 §3).
+            // The rules of LocalStorageThemeStore: "light" and "dark" are picks, anything else follows the system.
+            let mode = null;
+            try {
+                mode = localStorage.getItem('kroiko.theme');
+            } catch {
+                // Storage can be disabled or blocked; follow the system.
+            }
+            const dark = mode === 'dark' || (mode !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        }
+    </script>
     <script type="importmap"></script>
 </head>
 

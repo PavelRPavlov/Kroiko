@@ -24,6 +24,7 @@ See [CONTEXT.md](CONTEXT.md) for the domain model and the ubiquitous language.
 
 ```
 ATATextConverter/
+├── .github/workflows/        ← deploy-pwa.yml (production deploy on a pushed vX.Y.Z tag, ADR-0013); the Server's workflows
 ├── AGENTS.md                 ← you are here
 ├── CONTEXT.md                ← domain model + architecture + decision log
 ├── docs/
@@ -127,6 +128,6 @@ The offline PWA (`Kroiko.Client.Blazor`) is built phase by phase from
 source of truth (`Not started` → `In progress` → `Done`). To pick up work: read `00-overview.md`,
 take the next step of a guide that is not **Done** and whose dependencies are **Done**, and do
 **one step per PR**.
-Parallel lanes: `01 → 02` alongside `03`; then `05` alongside `06`; `07a` once `03` is done.
+Parallel lanes: `01 → 02` alongside `03`; then `05` alongside `06`; `07a` and `08` once `03` is done.
 `ATAFurniture.Server` is **maintained, not developed**: change it only where phase 02 rewires it
 onto the domain.

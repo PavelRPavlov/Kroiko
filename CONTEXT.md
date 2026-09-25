@@ -87,7 +87,7 @@ ATAFurniture.Server (unchanged behaviour) ──► the same Kroiko.Domain
 **Projects:** `Kroiko.Client.Blazor` (PWA), `Kroiko.Domain` (shared, **must stay
 browser-safe**), `ATAFurniture.Server` (maintained), and the test projects `Kroiko.Testing`,
 `Kroiko.Domain.Tests`, `Kroiko.Client.Tests`, `ATAFurniture.Server.Tests`
-([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0012](docs/adr/README.md).
+([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0013](docs/adr/README.md).
 Build order: [docs/implementation/00-overview.md](docs/implementation/00-overview.md).
 
 **`Kroiko.Client.Tests`** (xUnit, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §5) tests the shipped
@@ -109,7 +109,7 @@ only the domain tests record the Server's output. The host and the missing-brows
 app routes → `/index.html`, files keep their path (so a missing one is a 404), `br/` only for a viewer that accepts
 `br`, nothing but the URI changed, and `www.<domain>` → a `301` to `https://<domain><path>` (ADR-0011); and, against the
 publish output, that every published and precached file keeps its path through it.
-`PublishScript/` runs the real `scripts/publish-pwa.ps1` (the manual deploy, phase 07) in `pwsh` against a
+`PublishScript/` runs the real `scripts/publish-pwa.ps1` (the deploy script, phase 07) in `pwsh` against a
 throwaway git repository with a bare `origin`, with `dotnet` and `aws` replaced by logging stubs on `PATH`: the
 branch-model refusals, the `raw/` and `br/` trees with each object's metadata, the function update, a switch that
 changes only the origin path, failures before and after the switch, the dry run, and `--profile` on every `aws` call.
@@ -117,14 +117,17 @@ changes only the origin path, failures before and after the switch, the dry run,
 confirmation and the device settings faked (`Conversion/Fakes.cs`, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §4), on the
 real domain and the shared fixtures; no browser, no `Category=E2E`.
 
-**Deploys** are manual: `scripts/publish-pwa.ps1 -Environment main|production [-DryRun]` refuses a dirty tree, a
+**Deploys** all run `scripts/publish-pwa.ps1 -Environment main|production [-DryRun]`, which refuses a dirty tree, a
 `HEAD` that is not `origin/main` (staging) or `origin/release` checked out as `release` with the pushed tag
 `v<Version>`, no older than any `vX.Y.Z` tag on `origin` (production), and failing tests; then publishes in
 Release, uploads `wwwroot` to a new S3 release folder `<environment>/<release>/` (a `raw/` and a `br/` tree, with
 `Content-Type` and `Cache-Control` on every object), brings the environment's CloudFront Function up to the committed
 code, switches the distribution's origin path to the folder and invalidates `/*` (ADR-0010). The IDs are in
-`hosting/aws/hosting.json`; the credentials only in the AWS CLI profile `kroiko-pwa`. [`docs/release-checklist.md`](docs/release-checklist.md)
-has the release procedure (bump, merge `main` into `release`, tag, `-DryRun`, deploy), the manual checks for every
+`hosting/aws/hosting.json`; the credentials only in the AWS CLI profile `kroiko-pwa`. Production deploys itself on a
+pushed `vX.Y.Z` tag: `.github/workflows/deploy-pwa.yml` checks the tag's form, checks out `release` and runs the script
+on a Windows runner, writing that profile from the GitHub environment `pwa-production`'s secrets (ADR-0013); by hand,
+the script deploys staging and is the fallback. [`docs/release-checklist.md`](docs/release-checklist.md)
+has the release procedure (bump, merge `main` into `release`, push the tag, watch the run), the manual checks for every
 production release on the installed Edge PWA, and the go-live checks (ADR-0007 §9). Each release's run of them is
 recorded in a "Release vX.Y.Z sign-off" issue.
 
@@ -190,8 +193,19 @@ the manufacturer by `SupportedCompany.Name` (an unknown name loads as none). Loa
 untouched until the operator edits the settings (committed by the next successful generation, which saves them) ([ADR-0002](docs/adr/0002-pwa-updates-reload-prompt.md) §7–8). Only the two
 `localStorage` calls are interop (`IBrowserStorage`); `LocalStorageDeviceSettingsStoreTests` covers the rest.
 
+**Theme** ([ADR-0014](docs/adr/0014-system-light-dark-theme.md)): a `ThemeMode` of „Системна“ (the default, following
+`prefers-color-scheme` live), „Светла“ or „Тъмна“, picked from the app bar's „Тема“ menu (`Layout/ThemeMenu`).
+`Theme/LocalStorageThemeStore` (registered by `AddTheme()`) keeps it in `localStorage` under `kroiko.theme` as `system`,
+`light` or `dark`, apart from the device settings, and saves a pick at once. Loading never throws (anything unreadable
+is „Системна“), and a failed save is logged. An inline script in `index.html`'s `<head>` reads the same key by the same
+rules and sets `<html data-theme>` before anything paints, so `app.css` shows the loading screen in the right theme.
+`MainLayout` resolves the mode before it renders `MudThemeProvider` and the layout, observes the device only while the
+mode is „Системна“, and keeps `data-theme` in step. The palettes are MudBlazor's defaults (`Theme/AppTheme`).
+`Theme/LocalStorageThemeStoreTests` covers the store; `E2E/ThemeTests` the picker, the live follow and the start-up in
+the published app.
+
 **Version** ([ADR-0002](docs/adr/0002-pwa-updates-reload-prompt.md) §5–6): the hand-maintained SemVer `<Version>` in
-`Kroiko.Client.Blazor.csproj` (`0.1.0` until go-live, then `1.0.0`; bumped in the PR that goes to `release`, and read as
+`Kroiko.Client.Blazor.csproj` (`0.x` until go-live, then `1.0.0`; bumped in the PR that goes to `release`, and read as
 `X.Y.Z` by `scripts/publish-pwa.ps1`). The SDK's Source Link appends `+<commit sha>` to the assembly's informational version;
 `Updates/AppVersion` formats it as `v0.1.0 (a1b2c3d)` (the first 7 characters of the sha, or just `v0.1.0` without one), and
 only the About dialog shows it. `Updates/AppVersionTests` covers the formatting; `E2E/AboutDialogTests` the published app's About.
@@ -331,3 +345,4 @@ Server's output. The manual acceptance check (`docs/release-checklist.md`) walks
 | Order persists across in-app navigation (Server: lost when leaving the Converter page) | [0005](docs/adr/0005-copy-conversion-ui-into-pwa.md) §4 | `ConverterStateRegistrationTests.Every_page_of_the_app_gets_the_same_Order`, `ConverterStateTests.The_device_settings_are_loaded_once_so_returning_to_the_page_keeps_the_Order` |
 | Files are saved to a picked folder or downloaded; clashes get ` (n)`; names pass through `FileNameSanitizer` (Server: Blob Storage links) | [0003](docs/adr/0003-save-order-files-to-picked-folder.md) | `FileNameSanitizerTests` (every case), `ClashNamingTests` (every case), `ConverterStateTests.Downloading_all_triggers_every_generated_file_in_order_under_its_sanitised_name`, `…Saving_to_a_folder_never_overwrites_and_confirms_the_numbered_names` + Playwright `GenerationTests.The_files_are_listed_and_downloaded_under_their_sanitised_names`, `FolderSaveTests` (picker stubbed); the real picker manual |
 | Busy spinners always clear; errors show a snackbar (Server: generate spinner can hang) | [0006](docs/adr/0006-known-conversion-bugs-in-pwa.md) §4 | `ConverterStateTests.A_failed_generation_raises_an_error_and_leaves_the_Order_as_it_was`, `…A_file_that_cannot_be_read_raises_an_error_and_leaves_the_Order_as_it_was`, `…A_download_that_cannot_start_raises_an_error_and_is_not_saved` |
+| A „Тема“ menu switches between the device's theme (the default), light and dark, remembered per device (Server: light only) | [0014](docs/adr/0014-system-light-dark-theme.md) | `LocalStorageThemeStoreTests` (every case) + Playwright `ThemeTests.Each_pick_applies_at_once_and_the_last_one_starts_the_next_visit` |
