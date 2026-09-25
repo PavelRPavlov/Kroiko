@@ -1,7 +1,7 @@
 {
   "profile": "kroiko-pwa",
   "region": "eu-central-1",
-  "bucket": "",
+  "bucket": "kroiko-pwa",
   "environments": {
     "main": {
       "distributionId": "",
@@ -9,7 +9,7 @@
       "url": ""
     },
     "production": {
-      "distributionId": "",
+      "distributionId": "E3J8QR1NOULXRZ",
       "functionName": "kroiko-pwa-production",
       "url": "https://kroiko.com"
     }
