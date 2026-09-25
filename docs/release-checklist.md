@@ -62,7 +62,7 @@ A tag that does not look like `vX.Y.Z` deploys nothing.
    ```
 
    Push one release tag at a time: GitHub starts no workflow for a push of more than three tags.
-5. **Watch the deploy.** In the repository's Actions tab, open the "Deploy PWA" run for the tag. It runs, in
+5. **Watch the deploy.** In the repository's Actions tab, open the "Deploy PWA to AWS" run for the tag. It runs, in
    order, the full `dotnet test` (E2E included), the publish, the upload, the switch and the cache
    invalidation. Success is the "Deploy" step's line `Deployed vX.Y.Z (<sha>) to production: https://kroiko.com`,
    followed by the release folder. Note `vX.Y.Z (<sha>)` for the issue. If the script refuses, its log line

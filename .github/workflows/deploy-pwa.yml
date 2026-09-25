@@ -6,7 +6,7 @@
 # The deploy user's access key is in the GitHub environment "pwa-production" (secrets AWS_ACCESS_KEY_ID and
 # AWS_SECRET_ACCESS_KEY), which only tags matching v* may use (07a.5).
 
-name: Deploy PWA
+name: Deploy PWA to AWS
 
 on:
   push:
@@ -92,3 +92,20 @@ jobs:
 
       - name: Deploy
         run: ./scripts/publish-pwa.ps1 -Environment production
+
+      # Runs whatever happened before, even on a failed or cancelled run. The hosted runner is discarded after the
+      # job anyway; this makes sure nothing the deploy wrote outlives it there.
+      - name: Clean up
+        if: always()
+        run: |
+          # The access key.
+          Remove-Item -LiteralPath (Join-Path $HOME '.aws/credentials') -Force -ErrorAction SilentlyContinue
+          # The script's publish folder (kroiko-pwa-*) and the tests' temp folders (kroiko-*), which a cancelled run
+          # leaves behind.
+          Get-ChildItem -LiteralPath ([System.IO.Path]::GetTempPath()) -Filter 'kroiko-*' -Directory -ErrorAction SilentlyContinue |
+              Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+          # The build output, the test results and every other untracked file in the checkout.
+          git clean -ffdxq
+          # The Playwright Chromium.
+          Remove-Item -LiteralPath (Join-Path $env:LOCALAPPDATA 'ms-playwright') -Recurse -Force -ErrorAction SilentlyContinue
+          exit 0

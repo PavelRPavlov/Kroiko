@@ -243,6 +243,9 @@ As built:
   `origin`, which the script compares.
 - The workflow reads the key only in the step that writes the credentials file, and fails there with the names of
   the missing secrets if the environment has none.
+- A last step, "Clean up", runs even after a failed or cancelled step. It deletes the credentials file, the
+  `kroiko-*` temp folders of the script and the tests, every untracked file in the checkout (`git clean -ffdx`) and
+  the Playwright Chromium. The hosted runner is discarded after the job anyway.
 
 Setup (human), once:
 
