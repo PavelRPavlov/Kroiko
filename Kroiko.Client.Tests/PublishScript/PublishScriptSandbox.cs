@@ -306,7 +306,7 @@ internal sealed class PublishScriptSandbox : IDisposable
                 "TargetOriginId": "kroiko-pwa-bucket",
                 "ViewerProtocolPolicy": "redirect-to-https",
                 "Compress": true,
-                "CachePolicyId": "83da9c7e-98b4-4e11-a168-04f0df8e2c65",
+                "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
                 "FunctionAssociations": {
                     "Quantity": 1,
                     "Items": [ { "FunctionARN": "arn:aws:cloudfront::123456789012:function/FUNCTION_NAME", "EventType": "viewer-request" } ]

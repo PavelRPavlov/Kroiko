@@ -101,6 +101,11 @@ measurement (method given). **[I]** = inference / recommendation drawn from veri
   (`83da9c7e-98b4-4e11-a168-04f0df8e2c65`) has minimum and default TTL 0 and maximum 365 days, Gzip and Brotli
   on, and `Host` and `Origin` in the cache key. With a minimum TTL of 0, "CloudFront and browsers respect" an
   origin's `Cache-Control: no-cache`.
+- **[V, 2026-09-25, correction]** Because `UseOriginCacheControlHeaders` forwards `Host`, the CloudFront console
+  greys it out for an S3 origin: "This policy forwards the host header. S3 expects the origin's host and cannot
+  resolve the distribution's host." Custom cache policies need the Business plan. For an S3 origin on Free with
+  compression, that leaves `CachingOptimized` ([ADR-0012](../adr/0012-use-cachingoptimized-cache-policy.md)).
+  Observed in the console while provisioning 07a.3.
   — [Managed cache policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html),
   [Expiration](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
 - **[V]** An S3 origin's `Cache-Control` comes from the object's metadata, set at upload.
@@ -120,7 +125,7 @@ measurement (method given). **[I]** = inference / recommendation drawn from veri
   policy grants the distributions `s3:ListBucket` as well as `s3:GetObject`, so a missing file is a 404.
 - **[I]** Without KeyValueStore, the atomic switch is the distribution's origin path: upload the release to a new
   folder, point the origin path at it, invalidate `/*`. The files are fingerprinted, and everything else is
-  `no-cache` under `UseOriginCacheControlHeaders`, so the invalidation is a safety net, not a requirement.
+  `no-cache` (at most 1 s at the edge under `CachingOptimized`, ADR-0012), so the invalidation is a safety net, not a requirement.
 - **[I]** Staging and production are two distributions, each on its own Free plan (2 of the 3 allowed), each
   with its own copy of the function.
 
