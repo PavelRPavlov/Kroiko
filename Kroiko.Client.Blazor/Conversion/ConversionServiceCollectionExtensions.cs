@@ -34,9 +34,8 @@ public static class ConversionServiceCollectionExtensions
     public static IServiceCollection AddDeviceSettingsStore(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        return services
-            .AddScoped<IBrowserStorage, BrowserLocalStorage>()
-            .AddScoped<IDeviceSettingsStore, LocalStorageDeviceSettingsStore>();
+        services.TryAddScoped<IBrowserStorage, BrowserLocalStorage>();
+        return services.AddScoped<IDeviceSettingsStore, LocalStorageDeviceSettingsStore>();
     }
 
     /// <summary>

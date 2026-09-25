@@ -1,0 +1,47 @@
+@using Kroiko.Client.Blazor.Theme
+
+@* The app bar's theme picker (ADR-0014 §1): its icon shows the current mode, and its menu marks it. *@
+@* The tooltip sits to the left: below, it would cover the open menu. *@
+<MudTooltip Text="Тема" Placement="Placement.Left">
+    <MudMenu Icon="@IconOf(Mode)" Color="Color.Inherit" AriaLabel="Тема"
+             AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+        @foreach (var choice in Choices)
+        {
+            var isCurrent = choice.Mode == Mode;
+            <MudMenuItem Icon="@IconOf(choice.Mode)" OnClick="() => ModeChanged.InvokeAsync(choice.Mode)"
+                         role="menuitemradio" aria-checked="@(isCurrent ? "true" : "false")">
+                <span class="d-flex align-center">
+                    @choice.Label
+                    @if (isCurrent)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Class="ml-4" />
+                    }
+                </span>
+            </MudMenuItem>
+        }
+    </MudMenu>
+</MudTooltip>
+
+@code {
+    private sealed record Choice(ThemeMode Mode, string Label);
+
+    private static readonly Choice[] Choices =
+    [
+        new(ThemeMode.System, "Системна"),
+        new(ThemeMode.Light, "Светла"),
+        new(ThemeMode.Dark, "Тъмна"),
+    ];
+
+    [Parameter, EditorRequired]
+    public ThemeMode Mode { get; set; }
+
+    [Parameter]
+    public EventCallback<ThemeMode> ModeChanged { get; set; }
+
+    private static string IconOf(ThemeMode mode) => mode switch
+    {
+        ThemeMode.Light => Icons.Material.Filled.LightMode,
+        ThemeMode.Dark => Icons.Material.Filled.DarkMode,
+        _ => Icons.Material.Filled.BrightnessAuto,
+    };
+}

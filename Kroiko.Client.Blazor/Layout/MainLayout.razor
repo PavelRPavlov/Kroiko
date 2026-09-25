@@ -1,40 +1,51 @@
 @inherits LayoutComponentBase
 @implements IDisposable
+@using Kroiko.Client.Blazor.Theme
 @using Kroiko.Client.Blazor.Updates
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject AppUpdates AppUpdates
 @inject UpdateOffer UpdateOffer
+@inject IThemeStore ThemeStore
+@inject BrowserTheme BrowserTheme
 
-<MudThemeProvider/>
 <MudPopoverProvider/>
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 
-<MudLayout>
-    <MudAppBar Elevation="1">
-        <a href="" class="d-flex align-center mr-4">
-            <img src="Assets/kroiko.png" alt="Kroiko" height="40" />
-        </a>
-        @* Text links from sm up; icon-only on phones, where the labels do not fit. *@
-        @foreach (var link in NavLinks)
-        {
-            <MudButton Href="@link.Href" Color="Color.Inherit" Class="d-none d-sm-flex"
-                       StartIcon="@link.Icon">@link.Label</MudButton>
-            <MudIconButton Href="@link.Href" Color="Color.Inherit" Class="d-flex d-sm-none"
-                           Icon="@link.Icon" aria-label="@link.Label" />
-        }
-        <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.Info" Color="Color.Inherit"
-                       aria-label="Относно" OnClick="OpenAboutAsync" />
-    </MudAppBar>
+@* Nothing themed renders until the theme is known, so the first paint is already in it (ADR-0014 §3); until then the
+   page shows the background index.html set. The provider follows the system only while the mode does. *@
+@if (_themeKnown)
+{
+    <MudThemeProvider Theme="AppTheme.Theme" IsDarkMode="_isDarkMode" IsDarkModeChanged="ShowThemeAsync"
+                      ObserveSystemDarkModeChange="@(_themeMode == ThemeMode.System)" />
 
-    <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-4">
-            @Body
-        </MudContainer>
-    </MudMainContent>
-</MudLayout>
+    <MudLayout>
+        <MudAppBar Elevation="1">
+            <a href="" class="d-flex align-center mr-4">
+                <img src="Assets/kroiko.png" alt="Kroiko" height="40" />
+            </a>
+            @* Text links from sm up; icon-only on phones, where the labels do not fit. *@
+            @foreach (var link in NavLinks)
+            {
+                <MudButton Href="@link.Href" Color="Color.Inherit" Class="d-none d-sm-flex"
+                           StartIcon="@link.Icon">@link.Label</MudButton>
+                <MudIconButton Href="@link.Href" Color="Color.Inherit" Class="d-flex d-sm-none"
+                               Icon="@link.Icon" aria-label="@link.Label" />
+            }
+            <MudSpacer />
+            <ThemeMenu Mode="_themeMode" ModeChanged="PickThemeAsync" />
+            <MudIconButton Icon="@Icons.Material.Filled.Info" Color="Color.Inherit"
+                           aria-label="Относно" OnClick="OpenAboutAsync" />
+        </MudAppBar>
+
+        <MudMainContent>
+            <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-4">
+                @Body
+            </MudContainer>
+        </MudMainContent>
+    </MudLayout>
+}
 
 @code {
     private sealed record NavLinkItem(string Href, string Icon, string Label);
@@ -48,10 +59,18 @@
     // The reload snackbar while UpdateOffer.ShowsSnackbar; null while none is shown.
     private Snackbar? _updateSnackbar;
 
-    protected override void OnInitialized()
+    private bool _themeKnown;
+    private ThemeMode _themeMode;
+    private bool _isDarkMode;
+
+    protected override async Task OnInitializedAsync()
     {
         UpdateOffer.Changed += OnUpdateOfferChanged;
         UpdateOffer.Error += OnUpdateOfferError;
+
+        _themeMode = await ThemeStore.LoadAsync();
+        await ShowThemeAsync(await IsDarkAsync(_themeMode));
+        _themeKnown = true;
     }
 
     // The layout lives as long as the app: from its first render on, the app hears about new versions (ADR-0002 §1).
@@ -88,6 +107,28 @@
             Snackbar.Remove(_updateSnackbar);
             _updateSnackbar = null;
         }
+    }
+
+    // A pick applies at once and is saved; "Системна" takes the system's setting now, and the provider follows it on.
+    private async Task PickThemeAsync(ThemeMode mode)
+    {
+        _themeMode = mode;
+        await ShowThemeAsync(await IsDarkAsync(mode));
+        await ThemeStore.SaveAsync(mode);
+    }
+
+    private async Task<bool> IsDarkAsync(ThemeMode mode) => mode switch
+    {
+        ThemeMode.Light => false,
+        ThemeMode.Dark => true,
+        _ => await BrowserTheme.PrefersDarkAsync(),
+    };
+
+    // Also what the provider calls when the system changes while the mode is "Системна".
+    private async Task ShowThemeAsync(bool isDark)
+    {
+        _isDarkMode = isDark;
+        await BrowserTheme.ShowAsync(isDark);
     }
 
     private Task OpenAboutAsync() =>
