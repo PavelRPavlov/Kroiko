@@ -1,6 +1,6 @@
 # ADR-0010: Host the PWA on Amazon S3 + CloudFront (flat-rate Free plan) at `app.kroiko.com`
 
-- Status: Accepted; §1 (the origin `app.kroiko.com`) superseded by [ADR-0011](0011-serve-pwa-at-kroiko-com-with-route-53.md), the cache policy in §5 by [ADR-0012](0012-use-cachingoptimized-cache-policy.md)
+- Status: Accepted; §1 (the origin `app.kroiko.com`) superseded by [ADR-0011](0011-serve-pwa-at-kroiko-com-with-route-53.md), the cache policy in §5 by [ADR-0012](0012-use-cachingoptimized-cache-policy.md), the production deploy by hand in §6–7 by [ADR-0013](0013-deploy-production-from-release-tag-with-github-actions.md)
 - Date: 2026-09-24
 - Deciders: Pavel Pavlov
 

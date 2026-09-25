@@ -22,9 +22,10 @@ The earlier ADRs were deliberately removed (see git history) and are not carried
 | [0007](0007-parity-and-test-strategy.md) | Prove parity with shared golden files, `ConverterState` unit tests and a Playwright suite | Accepted |
 | [0008](0008-upgrade-largexlsx-to-2.md) | Upgrade LargeXlsx to 2.x behind the golden tests | Accepted |
 | [0009](0009-cut-mt-line-endings-crlf.md) | Write the `.cut_mt` with CRLF line endings on every host | Accepted |
-| [0010](0010-host-pwa-on-s3-and-cloudfront.md) | Host the PWA on Amazon S3 + CloudFront (flat-rate Free plan) at `app.kroiko.com` | Accepted; the origin (§1) superseded by [0011](0011-serve-pwa-at-kroiko-com-with-route-53.md), the cache policy (§5) by [0012](0012-use-cachingoptimized-cache-policy.md) |
+| [0010](0010-host-pwa-on-s3-and-cloudfront.md) | Host the PWA on Amazon S3 + CloudFront (flat-rate Free plan) at `app.kroiko.com` | Accepted; the origin (§1) superseded by [0011](0011-serve-pwa-at-kroiko-com-with-route-53.md), the cache policy (§5) by [0012](0012-use-cachingoptimized-cache-policy.md), the production deploy by hand (§6–7) by [0013](0013-deploy-production-from-release-tag-with-github-actions.md) |
 | [0011](0011-serve-pwa-at-kroiko-com-with-route-53.md) | Serve the PWA at `kroiko.com`, with its DNS in Route 53 | Accepted |
 | [0012](0012-use-cachingoptimized-cache-policy.md) | Use the managed `CachingOptimized` cache policy | Accepted |
+| [0013](0013-deploy-production-from-release-tag-with-github-actions.md) | Deploy production from a pushed release tag with GitHub Actions | Accepted |
 
 ## Format
 

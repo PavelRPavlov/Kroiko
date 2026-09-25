@@ -21,8 +21,9 @@
     and prints the deployed version and URL.
 
     The IDs come from hosting/aws/hosting.json. The credentials are the AWS CLI profile it names (kroiko-pwa):
-    an IAM user's access key, set up with `aws configure --profile kroiko-pwa` on your machine only. The script
-    never reads, prints or writes the key; it passes --profile to every aws call.
+    an IAM user's access key, set up with `aws configure --profile kroiko-pwa` on your machine, or written from the
+    GitHub environment pwa-production by .github/workflows/deploy-pwa.yml, which runs this script for every pushed
+    release tag (ADR-0013). The script never reads, prints or writes the key; it passes --profile to every aws call.
 
     See docs/implementation/07-hosting-and-go-live.md (07a.2) for the rules and 07b for the release procedure.
 

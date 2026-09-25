@@ -8,8 +8,8 @@ updates between two deployed versions, the production host, and real orders.
 
 Three parts, in the order you use them:
 
-1. **[Release procedure](#1-release-procedure):** every release. Bump the version, tag it, deploy with
-   `scripts/publish-pwa.ps1`, then open the sign-off issue.
+1. **[Release procedure](#1-release-procedure):** every release. Bump the version, push the tag (GitHub Actions
+   deploys it with `scripts/publish-pwa.ps1`), then open the sign-off issue.
 2. **[Every production release](#2-every-production-release-10-minutes)** (~10 minutes): the checks on the
    installed Edge PWA.
 3. **[Go-live](#3-go-live-once)** (once, with `v1.0.0`): the production host, the browsers, and a side-by-side
@@ -22,25 +22,17 @@ box is done. For `v1.0.0`, operators get `https://kroiko.com` only after that is
 > **The repository and its issues are public.** Real Polyboard files, the order files made from them, and
 > customer names stay on the local machine. Never commit them, attach them to an issue or paste them into
 > one. In the issue, refer to orders by number only ("order 3: Suliver, 23 fields, 5 materials"). Never
-> paste the AWS access key anywhere. It lives only in the deploying machine's AWS CLI profile `kroiko-pwa`.
+> paste an AWS access key anywhere. They live only in the GitHub environment `pwa-production` and in the AWS CLI
+> profile `kroiko-pwa` of a deploying machine.
 
 ## 1. Release procedure
 
-Deploys are manual. There is no CI. `scripts/publish-pwa.ps1` enforces the branch model
-([ADR-0010](adr/0010-host-pwa-on-s3-and-cloudfront.md), [07](implementation/07-hosting-and-go-live.md) 07a.2):
-production is deployed only from `release`, from a pushed tag `vX.Y.Z` that equals the csproj `<Version>`, and
-never from an older version than the newest tag on `origin`.
-
-### Once per deploying machine
-
-- PowerShell 7.2+, the .NET SDK from `global.json`, and the [AWS CLI v2](https://aws.amazon.com/cli/).
-- The AWS CLI profile `kroiko-pwa`, with the deploy user's access key and the region `eu-central-1`:
-  `aws configure --profile kroiko-pwa` ([07](implementation/07-hosting-and-go-live.md) 07a.3). The script checks it
-  before the tests.
-- The Playwright Chromium, because the script runs the full `dotnet test`, E2E included. If it is missing, the
-  first failing E2E test prints the exact `playwright.ps1 install chromium` command.
-- The script needs a clean tree, including untracked files. Add local tool folders such as `.claude/` to
-  `.git/info/exclude`, not to `.gitignore`.
+Production deploys itself when a release tag is pushed: the workflow `.github/workflows/deploy-pwa.yml` runs
+`scripts/publish-pwa.ps1` on a GitHub runner ([ADR-0013](adr/0013-deploy-production-from-release-tag-with-github-actions.md)).
+The script enforces the branch model ([ADR-0010](adr/0010-host-pwa-on-s3-and-cloudfront.md),
+[07](implementation/07-hosting-and-go-live.md) 07a.2): production is deployed only from `release`, from a pushed
+tag `vX.Y.Z` that equals the csproj `<Version>`, and never from an older version than the newest tag on `origin`.
+A tag that does not look like `vX.Y.Z` deploys nothing.
 
 ### Steps
 
@@ -60,42 +52,51 @@ never from an older version than the newest tag on `origin`.
    `release` is also the branch of the Server's deploy workflow, `.github/workflows/release_kroiko.yml`. Its
    `push` trigger is commented out today, so this push does not deploy the Server. If that trigger has been
    turned back on, a push that changes `ATAFurniture.Server/**` redeploys the Server too. Check before you push.
-3. **Tag the release and push the tag.**
+3. **Prepare the test machine.** Do part 2's "Before you deploy" setup now: the update checks need the previous
+   version open while this one lands, and the next step deploys.
+4. **Tag the release and push the tag.** This starts the deploy.
 
    ```powershell
    git tag -a vX.Y.Z -m "vX.Y.Z"
    git push origin vX.Y.Z
    ```
 
-4. **Rehearse** with `-DryRun`. It runs every check, the full `dotnet test` and the publish, then prints what
-   it would do instead of deploying: the release folder, the file count and the sizes of the `raw/` and `br/`
-   trees, and the origin path it would switch to. It needs neither the credentials nor the AWS CLI.
-
-   ```powershell
-   ./scripts/publish-pwa.ps1 -Environment production -DryRun
-   ```
-
-   It must print `Dry run: would deploy vX.Y.Z (<sha>) to production - …`, followed by an `upload` and a
-   `switch` line. If it refuses, fix what it names; never work around it.
-5. **Deploy.** First do part 2's "Before you deploy" setup on the test machine: the update checks need the
-   previous version open while this one lands.
-
-   ```powershell
-   ./scripts/publish-pwa.ps1 -Environment production
-   ```
-
-   It runs the checks and the tests again. Then it uploads the release folder, brings the function up to date
-   if needed, and switches the distribution to the new folder. Waiting for CloudFront and the cache invalidation
-   takes a few minutes. Success is the line `Deployed vX.Y.Z (<sha>) to production: https://kroiko.com`,
-   followed by the release folder. Note `vX.Y.Z (<sha>)` for the issue. A `*.cloudfront.net` URL is never
-   given to anyone (ADR-0011).
+   Push one release tag at a time: GitHub starts no workflow for a push of more than three tags.
+5. **Watch the deploy.** In the repository's Actions tab, open the "Deploy PWA to AWS" run for the tag. It runs, in
+   order, the full `dotnet test` (E2E included), the publish, the upload, the switch and the cache
+   invalidation. Success is the "Deploy" step's line `Deployed vX.Y.Z (<sha>) to production: https://kroiko.com`,
+   followed by the release folder. Note `vX.Y.Z (<sha>)` for the issue. If the script refuses, its log line
+   `publish-pwa: refused - …` names what to fix; never work around it. A `*.cloudfront.net` URL is never given to
+   anyone (ADR-0011).
 6. **Open the sign-off issue.** Title: "Release vX.Y.Z sign-off". Paste in part 2 (and part 3 for `v1.0.0`)
    and record the deployed `vX.Y.Z (<sha>)`. Run the checks, tick them and close the issue.
 
-Optional: before step 2, the `main` staging environment can be tried with
-`./scripts/publish-pwa.ps1 -Environment main`, which needs `HEAD` = `origin/main`. Staging is a different
-origin, so installs and settings made there are separate from production.
+### Deploying by hand
 
+The script also runs on a machine of your own: for staging, and when Actions is unavailable. Staging is a
+different origin, so installs and settings made there are separate from production.
+
+Once per deploying machine:
+
+- PowerShell 7.2+, the .NET SDK from `global.json`, and the [AWS CLI v2](https://aws.amazon.com/cli/).
+- The AWS CLI profile `kroiko-pwa`, with the deploy user's access key and the region `eu-central-1`:
+  `aws configure --profile kroiko-pwa` ([07](implementation/07-hosting-and-go-live.md) 07a.3). The script checks it
+  before the tests.
+- The Playwright Chromium, because the script runs the full `dotnet test`, E2E included. If it is missing, the
+  first failing E2E test prints the exact `playwright.ps1 install chromium` command.
+- The script needs a clean tree, including untracked files. Add local tool folders such as `.claude/` to
+  `.git/info/exclude`, not to `.gitignore`.
+
+Then, with `release` checked out at the pushed tag (production) or `main` at `origin/main` (staging):
+
+```powershell
+./scripts/publish-pwa.ps1 -Environment production -DryRun
+./scripts/publish-pwa.ps1 -Environment production
+```
+
+`-DryRun` runs every check, the full `dotnet test` and the publish, then prints what it would do instead of
+deploying: `Dry run: would deploy vX.Y.Z (<sha>) to production - …`, followed by an `upload` and a `switch` line.
+It needs neither the credentials nor the AWS CLI. For staging, use `-Environment main`.
 ### A bad release
 
 Fix it forward ([ADR-0002](adr/0002-pwa-updates-reload-prompt.md) §8). Revert or fix the change in a PR to
@@ -106,9 +107,10 @@ update prompt.
   Pointing a distribution's origin path back at an older release folder by hand is the same thing, so never do
   that either.
 - Never move, delete or re-push a pushed tag. Never force-push `release`.
-- If a deploy fails part-way, running the script again with the same, newest version is allowed. Each run
-  uploads a new folder and switches only at the end, so a failure before the switch leaves the previous version
-  in place. After the switch, the script prints the `create-invalidation` command that finishes the deploy.
+- If a deploy fails part-way, deploying the same, newest version again is allowed: "Re-run failed jobs" on the
+  run in Actions, or the script by hand. Each run uploads a new folder and switches only at the end, so a failure
+  before the switch leaves the previous version in place. After the switch, the script prints the
+  `create-invalidation` command that finishes the deploy.
 - Old release folders stay in the bucket, ~25 MB each. When there are many, delete old ones in the S3 console
   (`<environment>/<release>/`), but never the one the distribution's origin path points at.
 

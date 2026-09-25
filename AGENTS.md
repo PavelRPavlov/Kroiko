@@ -24,6 +24,7 @@ See [CONTEXT.md](CONTEXT.md) for the domain model and the ubiquitous language.
 
 ```
 ATATextConverter/
+├── .github/workflows/        ← deploy-pwa.yml (production deploy on a pushed vX.Y.Z tag, ADR-0013); the Server's workflows
 ├── AGENTS.md                 ← you are here
 ├── CONTEXT.md                ← domain model + architecture + decision log
 ├── docs/
