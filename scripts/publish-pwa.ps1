@@ -4,7 +4,7 @@
     Tests, publishes and deploys Kroiko.Client.Blazor (the PWA) to Amazon S3 + CloudFront.
 
 .DESCRIPTION
-    Enforces the branch model of ADR-0010 (docs/adr/0010-host-pwa-on-s3-and-cloudfront.md) and refuses to
+    Enforces the branch model of ADR-0010 (docs/adr/0010-host-pwa-on-s3-and-cloudfront.md; origin: ADR-0011) and refuses to
     run unless:
       1. the working tree is clean (git status --porcelain is empty);
       2. -Environment main:       HEAD equals origin/main (after a fetch);
@@ -28,7 +28,7 @@
 
 .PARAMETER Environment
     main       - the staging distribution "main" (its *.cloudfront.net URL), from origin/main.
-    production - app.kroiko.com, from a tagged origin/release.
+    production - kroiko.com, from a tagged origin/release.
 
 .PARAMETER DryRun
     Runs every check, the tests and the publish, then prints what it would upload and switch instead of doing it

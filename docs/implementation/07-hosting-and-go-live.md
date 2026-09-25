@@ -2,11 +2,11 @@
 
 - **Status:** In progress
 - **Depends on:** 07a — [03 Client shell](03-client-shell.md); 07b — [05 Saving](05-saving.md), [06 Updates & About](06-updates-and-about.md) and 07a
-- **ADRs:** [0010](../adr/0010-host-pwa-on-s3-and-cloudfront.md), [0002](../adr/0002-pwa-updates-reload-prompt.md) §6, §8, [0006](../adr/0006-known-conversion-bugs-in-pwa.md) §5, [0007](../adr/0007-parity-and-test-strategy.md) §9
+- **ADRs:** [0010](../adr/0010-host-pwa-on-s3-and-cloudfront.md), [0011](../adr/0011-serve-pwa-at-kroiko-com-with-route-53.md), [0002](../adr/0002-pwa-updates-reload-prompt.md) §6, §8, [0006](../adr/0006-known-conversion-bugs-in-pwa.md) §5, [0007](../adr/0007-parity-and-test-strategy.md) §9
 
 ## Goal
 
-The PWA is served from `https://app.kroiko.com` by Amazon CloudFront on the flat-rate Free plan, from a private
+The PWA is served from `https://kroiko.com` by Amazon CloudFront on the flat-rate Free plan, from a private
 S3 bucket in Frankfurt. It gets the published Brotli files, correct MIME types and cache headers, at $0. The
 `main` staging distribution is live from 07a. Operators switch to the app only after a signed-off, side-by-side
 go-live run against the Server.
@@ -35,7 +35,9 @@ event). It is the only logic at the edge:
 - **Brotli:** when `Accept-Encoding` lists `br`, the path is prefixed with `/br`, otherwise with `/raw`. A release
   folder holds both trees (step 2). CloudFront gzips `raw/` on the fly for clients without `br`, and leaves `br/`
   alone because its objects carry `Content-Encoding: br`.
-- Nothing else: no redirects, no headers, no query-string handling.
+- **www:** a request for `www.<domain>` gets a `301` to `https://<domain><path>`, without the query string
+  (ADR-0011). That is the only response the function makes itself.
+- Nothing else: no other redirects, no headers, no query-string handling.
 
 It replaces `staticwebapp.config.json`. That file, its entry in `service-worker.published.js`'s
 `offlineAssetsExclude` and its tests are removed.
@@ -52,6 +54,8 @@ As built:
   with the viewer-request event CloudFront passes it. `StaticSiteHost` calls the same instance on every request,
   so the E2E suite (offline start, parity) goes through the real function. It maps `br/` to a file's `.br`
   sibling where there is one, and `raw/` to the plain file. It does not emulate CloudFront's on-the-fly gzip.
+- `ViewerRequestFunction.Respond` checks the `www` redirect (ADR-0011) for any path and for any case of the host.
+  `Run` passes `Host: kroiko.com` unless a test says otherwise, so `StaticSiteHost` never meets the redirect.
 - A wildcard `Accept-Encoding: *` is not taken as `br`, and neither is `br;q=0`. Such requests get `raw/`, which is
   always safe.
 - The function sets no headers. `Content-Type` and `Cache-Control` are object metadata (step 2), so the test host
@@ -139,8 +143,15 @@ certificate in `us-east-1`, and CloudFront is global.
 - [ ] **Bucket:** create an S3 bucket in `eu-central-1`, for example `kroiko-pwa-<suffix>`. Keep "Block all
       public access" on, ACLs disabled (bucket owner enforced), versioning off, default encryption SSE-S3, and
       no static website hosting.
-- [ ] **Certificate:** in ACM in **`us-east-1`**, request a public certificate for `app.kroiko.com` with DNS
-      validation. Add the validation CNAME it shows in the site4now DNS panel, and wait for "Issued".
+- [ ] **DNS zone (ADR-0011):** in Route 53, create a public hosted zone `kroiko.com` and note its four
+      nameservers (`ns-….awsdns-….com/.net/.org/.co.uk`). In the domain's registrar panel (eNom, through the reseller
+      where the nameservers were last set to SuperHosting.bg), replace the nameservers with those four. Nothing needs
+      copying from the old hosts: their A record pointed at a dead address, and there is no MX. The change can take
+      up to a day or two. It is done when `Resolve-DnsName kroiko.com -Type NS -Server 8.8.8.8` lists only
+      `awsdns` servers.
+- [ ] **Certificate:** in ACM in **`us-east-1`**, request a public certificate for `kroiko.com` **and**
+      `www.kroiko.com`, with DNS validation. Choose "Create records in Route 53", and wait for "Issued" (it waits
+      for the nameserver change).
 - [ ] **Functions:** in CloudFront → Functions, create `kroiko-pwa-main` and `kroiko-pwa-production`
       (runtime `cloudfront-js-2.0`). Paste `hosting/cloudfront/viewer-request.js` into both and publish them.
       A function on a Free-plan distribution cannot be shared, so each distribution gets its own copy.
@@ -152,14 +163,18 @@ certificate in `us-east-1`, and CloudFront is global.
     **`UseOriginCacheControlHeaders`** (managed); no origin request policy; no response headers policy.
     Viewer request: its own function.
   - No default root object (the function handles `/`), no Lambda@Edge, no standard or real-time logs.
-  - Production only: the alternate domain name `app.kroiko.com` and the ACM certificate.
+  - Production only: the alternate domain names `kroiko.com` and `www.kroiko.com`, and the ACM certificate.
   - Pricing plan: subscribe **each** distribution to the **Free** flat-rate plan.
 - [ ] **Bucket policy:** fill in `hosting/aws/bucket-policy.json` with the bucket and both distribution ARNs, and
       apply it. It grants `s3:GetObject` and `s3:ListBucket` to CloudFront for those two distributions only.
       `s3:ListBucket` makes a missing file a 404 instead of a 403.
-- [ ] **DNS:** in the site4now DNS panel, add a CNAME `app` → the production distribution's
-      `dxxxxxxxxxxxxx.cloudfront.net`. It takes priority over the wildcard record for that one name. The origin
-      is permanent from now on (ADR-0010).
+- [ ] **Records:** in the `kroiko.com` zone, create an A and an AAAA record, each an **Alias** to the production
+      distribution, for `kroiko.com` and for `www.kroiko.com`: four records in all. `www` reaches the same
+      distribution, and the function redirects it to `https://kroiko.com`. The origin is permanent from now on
+      (ADR-0011).
+- [ ] **Attach the zone to the plan:** in the production distribution's **Manage plan**, attach the `kroiko.com`
+      hosted zone to its Free plan. Without it the zone costs $0.50 a month. The plan allows 50 records; any mail
+      records for `kroiko.com` go in this zone too.
 - [ ] **Deploy user:** create the IAM user `kroiko-pwa-deployer` without console access. Give it the inline
       policy `hosting/aws/deployer-policy.json`, filled in, and create an access key. On the deploying machine,
       install AWS CLI v2 and run `aws configure --profile kroiko-pwa` (region `eu-central-1`). Enter the key
@@ -194,7 +209,7 @@ Write it from ADR-0007 §9, with two sections:
 
 - **Go-live (once).** Pavel plus one operator; ~10 recent real orders across all three manufacturers,
   both field formats and Cyrillic material names. Run each through the deployed Server and through
-  the installed PWA on `app.kroiko.com` in Edge. Files match (Excel identical; `.cut_mt` byte-equal
+  the installed PWA on `kroiko.com` in Edge. Files match (Excel identical; `.cut_mt` byte-equal
   apart from the date), open in each manufacturer's software (including a CRLF `.cut_mt` in
   MegaTrading's, [ADR-0009](../adr/0009-cut-mt-line-endings-crlf.md); the deployed Server must include
   it, or a Linux-hosted one still writes LF), and decode as UTF-8, including a check
@@ -215,7 +230,7 @@ the release procedure (with a `-DryRun` rehearsal before the deploy), every prod
 go-live. The manual checks that earlier phases left open are on it: the update flow from phase 06, the real
 folder picker and downloads from phase 05, and Edge install and offline start. Also on it are phase 01's
 Excel review, phase 02's Server smoke check, and step 4's host checks, which run again against
-`app.kroiko.com`. Its host-specific parts (the tools, the credentials, the host checks) were rewritten for
+`kroiko.com`. Its host-specific parts (the tools, the credentials, the host checks) were rewritten for
 S3 + CloudFront with step 2.
 
 Two choices go beyond this step's text:
@@ -229,7 +244,7 @@ Two choices go beyond this step's text:
 - Set `<Version>1.0.0</Version>`, follow the release procedure, and deploy to production.
 - Open the GitHub issue **"Release v1.0.0 sign-off"** with the checklist pasted in. Run the
   go-live section with the operator, tick it, and close the issue.
-- Only then are operators given `https://app.kroiko.com`. The Server stays deployed, unchanged.
+- Only then are operators given `https://kroiko.com`. The Server stays deployed, unchanged.
 
 ## Done criteria
 
@@ -238,7 +253,7 @@ Two choices go beyond this step's text:
 - [x] `scripts/publish-pwa.ps1` uploads a new release folder with its `raw/` and `br/` trees, switches the origin
       path and invalidates. It never prints the credentials.
 - [x] `scripts/publish-pwa.ps1` refuses dirty trees, wrong branches, unsynced `HEAD`, a missing or mismatched tag, and failing tests.
-- [ ] The bucket and both distributions exist, each distribution on the Free plan; `app.kroiko.com` resolves to
+- [ ] The bucket and both distributions exist, each distribution on the Free plan; `kroiko.com` (DNS in Route 53, ADR-0011) resolves to
       production over HTTPS.
 - [ ] The `main` staging deploy passes the step-4 checks (07a done).
 - [x] `docs/release-checklist.md` exists with the go-live, per-release and release-procedure sections.

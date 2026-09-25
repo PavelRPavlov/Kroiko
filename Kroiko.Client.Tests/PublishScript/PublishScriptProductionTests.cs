@@ -24,7 +24,7 @@ public sealed class PublishScriptProductionTests(PublishScriptTemplate template)
         run.AwsCalls.Where(c => c.Contains(" --id ") || c.Contains(" --distribution-id "))
             .Should().NotBeEmpty().And.OnlyContain(c => c.Contains(PublishScriptSandbox.ProductionDistribution));
         run.AwsCalls.Should().Contain(c => c.StartsWith("aws cloudfront get-function --name kroiko-pwa-production "));
-        run.Output.Should().Contain($"Deployed v1.2.3 ({shortSha}) to production: https://app.kroiko.com");
+        run.Output.Should().Contain($"Deployed v1.2.3 ({shortSha}) to production: https://kroiko.com");
     }
 
     [Fact]
