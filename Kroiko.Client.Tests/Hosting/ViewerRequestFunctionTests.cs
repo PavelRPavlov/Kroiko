@@ -59,18 +59,40 @@ public sealed class ViewerRequestFunctionTests
         Function.Run("/app.js", acceptEncoding).Uri.Should().Be(brotli ? "/br/app.js" : "/raw/app.js");
     }
 
-    [Fact]
-    public void Returns_the_request_with_only_its_uri_changed()
+    [Theory]
+    [InlineData("kroiko.com")]
+    [InlineData("d111111abcdef8.cloudfront.net")] // staging
+    public void Returns_the_request_with_only_its_uri_changed(string host)
     {
-        // No redirects, no generated responses, no headers: S3's object metadata sets the response headers.
-        var request = Function.Run("/configuration", "gzip, br", method: "HEAD");
+        // No generated response off www, no headers: S3's object metadata sets the response headers.
+        var request = Function.Run("/configuration", "gzip, br", method: "HEAD", host: host);
 
         request.Method.Should().Be("HEAD");
         request.Headers.Should().BeEquivalentTo(new Dictionary<string, string>
         {
-            ["host"] = "app.kroiko.com",
+            ["host"] = host,
             ["accept-encoding"] = "gzip, br",
         });
+    }
+
+    [Theory]
+    [InlineData("/", "https://kroiko.com/")]
+    [InlineData("/configuration", "https://kroiko.com/configuration")]
+    [InlineData("/_framework/dotnet.native.rw4kynp763.wasm", "https://kroiko.com/_framework/dotnet.native.rw4kynp763.wasm")]
+    public void Redirects_www_to_the_bare_domain_keeping_the_path(string path, string location)
+    {
+        // ADR-0011: one origin, so installs and saved settings never split between www and the bare domain.
+        var response = Function.Respond(path, "www.kroiko.com");
+
+        response.StatusCode.Should().Be(301);
+        response.StatusDescription.Should().Be("Moved Permanently");
+        response.Headers.Should().BeEquivalentTo(new Dictionary<string, string> { ["location"] = location });
+    }
+
+    [Fact]
+    public void Redirects_www_whatever_the_case_of_the_host()
+    {
+        Function.Respond("/", "WWW.Kroiko.com").Headers["location"].Should().Be("https://kroiko.com/");
     }
 
     [Fact]

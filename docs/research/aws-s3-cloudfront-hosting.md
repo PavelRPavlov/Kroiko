@@ -123,3 +123,23 @@ measurement (method given). **[I]** = inference / recommendation drawn from veri
   `no-cache` under `UseOriginCacheControlHeaders`, so the invalidation is a safety net, not a requirement.
 - **[I]** Staging and production are two distributions, each on its own Free plan (2 of the 3 allowed), each
   with its own copy of the function.
+
+## 6. The apex `kroiko.com` and Route 53 (added 2026-09-25, for [ADR-0011](../adr/0011-serve-pwa-at-kroiko-com-with-route-53.md))
+
+- **[V]** A hosted zone attached to a distribution's plan is covered by it: "the monthly hosted zone fee, DNS
+  records, and DNS query fees subject to respective allowances per tier". On Free: 50 records per zone, no limit
+  on queries to ALIAS records that point at CloudFront, and 1 M other queries a month. CNAME records to CloudFront
+  count against that 1 M. If usage exceeds it, AWS may notify you and then move the zone to pay-as-you-go. The
+  zone is attached in the distribution's **Manage Plan** section.
+  — [Flat-rate pricing plans: Route 53 DNS](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/flat-rate-pricing-plan.html#costs-covered-by-plan)
+- **[V]** Route 53 ALIAS records can point a zone apex at a CloudFront distribution; a CNAME cannot exist at the
+  apex. — [Choosing between alias and non-alias records](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html)
+- **[V]** SuperHosting.bg's cPanel zone editor offers A, AAAA, CAA, CNAME, DMARC, MX, SRV and TXT records, with no
+  ALIAS/ANAME. — [DNS zone editor in cPanel](https://help.superhosting.bg/dns-zone-editor-cpanel.html)
+- **[V, measured]** On 2026-09-25 RDAP showed `kroiko.com` registered with eNom (IANA 48), with its nameservers
+  changed on 2026-09-24 to `ns23`/`ns24.superhosting.bg`. Those servers refused queries for the zone, so public
+  resolvers (8.8.8.8, 1.1.1.1) returned SERVFAIL. Method: `https://rdap.verisign.com/com/v1/domain/kroiko.com`,
+  `Resolve-DnsName -Server`.
+- **[I]** The CloudFront Function can serve the `www` redirect itself (it reads `Host` on the viewer request), so
+  `www.kroiko.com` needs no bucket or distribution of its own. It needs only an alternate domain name on the
+  production distribution, a name on the certificate, and an ALIAS.

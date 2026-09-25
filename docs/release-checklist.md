@@ -17,7 +17,7 @@ Three parts, in the order you use them:
 
 Each production release gets a GitHub issue **"Release vX.Y.Z sign-off"**. Paste in part 2, and for `v1.0.0`
 part 3 too. Tick each box as you check it, or write "n/a" and the reason next to it. Close the issue when every
-box is done. For `v1.0.0`, operators get `https://app.kroiko.com` only after that issue is closed.
+box is done. For `v1.0.0`, operators get `https://kroiko.com` only after that issue is closed.
 
 > **The repository and its issues are public.** Real Polyboard files, the order files made from them, and
 > customer names stay on the local machine. Never commit them, attach them to an issue or paste them into
@@ -86,9 +86,9 @@ never from an older version than the newest tag on `origin`.
 
    It runs the checks and the tests again. Then it uploads the release folder, brings the function up to date
    if needed, and switches the distribution to the new folder. Waiting for CloudFront and the cache invalidation
-   takes a few minutes. Success is the line `Deployed vX.Y.Z (<sha>) to production: https://app.kroiko.com`,
+   takes a few minutes. Success is the line `Deployed vX.Y.Z (<sha>) to production: https://kroiko.com`,
    followed by the release folder. Note `vX.Y.Z (<sha>)` for the issue. A `*.cloudfront.net` URL is never
-   given to anyone (ADR-0010).
+   given to anyone (ADR-0011).
 6. **Open the sign-off issue.** Title: "Release vX.Y.Z sign-off". Paste in part 2 (and part 3 for `v1.0.0`)
    and record the deployed `vX.Y.Z (<sha>)`. Run the checks, tick them and close the issue.
 
@@ -114,7 +114,7 @@ update prompt.
 
 ## 2. Every production release (~10 minutes)
 
-On the **installed Edge PWA** from `https://app.kroiko.com`, on a machine that ran the previous version.
+On the **installed Edge PWA** from `https://kroiko.com`, on a machine that ran the previous version.
 
 Record: `vX.Y.Z (<sha>)` · date · who · Edge version (`edge://version`).
 
@@ -174,11 +174,13 @@ commit it was built from.
 
 ### Production host
 
-These are the 07a.4 staging checks, run again on `app.kroiko.com`. Repeat them whenever
+These are the 07a.4 staging checks, run again on `kroiko.com`. Repeat them whenever
 `hosting/cloudfront/viewer-request.js` or the upload rules in `scripts/publish-pwa.ps1` change.
 
 ```powershell
-$site = 'https://app.kroiko.com'
+foreach ($server in '8.8.8.8', '1.1.1.1') { Resolve-DnsName kroiko.com -Type NS -Server $server -DnsOnly | Select-Object -ExpandProperty NameHost }
+curl.exe -sI 'https://www.kroiko.com/configuration'
+$site = 'https://kroiko.com'
 $assets = curl.exe -s "$site/service-worker-assets.js"
 $wasm, $dat, $font = foreach ($ext in 'wasm', 'dat', 'woff2') { [regex]::Match("$assets", ('"url": "([^"]+\.{0})"' -f $ext)).Groups[1].Value }
 curl.exe -sI -H 'Accept-Encoding: br' "$site/$wasm"
@@ -188,8 +190,12 @@ foreach ($path in 'configuration', 'no-such-page', '_framework/x.js', '_content/
 foreach ($path in '', 'index.html', 'service-worker.js', 'service-worker-assets.js') { curl.exe -sI "$site/$path" }
 ```
 
-- [ ] `https://app.kroiko.com` opens over HTTPS with a valid certificate. It is the only address given to
-      operators, never a `*.cloudfront.net` one (ADR-0010).
+- [ ] Both public resolvers list only `awsdns` nameservers for `kroiko.com`: the move to Route 53 is complete
+      everywhere (ADR-0011).
+- [ ] `https://kroiko.com` opens over HTTPS with a valid certificate. It is the only address given to
+      operators, never a `*.cloudfront.net` one (ADR-0011).
+- [ ] `https://www.kroiko.com/configuration` returns `301` with `Location: https://kroiko.com/configuration`, over
+      HTTPS with a valid certificate.
 - [ ] The `.wasm` file with `br` returns `Content-Encoding: br` and `Content-Type: application/wasm`. With `gzip`
       only, it returns `Content-Encoding: gzip`, compressed by CloudFront.
 - [ ] `manifest.webmanifest` returns `application/manifest+json` with `Content-Encoding: br`. The `.dat` file
@@ -203,7 +209,7 @@ foreach ($path in '', 'index.html', 'service-worker.js', 'service-worker-assets.
 
 ### Install and browsers
 
-- [ ] In Edge, install Kroiko from `https://app.kroiko.com` ("App available" in the address bar → Install). It
+- [ ] In Edge, install Kroiko from `https://kroiko.com` ("App available" in the address bar → Install). It
       opens in its own window. Close it, disconnect the network, and start it: it starts offline.
 - [ ] In an Edge tab (not the installed app), "Запази в папка…" writes all files. The second save opens at the
       last folder, never overwrites, and lists the final names. Part 2 covers the installed window.
@@ -285,7 +291,7 @@ The PWA differs from the Server on purpose in these rows. Check that each one be
 
 - [ ] No login, account, credits or email. Nothing leaves the device: in DevTools (F12) → Network, converting
       and saving send nothing to any server. Only local `blob:` downloads appear, plus at most the app's own
-      files from `app.kroiko.com`.
+      files from `kroiko.com`.
 - [ ] `bad-lines-12.txt` (a fixture) is rejected. The alert lists 10 lines as `ред N: …`, then "…и още 2", and
       keeps the link to the configuration page. Nothing is loaded. The Server shows a generic alert.
 - [ ] `kitchen-8-materials.txt` for Мега Трейдинг names the 8 materials and cannot be generated. Merging
@@ -306,5 +312,5 @@ The PWA differs from the Server on purpose in these rows. Check that each one be
 ### Sign-off
 
 - [ ] Every box in the issue is ticked, or marked n/a with its reason.
-- [ ] Close "Release v1.0.0 sign-off". Only then are operators given `https://app.kroiko.com`. The Server stays
+- [ ] Close "Release v1.0.0 sign-off". Only then are operators given `https://kroiko.com`. The Server stays
       deployed, unchanged.

@@ -1,6 +1,6 @@
 # ADR-0010: Host the PWA on Amazon S3 + CloudFront (flat-rate Free plan) at `app.kroiko.com`
 
-- Status: Accepted
+- Status: Accepted; §1 (the origin `app.kroiko.com`) superseded by [ADR-0011](0011-serve-pwa-at-kroiko-com-with-route-53.md)
 - Date: 2026-09-24
 - Deciders: Pavel Pavlov
 

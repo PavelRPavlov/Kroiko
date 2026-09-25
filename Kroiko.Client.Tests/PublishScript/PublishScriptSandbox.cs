@@ -98,7 +98,7 @@ internal sealed class PublishScriptSandbox : IDisposable
               "bucket": "{{bucket}}",
               "environments": {
                 "main": { "distributionId": "{{mainDistribution}}", "functionName": "kroiko-pwa-main", "url": "{{mainUrl}}" },
-                "production": { "distributionId": "{{ProductionDistribution}}", "functionName": "kroiko-pwa-production", "url": "https://app.kroiko.com" }
+                "production": { "distributionId": "{{ProductionDistribution}}", "functionName": "kroiko-pwa-production", "url": "https://kroiko.com" }
               }
             }
             """);

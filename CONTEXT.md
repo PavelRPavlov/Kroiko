@@ -73,7 +73,7 @@ first visit. It has no backend, login, credits or email. `ATAFurniture.Server` s
 deployed and shares the conversion domain with it.
 
 ```
-app.kroiko.com (CloudFront + S3, static files only)  ───── first load + updates ─────►  Browser
+kroiko.com (CloudFront + S3, static files only)  ─────── first load + updates ───────►  Browser
                                                                                          │
   Kroiko.Client.Blazor (WASM, installable, service worker)                               │
    ├─ ConverterState (one app-wide Order)                                                │
@@ -87,7 +87,7 @@ ATAFurniture.Server (unchanged behaviour) ──► the same Kroiko.Domain
 **Projects:** `Kroiko.Client.Blazor` (PWA), `Kroiko.Domain` (shared, **must stay
 browser-safe**), `ATAFurniture.Server` (maintained), and the test projects `Kroiko.Testing`,
 `Kroiko.Domain.Tests`, `Kroiko.Client.Tests`, `ATAFurniture.Server.Tests`
-([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0010](docs/adr/README.md).
+([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0011](docs/adr/README.md).
 Build order: [docs/implementation/00-overview.md](docs/implementation/00-overview.md).
 
 **`Kroiko.Client.Tests`** (xUnit, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §5) tests the shipped
@@ -107,8 +107,8 @@ tests compare with the golden files through `ConverterPage.MatchGolden`, which n
 only the domain tests record the Server's output. The host and the missing-browser message have their own browser-free tests.
 `Hosting/` runs the CloudFront Function, `hosting/cloudfront/viewer-request.js`, in Jint (`ViewerRequestFunction`):
 app routes → `/index.html`, files keep their path (so a missing one is a 404), `br/` only for a viewer that accepts
-`br`, nothing but the URI changed; and, against the publish output, that every published and precached file keeps
-its path through it.
+`br`, nothing but the URI changed, and `www.<domain>` → a `301` to `https://<domain><path>` (ADR-0011); and, against the
+publish output, that every published and precached file keeps its path through it.
 `PublishScript/` runs the real `scripts/publish-pwa.ps1` (the manual deploy, phase 07) in `pwsh` against a
 throwaway git repository with a bare `origin`, with `dotnet` and `aws` replaced by logging stubs on `PATH`: the
 branch-model refusals, the `raw/` and `br/` trees with each object's metadata, the function update, a switch that
