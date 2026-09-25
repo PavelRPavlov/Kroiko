@@ -23,6 +23,7 @@ the phase cut was decided in
 | 05 | [Saving](05-saving.md) | "Запази в папка…", per-file downloads, ` (n)` clash naming | [0003](../adr/0003-save-order-files-to-picked-folder.md) | In progress |
 | 06 | [Updates & About](06-updates-and-about.md) | Reload snackbar, update checks, version in About | [0002](../adr/0002-pwa-updates-reload-prompt.md) | In progress |
 | 07 | [Hosting & go-live](07-hosting-and-go-live.md) | 07a: S3 + CloudFront (Free plan) + first deploy + deploy on a release tag (GitHub Actions); 07b: release checklist, go-live sign-off | [0010](../adr/0010-host-pwa-on-s3-and-cloudfront.md), [0011](../adr/0011-serve-pwa-at-kroiko-com-with-route-53.md), [0013](../adr/0013-deploy-production-from-release-tag-with-github-actions.md), [0007](../adr/0007-parity-and-test-strategy.md) §9 | In progress |
+| 08 | [Theme](08-theme.md) | „Системна“ / „Светла“ / „Тъмна“ in the app bar, following the device by default, with no light flash on start-up | [0014](../adr/0014-system-light-dark-theme.md) | Done |
 
 The **Status** column mirrors each guide's own `Status:` line. The guide is the source of truth;
 update both in the same PR.
@@ -40,6 +41,7 @@ flowchart LR
     P05 --> P07b[07b Go-live]
     P06 --> P07b
     P07a --> P07b
+    P03 --> P08[08 Theme]
 ```
 
 - **Lane A:** `01 → 02`. **Lane B:** `03` runs alongside lane A, because the shell does not touch `Kroiko.Domain`.
@@ -49,6 +51,7 @@ flowchart LR
   already exists after `04`.
 - `07a` may start as soon as `03` is **Done**, deploying the shell manually to the `main`
   staging environment. `07b` needs `05`, `06` and `07a`.
+- `08` needs only `03`, and runs alongside anything else.
 
 ## How to work a step
 

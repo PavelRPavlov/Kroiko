@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Kroiko.Client.Blazor;
 using Kroiko.Client.Blazor.Conversion;
+using Kroiko.Client.Blazor.Theme;
 using Kroiko.Client.Blazor.Updates;
 using MudBlazor.Services;
 
@@ -16,5 +17,6 @@ builder.Services.AddFileDownloader();
 builder.Services.AddFolderPicker();
 builder.Services.AddConverterState();
 builder.Services.AddAppUpdates();
+builder.Services.AddTheme();
 
 await builder.Build().RunAsync();

@@ -2,6 +2,19 @@ h1:focus {
     outline: none;
 }
 
+/* The page behind the app, and the loading screen before it, in the theme index.html and MainLayout set on <html>
+   (ADR-0014 §3): MudBlazor's default light and dark backgrounds, until MudBlazor's own styles take over the body. */
+:root[data-theme="light"] {
+    color-scheme: light;
+    background-color: #ffffff;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    background-color: #32333d;
+    color: rgba(255, 255, 255, 0.7);
+}
+
 #blazor-error-ui {
     color-scheme: light only;
     background: lightyellow;
@@ -55,6 +68,14 @@ h1:focus {
             stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
             transition: stroke-dasharray 0.05s ease-in-out;
         }
+
+:root[data-theme="dark"] .loading-progress circle {
+    stroke: rgba(255, 255, 255, 0.12);
+}
+
+    :root[data-theme="dark"] .loading-progress circle:last-child {
+        stroke: #776be7;
+    }
 
 .loading-progress-text {
     position: absolute;
