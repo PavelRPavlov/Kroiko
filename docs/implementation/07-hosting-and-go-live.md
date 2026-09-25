@@ -183,10 +183,25 @@ certificate in `us-east-1`, and CloudFront is global.
 - [ ] **Record:** fill in `hosting/aws/hosting.json` (bucket, distribution IDs, function names, the staging
       `*.cloudfront.net` URL) in the PR, with the date.
 
+Provisioned so far (2026-09-25), recorded in `hosting/aws/hosting.json`:
+
+- Bucket `kroiko-pwa` (`eu-central-1`).
+- Production distribution `E3J8QR1NOULXRZ` (`d2gbcl6o27o2ys.cloudfront.net`) on the Free plan, with:
+  - `kroiko.com` and `www.kroiko.com`, and a `us-east-1` certificate for both;
+  - `CachingOptimized`, and the function `kroiko-pwa-production`;
+  - the Route 53 zone `kroiko.com` attached to its plan, with the four alias records.
+- `www.kroiko.com` answers with the function's 301.
+
+**Staging is deferred** (Pavel, 2026-09-25): no `main` distribution or function yet, and its entries in
+`hosting.json` stay empty. The script checks only the environment it deploys, so production deploys without them.
+Until staging exists, step 4's checks run against production (`https://kroiko.com`) with a `v0.x` release. Nobody
+is given the URL before the v1.0.0 sign-off (07b).
+
 ### 4. First deploy to `main` staging
 
 Deploy the app with `-Environment main`, then check it by hand on the staging URL and note the results in the
-PR:
+PR. While staging is deferred, deploy a `v0.x` release with `-Environment production` and run the same checks
+on `https://kroiko.com`:
 
 - `curl -sI -H "Accept-Encoding: br" <url>/_framework/<a .wasm file>` → `Content-Encoding: br` and
   `Content-Type: application/wasm`. With `Accept-Encoding: gzip` instead → `Content-Encoding: gzip`;
@@ -199,7 +214,8 @@ PR:
 - Edge installs it, and after one online visit it starts offline;
 - the CloudFront console shows both distributions on the Free plan, and Billing shows $0.
 
-Nothing is deployed to production in 07a. Nobody is given any URL.
+Nobody is given any URL in 07a. With staging deferred, production carries `v0.x` builds until then. They
+roll forward to `v1.0.0` at go-live, and an older version is never redeployed (ADR-0002 §8).
 
 ## 07b — Go-live
 
