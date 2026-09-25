@@ -87,7 +87,7 @@ ATAFurniture.Server (unchanged behaviour) ──► the same Kroiko.Domain
 **Projects:** `Kroiko.Client.Blazor` (PWA), `Kroiko.Domain` (shared, **must stay
 browser-safe**), `ATAFurniture.Server` (maintained), and the test projects `Kroiko.Testing`,
 `Kroiko.Domain.Tests`, `Kroiko.Client.Tests`, `ATAFurniture.Server.Tests`
-([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0011](docs/adr/README.md).
+([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0012](docs/adr/README.md).
 Build order: [docs/implementation/00-overview.md](docs/implementation/00-overview.md).
 
 **`Kroiko.Client.Tests`** (xUnit, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §5) tests the shipped

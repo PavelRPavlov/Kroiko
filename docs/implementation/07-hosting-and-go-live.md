@@ -160,7 +160,7 @@ certificate in `us-east-1`, and CloudFront is global.
   - Origin: the bucket's REST endpoint (not a website endpoint), with origin access control (sign requests).
     Leave the origin path empty; the first deploy sets it.
   - Default behavior: redirect HTTP to HTTPS; GET and HEAD only; compress objects automatically; cache policy
-    **`UseOriginCacheControlHeaders`** (managed); no origin request policy; no response headers policy.
+    **`CachingOptimized`** (managed, "Recommended for S3"; ADR-0012); no origin request policy; no response headers policy.
     Viewer request: its own function.
   - No default root object (the function handles `/`), no Lambda@Edge, no standard or real-time logs.
   - Production only: the alternate domain names `kroiko.com` and `www.kroiko.com`, and the ACM certificate.
