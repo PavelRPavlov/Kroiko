@@ -1,6 +1,6 @@
 ﻿namespace Kroiko.Domain.TemplateBuilding.Lonira;
 
-public class LoniraSheet : SheetBase
+internal sealed class LoniraSheet : SheetBase
 {
     public string? SheetMaterial { get; set; }
 }

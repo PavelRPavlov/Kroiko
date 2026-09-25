@@ -1,34 +1,14 @@
-﻿@using ATAFurniture.Server.Models
-@using Kroiko.Domain.ExcelFilesGeneration
-@using Kroiko.Domain.TemplateBuilding
-@using Microsoft.Extensions.DependencyInjection
-@using System.IO
-@using System.Net.Mail
-@using System.Runtime.CompilerServices
-@using System.Text
-@using ATAFurniture.Server.DataAccess
-@using ATAFurniture.Server.Pages
-@using Microsoft.Extensions.Configuration
-@using sib_api_v3_sdk.Api
-@using sib_api_v3_sdk.Model
-@using SelectionMode = Syncfusion.Blazor.SplitButtons.SelectionMode
-@using Task = System.Threading.Tasks.Task
-
-@implements IDisposable
-
-<RadzenCard>
-    <RadzenLabel class="py-3" Text="Избери една от опциите:"></RadzenLabel>
-    <RadzenRow class="py-3">
-        <SfButton CssClass="e-primary" @onclick="OnCreateFilesOptionSelected"><i class="bi-file-earmark-excel"></i> Генерирай бланки за поръчка</SfButton>
-        <SfButton CssClass="e-primary" @onclick="OnSendEmailOptionSelected"><i class="bi-envelope-at"></i> Изпрати Email поръчка</SfButton>
-    </RadzenRow>
+<MudPaper Class="pa-4">
+    <MudText Class="py-3">Избери една от опциите:</MudText>
+    <MudStack Row="true" Class="py-3" Spacing="2">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.GridOn" OnClick="OnCreateFilesOptionSelected">Генерирай бланки за поръчка</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Email" OnClick="OnSendEmailOptionSelected">Изпрати Email поръчка</MudButton>
+    </MudStack>
     @if (_shouldGenerateFiles)
     {
         @if (_areFilesGenerating)
         {
-            <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large">
-                <Template><h6>Working</h6></Template>
-            </RadzenProgressBarCircular>
+            <Spinner />
         }
         else
         {
@@ -45,230 +25,45 @@
         if (string.IsNullOrEmpty(Context.ContactInfo.CompanyName) ||
             string.IsNullOrEmpty(Context.ContactInfo.MobileNumber))
         {
-            <RadzenAlert Variant="Variant.Filled" AlertStyle="AlertStyle.Danger" Title="Липсващи контакти">
-                <p>Няма въведен телефонен номер! Поръчката ще бъде изпратена без тази инфомация.</p>
-            </RadzenAlert>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
+                <MudText Typo="Typo.subtitle2">Липсващи контакти</MudText>
+                Няма въведен телефонен номер! Поръчката ще бъде изпратена без тази инфомация.
+            </MudAlert>
         }
-        
-        <RadzenAlert Variant="Variant.Filled" AlertStyle="AlertStyle.Warning" Title="Тестване">
-            <p>Използвайте отметката за да изпратите тестов Email само към вашата поща</p>
-            <SfCheckBox TChecked="bool" @bind-Checked="_isTestEmail" Label="Изпрати тестов Email"></SfCheckBox>
-        </RadzenAlert>
-        
-        <RadzenAlert Variant="Variant.Outlined" AlertStyle="AlertStyle.Info" Title="Информация">
-            <p>Тази опция ще изпрати реален Email към <span class="font-weight-bold">@(_isTestEmail ? Context.ContactInfo.Email : Context.TargetCompany.Email)</span> с прикачени и попълнени бланки</p>
-        </RadzenAlert>
-        
-        <SfButton CssClass="e-sucess" Content="Изпрати e-mail поръчка" @onclick="OnSendEmailClicked"></SfButton>
-        
-        if(_sendingEmail)
+
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="my-2">
+            <MudText Typo="Typo.subtitle2">Тестване</MudText>
+            Използвайте отметката за да изпратите тестов Email само към вашата поща
+            <MudCheckBox T="bool" @bind-Value="_isTestEmail" Label="Изпрати тестов Email" />
+        </MudAlert>
+
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-2">
+            <MudText Typo="Typo.subtitle2">Информация</MudText>
+            Тази опция ще изпрати реален Email към <span class="font-weight-bold">@(_isTestEmail ? Context.ContactInfo.Email : Context.TargetCompany.Email)</span> с прикачени и попълнени бланки
+        </MudAlert>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="OnSendEmailClicked">Изпрати e-mail поръчка</MudButton>
+
+        if (_sendingEmail)
         {
-            <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" class="p-3">
-                <Template><h6>Working</h6></Template>
-            </RadzenProgressBarCircular>
+            <Spinner />
         }
         else
         {
             @if (_isEmailSentSuccessful.HasValue && _isEmailSentSuccessful.Value)
             {
-                <RadzenAlert Variant="Variant.Filled" AlertStyle="AlertStyle.Success" Title="Информация">
-                    <p>Успешно изпратихме е-mail към @_toEmail.Email</p>
-                </RadzenAlert>
-                
+                <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="my-2">
+                    <MudText Typo="Typo.subtitle2">Информация</MudText>
+                    Успешно изпратихме е-mail към @_toEmail.Email
+                </MudAlert>
             }
             @if (_isEmailSentSuccessful.HasValue && !_isEmailSentSuccessful.Value)
             {
-                <RadzenAlert Variant="Variant.Filled" AlertStyle="AlertStyle.Danger" Title="Възникна грешка">
-                    <p>Моля опитайте пак или опишете проблема на email support@kroiko.com</p>
-                </RadzenAlert>
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
+                    <MudText Typo="Typo.subtitle2">Възникна грешка</MudText>
+                    Моля опитайте пак или опишете проблема на email support@kroiko.com
+                </MudAlert>
             }
         }
     }
-</RadzenCard>
-
-@code {
-    [Inject] FileGeneratorService FileGenerator { get; set; }
-    [Inject] IServiceProvider ServiceProvider { get; set; }
-    [Inject] ILogger<OrderHandlingComponent> Logger { get; set; }
-    [Inject] IConfiguration Configuration { get; set; }
-    
-    [Parameter] public UserContextService UserContextService { get; set; }
-    [Parameter] public ConverterContext Context { get; set; }
-
-    private bool _shouldGenerateFiles = false;
-    private bool _shouldSendEmail = false;
-    private bool _areFilesGenerating = false;
-    private bool _sendingEmail = false;
-    private bool _isTestEmail = true;
-    private bool _isCreditConsumed = false;
-    private SendSmtpEmailTo _toEmail = null;
-    private readonly List<DirectoryInfo> _sessionDirs = [];
-    private List<FileDisplayContext> _files = [];
-    private bool? _isEmailSentSuccessful = null;
-
-    protected override void OnInitialized()
-    {
-        Context.PropertyChanged += ContextOnPropertyChanged;
-    }
-
-    private void ContextOnPropertyChanged(object sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(ConverterContext.Files))
-        {
-            _shouldSendEmail = false;
-            _shouldGenerateFiles = false;
-            _isCreditConsumed = false;
-            _files.Clear();
-        }
-        StateHasChanged();
-    }
-
-    private async Task OnCreateFilesOptionSelected()
-    {
-        _shouldGenerateFiles = true;
-        _shouldSendEmail = false;
-        var alreadyGeneratedFiles = await GenerateFiles();
-        _files = await SaveFilesLocallyForDownload(alreadyGeneratedFiles);
-        _areFilesGenerating = false;
-        StateHasChanged();
-    }
-
-    private async Task<List<FileSaveContext>> GenerateFiles()
-    {
-        var fileNameProvider = ServiceProvider.GetKeyedService<IFileNameProvider>(Context.TargetCompany.Name);
-        if (fileNameProvider is null)
-        {
-            Logger.LogWarning("No file name provider found for company {CompanyName}", Context.TargetCompany.Name);
-        }
-
-        var templateBuilder = ServiceProvider.GetKeyedService<ITemplateBuilder>(Context.TargetCompany.Name) as ITemplateBuilder;
-        if (templateBuilder is null)
-        {
-            Logger.LogWarning("No template builder found for company {CompanyName}", Context.TargetCompany.Name);
-        }
-        
-        _areFilesGenerating = true;
-        var alreadyGeneratedFiles = await FileGenerator.CreateFiles(Context.ContactInfo, Context.Files, templateBuilder, fileNameProvider, Context.DifferentEdgeColor);
-        return alreadyGeneratedFiles;
-    }
-
-    private async Task<List<FileDisplayContext>> SaveFilesLocallyForDownload(List<FileSaveContext> alreadyGeneratedFiles)
-    {
-        var result = new List<FileDisplayContext>();
-        foreach (var file in alreadyGeneratedFiles)
-        {
-            result.Add(await CreateFileDownloadLink(file));
-        }
-
-        return result;
-    }
-    
-    private async Task<FileDisplayContext> CreateFileDownloadLink(FileSaveContext context)
-    {
-        var filesRootPath = "files";
-        var salt = Guid.NewGuid().ToString();
-        var sessionFolder = Path.Combine(
-            Environment.CurrentDirectory,
-            filesRootPath,
-            salt);
-        var sessionDir = Directory.CreateDirectory(sessionFolder);
-        _sessionDirs.Add(sessionDir);
-
-        await File.WriteAllBytesAsync(
-            Path.Combine(
-                sessionDir.FullName,
-                context.FileName),
-            context.Content);
-        return new FileDisplayContext { Name = context.FileName, Url = Path.Combine(filesRootPath, salt, context.FileName) };
-    }
-
-    private void OnSendEmailOptionSelected()
-    {
-        _shouldGenerateFiles = false;
-        _shouldSendEmail = true;
-
-        StateHasChanged();
-    }
-
-    private async Task OnSendEmailClicked()
-    {
-        _sendingEmail = true;
-        
-        // TODO extract in dedicated service
-        await SendEmailUsingSendInBlue();
-        
-        if(_isEmailSentSuccessful.HasValue && _isEmailSentSuccessful.Value)
-        {
-            await UserContextService.ConsumeSingleCredit();
-        }
-        _sendingEmail = false;
-    }
-
-    private async Task SendEmailUsingSendInBlue()
-    {
-        var settings = new EmailSettings();
-        Configuration.GetSection("EmailSettings").Bind(settings);
-        var client = new TransactionalEmailsApi();
-        client.Configuration.ApiKey["api-key"] = settings.ApiKey;
-        var files = await GenerateFiles();
-        var usedMaterials = Context.Details.Select(d => d.Material).Distinct().ToList();
-        _toEmail = _isTestEmail ?
-            new SendSmtpEmailTo(Context.ContactInfo.Email):
-            new SendSmtpEmailTo(Context.TargetCompany.Email, Context.TargetCompany.Name);
-        var email = new SendSmtpEmail(
-            new SendSmtpEmailSender(settings.Name, settings.Email),
-            [_toEmail],
-            templateId: settings.EmailTemplateId,
-            _params: new Dictionary<string, object>
-            {
-                { "CompanyName", Context.ContactInfo.CompanyName },
-                { "CompanyMobile", Context.ContactInfo.MobileNumber },
-                { "CompanyEmail", Context.ContactInfo.Email },
-                { "MaterialList", usedMaterials }
-            },
-            attachment: files.Select(f => new SendSmtpEmailAttachment
-            {
-                Name = f.FileName,
-                Content = f.Content
-            }).ToList()
-        );
-        
-        try
-        {
-            await client.SendTransacEmailAsync(email);
-            _isEmailSentSuccessful = true;
-        }
-        catch (Exception e)
-        {
-            _isEmailSentSuccessful = false;
-        }
-    }
-
-    private void OnFileLinkClicked()
-    {
-        if (!_isCreditConsumed)
-        {
-            _isCreditConsumed = true;
-            UserContextService.ConsumeSingleCredit().ConfigureAwait(false);
-        }
-    }
-
-    public void Dispose()
-    {
-        Context.PropertyChanged -= ContextOnPropertyChanged;
-        _files.Clear();
-        
-        foreach (var sessionDir in _sessionDirs)
-        {
-            sessionDir.Delete(true);
-        }
-    }
-
-    private record EmailSettings
-    {
-        public string Name { get; init; }
-        public string Email { get; init; }
-        public string ApiKey { get; init; }
-        public long EmailTemplateId { get; init; }
-    }
-}
+</MudPaper>

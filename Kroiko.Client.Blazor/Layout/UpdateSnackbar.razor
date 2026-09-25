@@ -1,0 +1,21 @@
+@using Kroiko.Client.Blazor.Updates
+@implements IDisposable
+@inject UpdateOffer Offer
+@* The reload snackbar's content (ADR-0002 §1): MainLayout shows it while UpdateOffer.ShowsSnackbar. The snackbar
+   itself has no action or close icon, so a click in it does nothing but these buttons. *@
+<div class="d-flex flex-wrap align-center gap-2">
+    <span>@UpdateOffer.ReadyMessage</span>
+    <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Offer.ReloadAsync"
+               Disabled="Offer.IsReloading">Презареди</MudButton>
+    <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Offer.Postpone"
+               Disabled="Offer.IsReloading">По-късно</MudButton>
+</div>
+
+@code {
+    protected override void OnInitialized() => Offer.Changed += OnOfferChanged;
+
+    public void Dispose() => Offer.Changed -= OnOfferChanged;
+
+    // WebAssembly runs on one thread, JS callbacks included, so the component can re-render directly.
+    private void OnOfferChanged() => StateHasChanged();
+}

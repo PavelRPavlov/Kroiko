@@ -1,0 +1,8 @@
+@page "/not-found"
+@inject NavigationManager Navigation
+
+@* Unknown routes redirect to the Converter (ADR-0005 §2). *@
+
+@code {
+    protected override void OnInitialized() => Navigation.NavigateTo("", replace: true);
+}

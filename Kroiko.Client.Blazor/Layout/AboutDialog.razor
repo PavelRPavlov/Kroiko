@@ -1,0 +1,73 @@
+@using Kroiko.Client.Blazor.Updates
+@implements IDisposable
+@inject UpdateOffer Offer
+@* The version is shown here only (ADR-0002 §5), with the update controls under it: the offer of a version that waits
+   (after "По-късно" too, ADR-0002 §3), otherwise the manual check (ADR-0002 §4). *@
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6">Kroiko</MudText>
+        <MudText>Конвертор на списъци за разкрой от Polyboard към бланки за поръчка.</MudText>
+        <MudText Typo="Typo.body2" Class="mt-2 mud-text-secondary">@AppVersion.Current</MudText>
+        @if (Offer.IsReady)
+        {
+            <MudAlert Severity="Severity.Info" Class="mt-3" Dense="true">
+                <div class="d-flex flex-wrap align-center gap-2">
+                    <span>@UpdateOffer.ReadyMessage</span>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                               OnClick="Offer.ReloadAsync" Disabled="Offer.IsReloading">Презареди</MudButton>
+                </div>
+            </MudAlert>
+        }
+        else
+        {
+            <div class="d-flex flex-wrap align-center gap-2 mt-3">
+                <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh"
+                           OnClick="CheckAsync" Disabled="_checking">Провери за обновления</MudButton>
+                @if (_checking)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                }
+            </div>
+            @if (_report is not null)
+            {
+                <MudText Typo="Typo.body2" Class="mt-2" role="status">@_report</MudText>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Close">Затвори</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance Dialog { get; set; } = default!;
+
+    private bool _checking;
+    private string? _report;
+
+    protected override void OnInitialized() => Offer.Changed += OnOfferChanged;
+
+    public void Dispose() => Offer.Changed -= OnOfferChanged;
+
+    private async Task CheckAsync()
+    {
+        if (_checking)
+            return;
+
+        _checking = true;
+        _report = null;
+        try
+        {
+            _report = await Offer.CheckNowAsync();
+        }
+        finally
+        {
+            _checking = false;
+        }
+    }
+
+    // WebAssembly runs on one thread, JS callbacks included, so the dialog can re-render directly.
+    private void OnOfferChanged() => StateHasChanged();
+
+    private void Close() => Dialog.Close();
+}

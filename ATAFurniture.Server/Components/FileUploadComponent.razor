@@ -1,72 +1,86 @@
-﻿@using Kroiko.Domain
 @using Kroiko.Domain.CellsExtracting
-@using Kroiko.Domain.ExcelFilesGeneration
-@using Kroiko.Domain.TemplateBuilding
-@using UploadChangeEventArgs = Syncfusion.Blazor.Inputs.UploadChangeEventArgs
 @using System.IO
 @using ATAFurniture.Server.Models
-@using Syncfusion.Blazor
-@using Syncfusion.Blazor.Inputs
-@using Syncfusion.Blazor.Navigations
-@using Syncfusion.Blazor.Grids
-@using Syncfusion.Blazor.Cards
 @using System.Collections.ObjectModel
 @using ATAFurniture.Server.DataAccess
+@using Microsoft.AspNetCore.Components.Forms
 
-<RadzenCard>
-    <RadzenRow>
-        <RadzenStack disabled="@(UserContextService.User.CreditsCount <= 0)" >
-            <RadzenLabel Text="Избери Polyboard файл:"></RadzenLabel>
-            <SfUploader AutoUpload="true" AllowMultiple="false" AllowedExtensions=".txt, .csv">
-                <UploaderEvents ValueChange="@OnFileUpload" OnRemove="@OnFileRemoved"></UploaderEvents>
-            </SfUploader>
-        </RadzenStack>
+<MudPaper Class="pa-4">
+    <MudStack Spacing="2">
+        <MudText>Избери Polyboard файл:</MudText>
+        @* Drag-and-drop: with CustomContent, MudBlazor renders no drop overlay of its own, so we
+           expose the internal <input> (Hidden="false") and stretch it transparently over the whole
+           zone. A native file <input> accepts dropped files (assign + change) instead of letting the
+           browser navigate to them. The wrapping .relative gives the absolute input its bounds. *@
+        <div class="relative mud-width-full">
+            <MudFileUpload T="IBrowserFile"
+                           Accept=".txt,.csv"
+                           MaximumFileCount="1"
+                           FilesChanged="OnFileUpload"
+                           Hidden="false"
+                           InputClass="absolute mud-width-full mud-height-full overflow-hidden z-10"
+                           InputStyle="opacity:0; cursor:pointer;"
+                           Disabled="@(UserContextService.User.CreditsCount <= 0)">
+                <CustomContent Context="fileUpload">
+                    <MudPaper Outlined="true" Class="pa-8"
+                              Style="border: 2px dashed var(--mud-palette-lines-inputs, #bdbdbd); text-align: center;">
+                        <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Color="Color.Primary" />
+                            <MudText Typo="Typo.body1">Плъзнете и пуснете Polyboard файл тук, или</MudText>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                       OnClick="@(() => fileUpload.OpenFilePickerAsync())"
+                                       Disabled="@(UserContextService.User.CreditsCount <= 0)">
+                                Избери Polyboard файл
+                            </MudButton>
+                        </MudStack>
+                    </MudPaper>
+                </CustomContent>
+            </MudFileUpload>
+        </div>
+
         @if (_isLoadingFiles)
         {
-            <RadzenColumn>
-                <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large">
-                    <Template><h6>Working</h6></Template>
-                </RadzenProgressBarCircular>
-            </RadzenColumn>
+            <Spinner />
         }
         @if (_isError)
         {
-            <RadzenColumn>
-                <RadzenAlert Text="Каченият файл не отговаря на изискванията за формат! Кредити не са консумирани. Моля, качете друг файл." AlertStyle="AlertStyle.Danger" Variant="Variant.Filled"></RadzenAlert>
-                
-                <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Filled">
-                    Информация за формата може да намерите <a href="configuration">ТУК</a>
-                </RadzenAlert>
-            </RadzenColumn>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
+                Каченият файл не отговаря на изискванията за формат! Кредити не са консумирани. Моля, качете друг файл.
+            </MudAlert>
+            <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="my-2">
+                Информация за формата може да намерите <a href="configuration">ТУК</a>
+            </MudAlert>
         }
-    </RadzenRow>
-</RadzenCard>
+    </MudStack>
+</MudPaper>
 
 @code {
     [Inject] ILogger<FileUploadComponent> Logger { get; set; }
     [Inject] IDetailsExtractorService DetailsExtractorService { get; set; }
-    
+
     [Parameter] public ConverterContext Context { get; set; }
     [Parameter] public UserContextService UserContextService { get; set; }
 
     private bool _isLoadingFiles;
     private bool _isError;
 
-    private async Task OnFileUpload(UploadChangeEventArgs arg)
+    private async Task OnFileUpload(IBrowserFile file)
     {
-        if (UserContextService.User.CreditsCount <= 0)
+        if (file is null || UserContextService.User.CreditsCount <= 0)
         {
             return;
         }
-        
+
         _isError = false;
         _isLoadingFiles = true;
-        var uploadFileStream = new MemoryStream();
-        foreach (var file in arg.Files)
+        try
         {
+            var uploadFileStream = new MemoryStream();
             try
             {
-                await file.File.OpenReadStream().CopyToAsync(uploadFileStream);
+                await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(uploadFileStream);
             }
             catch (Exception ex)
             {
@@ -74,23 +88,20 @@
                 _isError = true;
                 return;
             }
-        }
 
-        var details = await DetailsExtractorService.ExtractDetails(uploadFileStream);
-        _isLoadingFiles = false;
-        if (!details.Any())
+            var details = await DetailsExtractorService.ExtractDetails(uploadFileStream);
+            if (!details.Any())
+            {
+                _isError = true;
+                return;
+            }
+
+            Context.Details = new ObservableCollection<Detail>(details);
+        }
+        finally
         {
-            _isError = true;
-            return;
+            // Always clear the spinner, even on the error/early-return paths (spinner-hang fix).
+            _isLoadingFiles = false;
         }
-
-        Context.Details = new ObservableCollection<Detail>(details);
-    }
-    
-    private void OnFileRemoved(RemovingEventArgs obj)
-    {
-        _isError = false;
-        _isLoadingFiles = false;
-        Context.Details = [];
     }
 }

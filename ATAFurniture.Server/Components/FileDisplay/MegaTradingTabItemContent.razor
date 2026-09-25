@@ -1,73 +1,96 @@
-﻿@using ATAFurniture.Server.Models
+@using ATAFurniture.Server.Models
 @using Kroiko.Domain.TemplateBuilding
-@using TextAlign = Syncfusion.Blazor.Grids.TextAlign
+@using System.Collections.ObjectModel
 
-<TabItem >
-    <HeaderTemplate>@File.FileName</HeaderTemplate>
-    <ContentTemplate >
-        <RadzenRow class="p-3">
-            <RadzenColumn>
-                <RadzenLabel Text="Име на клиента: "></RadzenLabel>
-            </RadzenColumn>
-            <RadzenColumn>
-                <SfTextBox @bind-Value="@Context.ContactInfo.CompanyName"></SfTextBox>
-            </RadzenColumn>
-        </RadzenRow>
-        <RadzenRow class="p-3">
-            <RadzenColumn>
-                <RadzenLabel Text="Телефон за връзка: "></RadzenLabel>
-            </RadzenColumn>
-            <RadzenColumn>
-                <SfTextBox @bind-Value="@Context.ContactInfo.MobileNumber"></SfTextBox>
-            </RadzenColumn>
-        </RadzenRow>
-        <RadzenRow class="p-3">
-            <RadzenColumn>
-                <RadzenLabel Text="Материал: "></RadzenLabel>
-            </RadzenColumn>
-            <RadzenColumn>
-                <SfTextBox @bind-Value="@File.FileName"></SfTextBox>
-            </RadzenColumn>
-        </RadzenRow>
+<MudGrid Class="pa-3">
+    <MudItem xs="12" sm="6">
+        <MudTextField @bind-Value="Context.ContactInfo.CompanyName" Label="Име на клиента" />
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudTextField @bind-Value="Context.ContactInfo.MobileNumber" Label="Телефон за връзка" />
+    </MudItem>
+</MudGrid>
 
-        <SfGrid class="p-3" DataSource="_source" TValue="MegaTrading" AllowPaging="true" AllowTextWrap="true">
-            <GridEditSettings AllowEditing="true" AllowEditOnDblClick="true" Mode="EditMode.Normal"></GridEditSettings>
-            <GridPageSettings PageSize="25"></GridPageSettings>
-            <GridColumns>
-                <GridColumn Field="@nameof(MegaTrading.Id)" Visible="false" IsPrimaryKey="true"></GridColumn>
-                <GridColumn Field="@nameof(MegaTrading.Material)" Width="160" HeaderText="Материал на детайла" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(MegaTrading.Height)" Width="160" HeaderText="X - фладер" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(MegaTrading.Width)" Width="180" HeaderText="Y" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(MegaTrading.Quantity)" HeaderText="Брой" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(MegaTrading.Rotated)" HeaderText="Rot." TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(MegaTrading.LeftEdge)" HeaderText="Ляво" TextAlign="TextAlign.Center" AllowEditing="true"></GridColumn>
-                <GridColumn Field="@nameof(MegaTrading.BottomEdge)" HeaderText="Долу" TextAlign="TextAlign.Center" AllowEditing="true"></GridColumn>
-                <GridColumn Field="@nameof(MegaTrading.RightEdge)" HeaderText="Дясно" TextAlign="TextAlign.Center" AllowEditing="true"></GridColumn>
-                <GridColumn Field="@nameof(MegaTrading.TopEdge)" HeaderText="Горе" TextAlign="TextAlign.Center" AllowEditing="true"></GridColumn>
-                <GridColumn Field="@nameof(MegaTrading.EdgeBandingMaterial)" HeaderText="Материал - Кант" TextAlign="TextAlign.Center" AllowEditing="true"></GridColumn>
-                <GridColumn Field="@nameof(MegaTrading.Note)" HeaderText="Забележка" EditType="EditType.DefaultEdit" AllowEditing="true"></GridColumn>
-            </GridColumns>
-        </SfGrid>
-    </ContentTemplate>
-</TabItem>
+<MudPaper Class="pa-3" Elevation="0">
+    <MudText Typo="Typo.subtitle1" GutterBottom="true">Използвани материали:</MudText>
+    @foreach (var group in _groups)
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="my-1">
+            <MudText>@group.OldName</MudText>
+            <MudTextField @bind-Value="group.NewName" />
+        </MudStack>
+    }
+</MudPaper>
+
+<MudStack Class="pa-3">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OnMaterialsReplaced">Замести използваните с новите материали</MudButton>
+</MudStack>
+
+<MudDataGrid T="MegaTradingViewModel" Items="@_source" ReadOnly="false"
+             EditMode="DataGridEditMode.Cell" EditTrigger="DataGridEditTrigger.OnRowClick"
+             CommittedItemChanged="OnCellCommitted"
+             Bordered="true" Dense="true" Class="pa-3">
+    <Columns>
+        <PropertyColumn Property="x => x.Material" Title="Материал на детайла" Editable="false" />
+        <PropertyColumn Property="x => x.Height" Title="X - фладер" Editable="false" />
+        <PropertyColumn Property="x => x.Width" Title="Y" Editable="false" />
+        <PropertyColumn Property="x => x.Quantity" Title="Брой" Editable="false" />
+        <PropertyColumn Property="x => x.Rotated" Title="Rot." Editable="false" />
+        <PropertyColumn Property="x => x.LeftEdge" Title="Ляво" Editable="true" Required="false" />
+        <PropertyColumn Property="x => x.BottomEdge" Title="Долу" Editable="true" Required="false" />
+        <PropertyColumn Property="x => x.RightEdge" Title="Дясно" Editable="true" Required="false" />
+        <PropertyColumn Property="x => x.TopEdge" Title="Горе" Editable="true" Required="false" />
+        <PropertyColumn Property="x => x.EdgeBandingMaterial" Title="Материал - Кант" Editable="true" Required="false" />
+        <PropertyColumn Property="x => x.Note" Title="Забележка" Editable="true" Required="false" />
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="MegaTradingViewModel" PageSizeOptions="new[] { 25, 50, 100 }" />
+    </PagerContent>
+</MudDataGrid>
 
 @code {
     [Parameter] public KroikoFile File { get; set; }
     [Parameter] public ConverterContext Context { get; set; }
-    
-    private List<MegaTrading> _source;
+
+    private ObservableCollection<MegaTradingViewModel> _source;
+    private ObservableCollection<MegaTradingGroupModel> _groups = [];
 
     protected override void OnInitialized()
     {
-        _source = File.Details.Cast<MegaTrading>().ToList();
+        _source = File.Details.ToMegaTradingViewModel();
+        _groups = new(
+            _source.GroupBy(x => x.Material)
+            .Select(x => new MegaTradingGroupModel(x.Key, x.Key))
+            .ToList());
+    }
+
+    private void OnMaterialsReplaced()
+    {
+        foreach (var detail in _source)
+        {
+            foreach (var group in _groups.Where(g => g.OldName == detail.Material))
+            {
+                detail.Material = group.NewName;
+            }
+        }
+
+        foreach (var group in _groups)
+        {
+            group.OldName = group.NewName;
+        }
+
+        StateHasChanged();
+
+        File.Details = _source.ToKroikoDetails();
+    }
+
+    // The grid binds to view-models (_source), which are copies of File.Details. Re-project the
+    // edited view-models back onto File.Details on each cell commit so edge/note edits reach
+    // generation without requiring the "replace materials" button (parity with Lonira/Suliver,
+    // whose grids share detail instances with File.Details).
+    private Task OnCellCommitted(MegaTradingViewModel item)
+    {
+        File.Details = _source.ToKroikoDetails();
+        return Task.CompletedTask;
     }
 }
-
-<style>
-    .e-grid .e-gridheader {
-        border: 1px solid black;
-    }
-    .e-grid .e-gridcontent .e-content {
-        border: 1px solid black;
-    }
-</style>

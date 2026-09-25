@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using Kroiko.Domain;
-using Kroiko.Domain.CellsExtracting;
+using ATAFurniture.Server.Models;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Logging;
 
@@ -104,12 +103,12 @@ public class UserContextService
         User.CreditsCount--;
     }
 
-    public async Task UpdateSelectedCompanyAsync(SupportedCompany targetCompany)
+    public async Task UpdateSelectedCompanyAsync(ManufacturerBranch targetCompany)
     {
         await _dataRepository.UpdateSelectedCompany(User, targetCompany);
     }
 
-    public async ValueTask<SupportedCompany> GetPreviouslySelectedTargetCompanyAsync()
+    public async ValueTask<ManufacturerBranch> GetPreviouslySelectedTargetCompanyAsync()
     {
         var user = await _dataRepository.GetUserAsync(User.AadId);
         return user?.LastSelectedCompany;

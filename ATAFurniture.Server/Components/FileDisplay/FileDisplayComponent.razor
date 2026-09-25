@@ -1,36 +1,24 @@
-﻿@using ATAFurniture.Server.Models
+@using ATAFurniture.Server.Models
 @using Kroiko.Domain.CellsExtracting
 @using Kroiko.Domain.TemplateBuilding
-@using TextAlign = Syncfusion.Blazor.Grids.TextAlign
 @using System.Collections.ObjectModel
-@using System.Diagnostics
-@using System.Threading
-@using System.Timers
-@using Microsoft.EntityFrameworkCore.Query.Internal
-@using AnimationEffect = Syncfusion.Blazor.AnimationEffect
-@using Timer = System.Threading.Timer
+@using Kroiko.Domain
+@using Microsoft.Extensions.DependencyInjection
 @implements IDisposable
 
-<RadzenCard>
-    <RadzenLabel class="py-3" Text="Прегледай информацията и редактирай при необходимост:"></RadzenLabel>
+<MudPaper Class="pa-4">
+    <MudText Class="py-3">Прегледай информацията и редактирай при необходимост:</MudText>
     @if (_isLoadingFiles)
     {
-        <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large">
-            <Template><h6>Working</h6></Template>
-        </RadzenProgressBarCircular>
+        <Spinner />
     }
     else
     {
-        <SfTab ShowCloseButton="false" AllowDragAndDrop="false" EnablePersistence="true" ReorderActiveTab="false">
-            <TabEvents Selecting="OnTabItemSelected"/>
-            <TabAnimationSettings>
-                <TabAnimationPrevious Effect="AnimationEffect.None"></TabAnimationPrevious>
-                <TabAnimationNext Effect="AnimationEffect.None"></TabAnimationNext>
-            </TabAnimationSettings>
-            <TabItems>
-                @foreach (var file in Context.Files)
-                {
-                    switch (Context.TargetCompany.Name)
+        <MudTabs Rounded="true" Border="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-4">
+            @foreach (var file in Context.Files)
+            {
+                <MudTabPanel Text="@file.FileName">
+                    @switch (Context.TargetCompany.Name)
                     {
                         case nameof(SupportedCompanies.Lonira):
                             <LoniraTabItemContent File="@file" Context="@Context"/>
@@ -44,13 +32,14 @@
                         default:
                             break;
                     }
-                }
-            </TabItems>
-        </SfTab>
+                </MudTabPanel>
+            }
+        </MudTabs>
     }
-</RadzenCard>
+</MudPaper>
 
 @code {
+    [Inject] private IServiceProvider ServiceProvider { get; set; }
     [Parameter] public ConverterContext Context { get; set; }
 
     private bool _isLoadingFiles = true;
@@ -66,23 +55,18 @@
         if (firstRender)
         {
             LoadDataSource();
-            
-            // add 1s delay to show loading indicator
-            await Task.Delay(TimeSpan.FromSeconds(1)).ContinueWith((t) =>
-            {
-                InvokeAsync(() =>
-                {
-                    _isLoadingFiles = false;
-                    StateHasChanged();
-                });
-            });
+
+            // Brief delay so the loading indicator is visible before the tabs appear.
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            _isLoadingFiles = false;
+            StateHasChanged();
         }
     }
 
     private void ContextPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(ConverterContext.Details) ||
-            e.PropertyName == nameof(ConverterContext.TargetCompany) && 
+            e.PropertyName == nameof(ConverterContext.TargetCompany) &&
             !_isInternalChange)
         {
             _isLoadingFiles = true;
@@ -94,40 +78,19 @@
 
     private void LoadDataSource()
     {
-        var result = new List<KroikoFile>();
-        switch (Context.TargetCompany.Name)
+        // A target company must be chosen before the details can be grouped into files.
+        // For a first-time user (no previously-selected company) TargetCompany is null
+        // until they pick one from the dropdown, so bail out instead of dereferencing it.
+        // Selecting a company later re-invokes this via ContextPropertyChanged.
+        if (Context.TargetCompany is null)
         {
-            case nameof(SupportedCompanies.Lonira):
-                var groups = Context.Details.GroupBy(x => x.Material).ToList();
-                foreach (var group in groups.Where(group => !string.IsNullOrEmpty(group.Key)))
-                {
-                    result.Add(new KroikoFile { FileName = group.Key, Details = group.ToList().ToLoniraDetails() });
-                }
-
-                break;
-            case nameof(SupportedCompanies.Suliver):
-                if (Context.Details.Any())
-                {
-                    result.Add(new KroikoFile
-                    {
-                        // TODO what is the required file name
-                        FileName = "Suliver",
-                        Details = Context.Details.ToSuliverDetails()
-                    });
-                }
-                break;
-            case nameof(SupportedCompanies.MegaTrading):
-                if (Context.Details.Any())
-                {
-                    result.Add(new KroikoFile
-                    {
-                        // TODO what is the required file name
-                        FileName = "MegaTrading",
-                        Details = Context.Details.ToMegaTradingDetails()
-                    });
-                }
-                break;
+            return;
         }
+
+        // The order format maps and groups the details (ADR-0004 §1; Lonira: one file per material). A name
+        // with no format (none today) gives no files, as the old switch's default did.
+        var format = ServiceProvider.GetKeyedService<IOrderFormat>(Context.TargetCompany.Name);
+        var result = format?.CreateFiles(Context.Details) ?? [];
 
         _isInternalChange = true;
         Context.Files = new ObservableCollection<KroikoFile>(result);
@@ -138,41 +101,4 @@
     {
         Context.PropertyChanged -= ContextPropertyChanged;
     }
-
-    private void OnTabItemSelected(SelectingEventArgs obj)
-    {
-        if (obj.IsSwiped)
-        {
-            obj.Cancel = true;
-        }
-    }
-
-    private void OnTabCreated(object obj)
-    {
-        _isLoadingFiles = false;
-    }
 }
-<style>
-    .e-tab .e-tab-header {
-       background: #FAFAFA !important;
-       color: whitesmoke;
-   }
-   .e-tab .e-tab-header .e-toolbar-item.e-active {
-        border-left: 1px solid black;
-        border-top: 1px solid black;
-        border-right: 1px solid black;
-        border-radius: 6px 6px 0 0;
-        color: black;
-    }
-    .e-tab .e-tab-header .e-toolbar-item .e-tab-wrap:hover {
-        border-left: 1px solid black;
-        border-top: 1px solid black;
-        border-right: 1px solid black;
-        border-radius: 6px 6px 0 0;
-        color: black;
-     }
-   .e-tab .e-content {
-        background: #FAFAFA !important;
-        border: 1px solid black;
-   }
-</style>

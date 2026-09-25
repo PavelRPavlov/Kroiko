@@ -1,0 +1,34 @@
+@page "/"
+@inherits ConverterStateComponentBase
+@inject ISnackbar Snackbar
+
+<PageTitle>Kroiko</PageTitle>
+
+<MudStack Spacing="4">
+    <TargetCompanySelectionComponent />
+    <FileUploadComponent />
+
+    @if (ConverterState.Files.Count > 0)
+    {
+        <ContactInfoComponent />
+        <FileDisplayComponent />
+        <OrderHandlingComponent />
+    }
+</MudStack>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        ConverterState.Error += ShowError;
+        // Once per app start: fills the contacts and the manufacturer the operator has not chosen (ADR-0005 §6).
+        await ConverterState.LoadDeviceSettingsAsync();
+    }
+
+    private void ShowError(string message) => Snackbar.Add(message, Severity.Error);
+
+    public override void Dispose()
+    {
+        ConverterState.Error -= ShowError;
+        base.Dispose();
+    }
+}

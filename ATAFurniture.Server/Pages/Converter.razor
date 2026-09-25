@@ -7,11 +7,11 @@
 
 @if(_isUserContextReady)
 {
-    <RadzenStack Gap="1em">
+    <MudStack Spacing="4">
         <UserCreditsComponent UserContextService="@UserContextService"/>
         <TargetCompanySelectionComponent UserContextService="@UserContextService" Context="@Context"/>
         <FileUploadComponent UserContextService="@UserContextService" Context="@Context"/>
-    
+
         @if (Context.Details.Any())
         {
             <FileDisplayComponent Context="@Context"/>
@@ -21,13 +21,11 @@
         {
             <OrderHandlingComponent UserContextService="@UserContextService"  Context="@Context"/>
         }
-    </RadzenStack>
+    </MudStack>
 }
 else
 {
-    <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large">
-        <Template><h6>Working</h6></Template>
-    </RadzenProgressBarCircular>
+    <Spinner />
 }
 
 @code {
@@ -42,7 +40,12 @@ else
         {
             await UserContextService.ExtractUserIdentity();
             var lastSelection = UserContextService.User!.LastSelectedCompany;
-            Context.TargetCompany = lastSelection ?? await UserContextService.GetPreviouslySelectedTargetCompanyAsync();
+            // Default to Lonira when the user has no previously-selected company, so a first-time
+            // user can convert without first picking from the dropdown. Revisit if a deliberate
+            // "no default" selection is preferred.
+            Context.TargetCompany = lastSelection
+                ?? await UserContextService.GetPreviouslySelectedTargetCompanyAsync()
+                ?? ManufacturerBranches.Lonira;
 
             Context.ContactInfo.CompanyName = UserContextService.User.CompanyName;
             Context.ContactInfo.MobileNumber = UserContextService.User.MobileNumber;

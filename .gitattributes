@@ -1,0 +1,12 @@
+# The fixtures keep CRLF, as they were exported, regardless of platform / core.autocrlf.
+Kroiko.Testing/TestData/polyboard/*.txt text eol=crlf
+# ...except the line-ending variants (ADR-0006 §1): LF-only, CR-only, a UTF-8 BOM and whitespace-only
+# lines. Their bytes are the point of the fixture, so git must never convert them.
+Kroiko.Testing/TestData/polyboard/*-lf.txt -text
+Kroiko.Testing/TestData/polyboard/*-cr.txt -text
+Kroiko.Testing/TestData/polyboard/*-bom.txt -text
+Kroiko.Testing/TestData/polyboard/*-whitespace-lines.txt -text
+
+# Golden files (01-golden-baseline) are compared byte for byte / as exact text: worksheet XML
+# uses LF, the .cut_mt uses CRLF (ADR-0009). Never let git convert them.
+Kroiko.Testing/TestData/golden/** -text

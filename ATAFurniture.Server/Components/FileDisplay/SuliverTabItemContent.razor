@@ -1,65 +1,47 @@
-﻿@using Kroiko.Domain.TemplateBuilding
+@using Kroiko.Domain.TemplateBuilding
 @using ATAFurniture.Server.Models
-@using TextAlign = Syncfusion.Blazor.Grids.TextAlign
 
-<TabItem >
-    <HeaderTemplate>@File.FileName</HeaderTemplate>
-    <ContentTemplate >
-        <RadzenRow class="p-3">
-            <RadzenColumn>
-                <RadzenLabel Text="Име на клиента: "></RadzenLabel>
-            </RadzenColumn>
-            <RadzenColumn>
-                <SfTextBox @bind-Value="@Context.ContactInfo.CompanyName"></SfTextBox>
-            </RadzenColumn>
-        </RadzenRow>
-        <RadzenRow class="p-3">
-            <RadzenColumn>
-                <RadzenLabel Text="Телефон за връзка: "></RadzenLabel>
-            </RadzenColumn>
-            <RadzenColumn>
-                <SfTextBox @bind-Value="@Context.ContactInfo.MobileNumber"></SfTextBox>
-            </RadzenColumn>
-        </RadzenRow>
-        @if (_isDifferentEdgeColorNotePresent)
-        {
-            <RadzenRow class="p-3">
-                <RadzenColumn>
-                    <RadzenLabel Text="Кантиране с друг цвят:"></RadzenLabel>
-                </RadzenColumn>
-                <RadzenColumn>
-                    <SfTextBox @bind-Value="@Context.DifferentEdgeColor"></SfTextBox>
-                </RadzenColumn>
-            </RadzenRow>
-        }
+<MudGrid Class="pa-3">
+    <MudItem xs="12" sm="6">
+        <MudTextField @bind-Value="Context.ContactInfo.CompanyName" Label="Име на клиента" />
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudTextField @bind-Value="Context.ContactInfo.MobileNumber" Label="Телефон за връзка" />
+    </MudItem>
+    @if (_isDifferentEdgeColorNotePresent)
+    {
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="Context.DifferentEdgeColor" Label="Кантиране с друг цвят" />
+        </MudItem>
+    }
+</MudGrid>
 
-        <SfGrid class="p-3" DataSource="_source" TValue="SuliverDetail" AllowPaging="true" AllowTextWrap="true">
-            <GridEditSettings AllowEditing="true" AllowEditOnDblClick="true" Mode="EditMode.Normal"></GridEditSettings>
-            <GridPageSettings PageSize="25"></GridPageSettings>
-            <GridColumns>
-                <GridColumn Field="@nameof(SuliverDetail.Id)" Visible="false" IsPrimaryKey="true"></GridColumn>
-                <GridColumn Field="@nameof(SuliverDetail.IsEdgeColorDifferent)" Visible="false"></GridColumn>
-                <GridColumn Field="@nameof(SuliverDetail.Material)" Width="200" HeaderText="Материал" TextAlign="TextAlign.Left" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(SuliverDetail.MaterialThickness)" Width="48" HeaderText="Деб. (мм)" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(SuliverDetail.IsGrainDirectionReversed)" Width="48" HeaderText="Рот*" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(SuliverDetail.Height)" Width="80" HeaderText="Дължина (мм)" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(SuliverDetail.Width)" Width="70" HeaderText="Ширина (мм)" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(SuliverDetail.Quantity)" Width="48" HeaderText="Брой" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(SuliverDetail.Cabinet)" HeaderText="Име Дет." TextAlign="TextAlign.Left" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(SuliverDetail.LongEdge)" Width="60" HeaderText="Дъл." TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(SuliverDetail.LongEdge2)" Width="60" HeaderText="Дъл.2" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(SuliverDetail.ShortEdge)" Width="60" HeaderText="Шир." TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(SuliverDetail.ShortEdge2)" Width="60" HeaderText="Шир.2" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(SuliverDetail.Note)" HeaderText="Забележка" EditType="EditType.DefaultEdit" AllowEditing="true" TextAlign="TextAlign.Left"></GridColumn>
-            </GridColumns>
-        </SfGrid>
-    </ContentTemplate>
-</TabItem>
+<MudDataGrid T="SuliverDetail" Items="@_source" ReadOnly="false"
+             EditMode="DataGridEditMode.Cell" EditTrigger="DataGridEditTrigger.OnRowClick"
+             Bordered="true" Dense="true" Class="pa-3">
+    <Columns>
+        <PropertyColumn Property="x => x.Material" Title="Материал" Editable="false" />
+        <PropertyColumn Property="x => x.MaterialThickness" Title="Деб. (мм)" Editable="false" />
+        <PropertyColumn Property="x => x.IsGrainDirectionReversed" Title="Рот*" Editable="false" />
+        <PropertyColumn Property="x => x.Height" Title="Дължина (мм)" Editable="false" />
+        <PropertyColumn Property="x => x.Width" Title="Ширина (мм)" Editable="false" />
+        <PropertyColumn Property="x => x.Quantity" Title="Брой" Editable="false" />
+        <PropertyColumn Property="x => x.Cabinet" Title="Име Дет." Editable="false" />
+        <PropertyColumn Property="x => x.LongEdge" Title="Дъл." Editable="false" />
+        <PropertyColumn Property="x => x.LongEdge2" Title="Дъл.2" Editable="false" />
+        <PropertyColumn Property="x => x.ShortEdge" Title="Шир." Editable="false" />
+        <PropertyColumn Property="x => x.ShortEdge2" Title="Шир.2" Editable="false" />
+        <PropertyColumn Property="x => x.Note" Title="Забележка" Editable="true" Required="false" />
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="SuliverDetail" PageSizeOptions="new[] { 25, 50, 100 }" />
+    </PagerContent>
+</MudDataGrid>
 
 @code {
     [Parameter] public KroikoFile File { get; set; }
     [Parameter] public ConverterContext Context { get; set; }
-    
+
     private List<SuliverDetail> _source;
     private bool _isDifferentEdgeColorNotePresent = false;
 

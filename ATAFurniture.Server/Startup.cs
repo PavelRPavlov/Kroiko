@@ -1,32 +1,23 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using ATAFurniture.Server.Auth;
 using ATAFurniture.Server.DataAccess;
-using ATAFurniture.Server.TemplateBuilding.Lonira;
-using ATAFurniture.Server.TemplateBuilding.Suliver;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Kroiko.Domain.CellsExtracting;
-using Kroiko.Domain.ExcelFilesGeneration;
-using Kroiko.Domain.ExcelFilesGeneration.XlsxWrapper;
-using Kroiko.Domain.TemplateBuilding;
-using Kroiko.Domain.TemplateBuilding.Lonira;
-using Kroiko.Domain.TemplateBuilding.Suliver;
-using Kroiko.Domain.TextFileGeneration;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
-using Radzen;
-using Radzen.Blazor.Rendering;
+using MudBlazor.Services;
 using Serilog;
-using Syncfusion.Blazor;
 
 namespace ATAFurniture.Server;
 
-public class Startup(IConfiguration configuration)
+public class Startup(IConfiguration configuration, IWebHostEnvironment environment)
 {
     public IConfiguration Configuration { get; } = configuration;
 
@@ -41,7 +32,20 @@ public class Startup(IConfiguration configuration)
         JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
         // Configuration to sign-in users with Azure AD B2C.
-        services.AddMicrosoftIdentityWebAppAuthentication(Configuration);
+        // Development-only fallback: when there is no B2C configuration (e.g. the secrets are
+        // unavailable locally), auto-sign-in a fixed dev user so the app is usable offline.
+        // Any non-Development environment, or a configured AzureAd:ClientId, uses real B2C.
+        if (environment.IsDevelopment() && string.IsNullOrEmpty(Configuration["AzureAd:ClientId"]))
+        {
+            services
+                .AddAuthentication(DevAuthHandler.SchemeName)
+                .AddScheme<AuthenticationSchemeOptions, DevAuthHandler>(DevAuthHandler.SchemeName, null);
+            services.AddAuthorization();
+        }
+        else
+        {
+            services.AddMicrosoftIdentityWebAppAuthentication(Configuration);
+        }
         
         services.AddHttpContextAccessor();
             
@@ -55,14 +59,10 @@ public class Startup(IConfiguration configuration)
             }*/
         ).AddMicrosoftIdentityUI();
 
-        services.AddScoped<DialogService>();
-        services.AddScoped<NotificationService>();
-        services.AddScoped<ContextMenuService>();
-        services.AddScoped<TooltipService>();
         services.AddRazorComponents();
-        
-        services.AddSyncfusionBlazor();
-        
+
+        services.AddMudServices();
+
         services.AddRazorPages();
         services.AddServerSideBlazor();
 
@@ -75,15 +75,8 @@ public class Startup(IConfiguration configuration)
         services.AddScoped<UserContextService>();
         
         services.AddScoped<IDetailsExtractorService, DetailsExtractorService>();
-        services.AddKeyedScoped<ITemplateBuilder, LoniraTemplateBuilder>(nameof(SupportedCompanies.Lonira));
-        services.AddKeyedScoped<ITableRowProvider, LoniraTableRowProvider>(nameof(SupportedCompanies.Lonira));
-        services.AddKeyedScoped<IFileNameProvider, LoniraFileNameProvider>(nameof(SupportedCompanies.Lonira));
-        services.AddKeyedScoped<ITemplateBuilder, SuliverTemplateBuilder>(nameof(SupportedCompanies.Suliver));
-        services.AddKeyedScoped<ITableRowProvider, SuliverTableRowProvider>(nameof(SupportedCompanies.Suliver));
-        services.AddKeyedScoped<IFileNameProvider, SuliverFileNameProvider>(nameof(SupportedCompanies.Suliver));
-        services.AddScoped<IExcelFileGenerator, ExcelFileGenerator>();
-        services.AddScoped<ITextFileGenerator, MegaTradingFileGenerator>();
-        services.AddScoped<FileGeneratorService>();
+        // One IOrderFormat per manufacturer, keyed by nameof(SupportedCompanies.X) (ADR-0004 §1).
+        services.AddOrderFormats();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -109,6 +102,7 @@ public class Startup(IConfiguration configuration)
         }
         
         app.UseHttpsRedirection();
+        
         app.UseStaticFiles();
         app.UseRouting();
 

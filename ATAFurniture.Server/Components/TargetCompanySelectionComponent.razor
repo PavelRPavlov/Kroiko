@@ -1,24 +1,33 @@
 ﻿@using Kroiko.Domain.CellsExtracting
 @using ATAFurniture.Server.Models
-@using Kroiko.Domain
 @using ATAFurniture.Server.DataAccess
 
-<RadzenCard>
-    <RadzenRow AlignItems="AlignItems.Center">
-        <RadzenLabel Text="Изберете към коя фирма ще правите поръчка: "></RadzenLabel>
-        <RadzenDropDown @bind-Value="Context.TargetCompany" TValue="SupportedCompany" Data="@_supportedCompanies" TextProperty="Translation" Change="@(args => OnUserSelection(args))"></RadzenDropDown>
-    </RadzenRow>
-</RadzenCard>
+<MudPaper Class="pa-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudText>Изберете към коя фирма ще правите поръчка: </MudText>
+        <MudSelect T="ManufacturerBranch"
+                   Value="Context.TargetCompany"
+                   ValueChanged="OnUserSelection"
+                   ToStringFunc="@(c => c?.Translation)"
+                   Dense="true"
+                   Variant="Variant.Outlined">
+            @foreach (var branch in _branches)
+            {
+                <MudSelectItem Value="@branch">@branch.Translation</MudSelectItem>
+            }
+        </MudSelect>
+    </MudStack>
+</MudPaper>
 
 @code {
     [Parameter] public UserContextService UserContextService { get; set; }
     [Parameter] public ConverterContext Context { get; set; }
-    
-    readonly SupportedCompany[] _supportedCompanies = [SupportedCompanies.Lonira, SupportedCompanies.MegaTrading, SupportedCompanies.Suliver, SupportedCompanies.SuliverKuklensko];
 
-    private async Task OnUserSelection(object args)
+    readonly IReadOnlyList<ManufacturerBranch> _branches = ManufacturerBranches.All;
+
+    private async Task OnUserSelection(ManufacturerBranch branch)
     {
-        Context.TargetCompany = (SupportedCompany)args;
+        Context.TargetCompany = branch;
         await UserContextService.UpdateSelectedCompanyAsync(Context.TargetCompany);
     }
 }

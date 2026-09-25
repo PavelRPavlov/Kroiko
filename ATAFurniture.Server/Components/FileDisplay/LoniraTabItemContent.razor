@@ -1,54 +1,37 @@
-﻿@using ATAFurniture.Server.Models
+@using ATAFurniture.Server.Models
 @using Kroiko.Domain.TemplateBuilding
-@using TextAlign = Syncfusion.Blazor.Grids.TextAlign
 
-<TabItem >
-    <HeaderTemplate>@File.FileName</HeaderTemplate>
-    <ContentTemplate >
-        <RadzenRow class="p-3">
-            <RadzenColumn>
-                <RadzenLabel Text="Име на клиента: "></RadzenLabel>
-            </RadzenColumn>
-            <RadzenColumn>
-                <SfTextBox @bind-Value="@Context.ContactInfo.CompanyName"></SfTextBox>
-            </RadzenColumn>
-        </RadzenRow>
-        <RadzenRow class="p-3">
-            <RadzenColumn>
-                <RadzenLabel Text="Телефон за връзка: "></RadzenLabel>
-            </RadzenColumn>
-            <RadzenColumn>
-                <SfTextBox @bind-Value="@Context.ContactInfo.MobileNumber"></SfTextBox>
-            </RadzenColumn>
-        </RadzenRow>
-        <RadzenRow class="p-3">
-            <RadzenColumn>
-                <RadzenLabel Text="Материал: "></RadzenLabel>
-            </RadzenColumn>
-            <RadzenColumn>
-                <SfTextBox @bind-Value="@File.FileName"></SfTextBox>
-            </RadzenColumn>
-        </RadzenRow>
+<MudGrid Class="pa-3">
+    <MudItem xs="12" sm="6">
+        <MudTextField @bind-Value="Context.ContactInfo.CompanyName" Label="Име на клиента" />
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudTextField @bind-Value="Context.ContactInfo.MobileNumber" Label="Телефон за връзка" />
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudTextField @bind-Value="File.FileName" Label="Материал" />
+    </MudItem>
+</MudGrid>
 
-        <SfGrid class="p-3" DataSource="_source" TValue="LoniraDetail" AllowPaging="true" AllowTextWrap="true">
-            <GridEditSettings AllowEditing="true" AllowEditOnDblClick="true" Mode="EditMode.Normal"></GridEditSettings>
-            <GridPageSettings PageSize="25"></GridPageSettings>
-            <GridColumns>
-                <GridColumn Field="@nameof(LoniraDetail.Id)" Visible="false" IsPrimaryKey="true"></GridColumn>
-                <GridColumn Field="@nameof(LoniraDetail.Height)" Width="160" HeaderText="Размер по фладер [мм]" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(LoniraDetail.Width)" Width="180" HeaderText="Размер срещу фладер [мм]" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(LoniraDetail.Quantity)" HeaderText="Брой детайли" TextAlign="TextAlign.Center" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(LoniraDetail.LoniraEdges)" HeaderText="Кантиране" AllowEditing="false"></GridColumn>
-                <GridColumn Field="@nameof(LoniraDetail.Note)" HeaderText="Забележка" EditType="EditType.DefaultEdit" AllowEditing="true"></GridColumn>
-            </GridColumns>
-        </SfGrid>
-    </ContentTemplate>
-</TabItem>
+<MudDataGrid T="LoniraDetail" Items="@_source" ReadOnly="false"
+             EditMode="DataGridEditMode.Cell" EditTrigger="DataGridEditTrigger.OnRowClick"
+             Bordered="true" Dense="true" Class="pa-3">
+    <Columns>
+        <PropertyColumn Property="x => x.Height" Title="Размер по фладер [мм]" Editable="false" />
+        <PropertyColumn Property="x => x.Width" Title="Размер срещу фладер [мм]" Editable="false" />
+        <PropertyColumn Property="x => x.Quantity" Title="Брой детайли" Editable="false" />
+        <PropertyColumn Property="x => x.LoniraEdges" Title="Кантиране" Editable="false" />
+        <PropertyColumn Property="x => x.Note" Title="Забележка" Editable="true" Required="false" />
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="LoniraDetail" PageSizeOptions="new[] { 25, 50, 100 }" />
+    </PagerContent>
+</MudDataGrid>
 
 @code {
     [Parameter] public KroikoFile File { get; set; }
     [Parameter] public ConverterContext Context { get; set; }
-    
+
     private List<LoniraDetail> _source;
 
     protected override void OnInitialized()
@@ -56,12 +39,3 @@
         _source = File.Details.Cast<LoniraDetail>().ToList();
     }
 }
-
-<style>
-    .e-grid .e-gridheader {
-        border: 1px solid black;
-    }
-    .e-grid .e-gridcontent .e-content {
-        border: 1px solid black;
-    }
-</style>

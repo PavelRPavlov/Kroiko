@@ -1,12 +1,12 @@
-﻿@page "/"
+@page "/"
 
-<RadzenStack Gap="1em">
-    <RadzenCard>
-        <RadzenLabel class="h1">За кого е този софтуер?</RadzenLabel>
-        <RadzenText>Ако използвате <a href="https://wooddesigner.org/polyboard-software-tools/" target="_blank">PolyBoard</a> за да направите дизайн и разкрой на вашите мебели, този софтуер ще помогне за създаването на файловете за поръчка към <a href="https://lonyra.com/razkroj-i-kantirane/tehnologichna-karta/" target="_blank">Лонира - София</a> или <a href="https://www.saliver-bg.com/" target="_blank">Съливер - Пловдив</a></RadzenText>
-    </RadzenCard>
-    <RadzenCard>
-        <RadzenLabel class="h2">Как се използва?</RadzenLabel>
+<MudStack Spacing="4">
+    <MudPaper Class="pa-4">
+        <MudText Typo="Typo.h4" GutterBottom="true">За кого е този софтуер?</MudText>
+        <MudText>Ако използвате <a href="https://wooddesigner.org/polyboard-software-tools/" target="_blank">PolyBoard</a> за да направите дизайн и разкрой на вашите мебели, този софтуер ще помогне за създаването на файловете за поръчка към <a href="https://lonyra.com/razkroj-i-kantirane/tehnologichna-karta/" target="_blank">Лонира - София</a> или <a href="https://www.saliver-bg.com/" target="_blank">Съливер - Пловдив</a></MudText>
+    </MudPaper>
+    <MudPaper Class="pa-4">
+        <MudText Typo="Typo.h5" GutterBottom="true">Как се използва?</MudText>
         <ol>
             <li>Направете си регистрация</li>
             <li>Конфигурирайте функцията Cutting Lists на Polyboard</li>
@@ -14,8 +14,8 @@
             <li>Качете файла в конвертора</li>
             <li>Свалете готовите файлове и спестете време и усилия</li>
         </ol>
-    </RadzenCard>
-    <RadzenAlert Variant="Variant.Filled" AlertStyle="AlertStyle.Primary">
+    </MudPaper>
+    <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
         При регистрация, получавате безплатни кредити за конвертиране и тестване
-    </RadzenAlert>
-</RadzenStack>
+    </MudAlert>
+</MudStack>
