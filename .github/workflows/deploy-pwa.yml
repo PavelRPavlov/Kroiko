@@ -1,0 +1,94 @@
+# Deploys the PWA (Kroiko.Client.Blazor) to production, https://kroiko.com, when a release tag vX.Y.Z is pushed
+# (ADR-0013). The deploy is scripts/publish-pwa.ps1, the same script as a deploy by hand, so every rule of the branch
+# model holds here too: the tag must be on the tip of release and equal the csproj <Version>, it must not be older
+# than the newest vX.Y.Z tag, and the full dotnet test must pass (docs/release-checklist.md).
+#
+# The deploy user's access key is in the GitHub environment "pwa-production" (secrets AWS_ACCESS_KEY_ID and
+# AWS_SECRET_ACCESS_KEY), which only tags matching v* may use (07a.5).
+
+name: Deploy PWA
+
+on:
+  push:
+    tags:
+      - '**'
+
+permissions:
+  contents: read
+
+jobs:
+  check-tag:
+    name: Check the tag
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.tag.outputs.release }}
+    steps:
+      - name: Is it a release tag vX.Y.Z?
+        id: tag
+        env:
+          TAG: ${{ github.ref_name }}
+        # The pattern the script uses for release tags (scripts/publish-pwa.ps1).
+        run: |
+          if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$TAG is a release tag; deploying it to production."
+          else
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::$TAG is not a release tag (vX.Y.Z); nothing is deployed."
+          fi
+
+  deploy:
+    name: Deploy to production
+    needs: check-tag
+    if: needs.check-tag.outputs.release == 'true'
+    # Windows, like the machines the script and the tests were built on.
+    runs-on: windows-latest
+    timeout-minutes: 60
+    environment:
+      name: pwa-production
+      url: https://kroiko.com
+    # One deploy at a time; a second tag waits for the first instead of cancelling it mid-switch.
+    concurrency:
+      group: pwa-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # The script deploys production only from release, checked out at origin/release, with the tag on HEAD. A tag
+      # that is not on release's tip is refused there, before the tests.
+      - name: Check out release
+        run: |
+          git fetch --force --tags origin
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          git checkout -B release origin/release
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Install the Playwright Chromium
+        run: |
+          dotnet build Kroiko.Client.Tests
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          pwsh Kroiko.Client.Tests/bin/Debug/net10.0/playwright.ps1 install chromium
+
+      # The script passes --profile kroiko-pwa (hosting/aws/hosting.json) to every aws call. The key is written only
+      # to this runner's AWS credentials file, never to the log.
+      - name: Set up the AWS CLI profile kroiko-pwa
+        env:
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          if (-not $env:ACCESS_KEY_ID -or -not $env:SECRET_ACCESS_KEY) {
+              Write-Host '::error::The environment pwa-production has no AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY secret (07a.5).'
+              exit 1
+          }
+          $awsFolder = Join-Path $HOME '.aws'
+          New-Item -ItemType Directory -Force -Path $awsFolder | Out-Null
+          $credentials = "[kroiko-pwa]`naws_access_key_id = $env:ACCESS_KEY_ID`naws_secret_access_key = $env:SECRET_ACCESS_KEY`n"
+          [System.IO.File]::WriteAllText((Join-Path $awsFolder 'credentials'), $credentials)
+
+      - name: Deploy
+        run: ./scripts/publish-pwa.ps1 -Environment production

@@ -87,7 +87,7 @@ ATAFurniture.Server (unchanged behaviour) ──► the same Kroiko.Domain
 **Projects:** `Kroiko.Client.Blazor` (PWA), `Kroiko.Domain` (shared, **must stay
 browser-safe**), `ATAFurniture.Server` (maintained), and the test projects `Kroiko.Testing`,
 `Kroiko.Domain.Tests`, `Kroiko.Client.Tests`, `ATAFurniture.Server.Tests`
-([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0012](docs/adr/README.md).
+([ADR-0007](docs/adr/0007-parity-and-test-strategy.md)). Decisions: [ADR-0001–0013](docs/adr/README.md).
 Build order: [docs/implementation/00-overview.md](docs/implementation/00-overview.md).
 
 **`Kroiko.Client.Tests`** (xUnit, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §5) tests the shipped
@@ -109,7 +109,7 @@ only the domain tests record the Server's output. The host and the missing-brows
 app routes → `/index.html`, files keep their path (so a missing one is a 404), `br/` only for a viewer that accepts
 `br`, nothing but the URI changed, and `www.<domain>` → a `301` to `https://<domain><path>` (ADR-0011); and, against the
 publish output, that every published and precached file keeps its path through it.
-`PublishScript/` runs the real `scripts/publish-pwa.ps1` (the manual deploy, phase 07) in `pwsh` against a
+`PublishScript/` runs the real `scripts/publish-pwa.ps1` (the deploy script, phase 07) in `pwsh` against a
 throwaway git repository with a bare `origin`, with `dotnet` and `aws` replaced by logging stubs on `PATH`: the
 branch-model refusals, the `raw/` and `br/` trees with each object's metadata, the function update, a switch that
 changes only the origin path, failures before and after the switch, the dry run, and `--profile` on every `aws` call.
@@ -117,14 +117,17 @@ changes only the origin path, failures before and after the switch, the dry run,
 confirmation and the device settings faked (`Conversion/Fakes.cs`, [ADR-0007](docs/adr/0007-parity-and-test-strategy.md) §4), on the
 real domain and the shared fixtures; no browser, no `Category=E2E`.
 
-**Deploys** are manual: `scripts/publish-pwa.ps1 -Environment main|production [-DryRun]` refuses a dirty tree, a
+**Deploys** all run `scripts/publish-pwa.ps1 -Environment main|production [-DryRun]`, which refuses a dirty tree, a
 `HEAD` that is not `origin/main` (staging) or `origin/release` checked out as `release` with the pushed tag
 `v<Version>`, no older than any `vX.Y.Z` tag on `origin` (production), and failing tests; then publishes in
 Release, uploads `wwwroot` to a new S3 release folder `<environment>/<release>/` (a `raw/` and a `br/` tree, with
 `Content-Type` and `Cache-Control` on every object), brings the environment's CloudFront Function up to the committed
 code, switches the distribution's origin path to the folder and invalidates `/*` (ADR-0010). The IDs are in
-`hosting/aws/hosting.json`; the credentials only in the AWS CLI profile `kroiko-pwa`. [`docs/release-checklist.md`](docs/release-checklist.md)
-has the release procedure (bump, merge `main` into `release`, tag, `-DryRun`, deploy), the manual checks for every
+`hosting/aws/hosting.json`; the credentials only in the AWS CLI profile `kroiko-pwa`. Production deploys itself on a
+pushed `vX.Y.Z` tag: `.github/workflows/deploy-pwa.yml` checks the tag's form, checks out `release` and runs the script
+on a Windows runner, writing that profile from the GitHub environment `pwa-production`'s secrets (ADR-0013); by hand,
+the script deploys staging and is the fallback. [`docs/release-checklist.md`](docs/release-checklist.md)
+has the release procedure (bump, merge `main` into `release`, push the tag, watch the run), the manual checks for every
 production release on the installed Edge PWA, and the go-live checks (ADR-0007 §9). Each release's run of them is
 recorded in a "Release vX.Y.Z sign-off" issue.
 

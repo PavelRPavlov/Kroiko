@@ -2,7 +2,7 @@
 
 - **Status:** In progress
 - **Depends on:** 07a — [03 Client shell](03-client-shell.md); 07b — [05 Saving](05-saving.md), [06 Updates & About](06-updates-and-about.md) and 07a
-- **ADRs:** [0010](../adr/0010-host-pwa-on-s3-and-cloudfront.md), [0011](../adr/0011-serve-pwa-at-kroiko-com-with-route-53.md), [0002](../adr/0002-pwa-updates-reload-prompt.md) §6, §8, [0006](../adr/0006-known-conversion-bugs-in-pwa.md) §5, [0007](../adr/0007-parity-and-test-strategy.md) §9
+- **ADRs:** [0010](../adr/0010-host-pwa-on-s3-and-cloudfront.md), [0011](../adr/0011-serve-pwa-at-kroiko-com-with-route-53.md), [0013](../adr/0013-deploy-production-from-release-tag-with-github-actions.md), [0002](../adr/0002-pwa-updates-reload-prompt.md) §6, §8, [0006](../adr/0006-known-conversion-bugs-in-pwa.md) §5, [0007](../adr/0007-parity-and-test-strategy.md) §9
 
 ## Goal
 
@@ -11,8 +11,10 @@ S3 bucket in Frankfurt. It gets the published Brotli files, correct MIME types a
 `main` staging distribution is live from 07a. Operators switch to the app only after a signed-off, side-by-side
 go-live run against the Server.
 
-There is **no CI** in this plan. Deploys are manual through `scripts/publish-pwa.ps1`, which enforces the branch
-model: production only from `release`, and staging from `main`.
+Every deploy runs `scripts/publish-pwa.ps1`, which enforces the branch model: production only from `release`, and
+staging from `main`. Production deploys itself when a release tag `vX.Y.Z` is pushed: the GitHub Actions workflow
+`.github/workflows/deploy-pwa.yml` runs the same script (step 5, [ADR-0013](../adr/0013-deploy-production-from-release-tag-with-github-actions.md)).
+The script also still runs by hand, for staging and as the fallback.
 
 Steps marked **(human)** need AWS or DNS access. The agent hands the human a precise checklist and records the
 resulting facts (bucket, distribution IDs, generated URLs), never a credential.
@@ -95,8 +97,9 @@ Then it runs `dotnet publish Kroiko.Client.Blazor -c Release -o <temp>` and depl
 
 The non-secret IDs live in `hosting/aws/hosting.json`: the region, the bucket, and per environment the
 distribution ID, function name and URL. The credentials are an IAM user's access key in the AWS CLI profile
-`kroiko-pwa` on the deploying machine. The script passes `--profile kroiko-pwa` to every `aws` call. The key is
-**never** committed, echoed or written anywhere else. The IAM policy and the bucket policy are committed as
+`kroiko-pwa` on the deploying machine, or on the GitHub runner, where the workflow writes it from the environment's
+secrets (step 5). The script passes `--profile kroiko-pwa` to every `aws` call. The key is **never** committed,
+echoed or written anywhere else. The IAM policy and the bucket policy are committed as
 templates in `hosting/aws/`. The script is a plain, readable script (no encoded commands, per
 [AGENTS.md](../../AGENTS.md)).
 
@@ -178,7 +181,7 @@ certificate in `us-east-1`, and CloudFront is global.
 - [ ] **Deploy user:** create the IAM user `kroiko-pwa-deployer` without console access. Give it the inline
       policy `hosting/aws/deployer-policy.json`, filled in, and create an access key. On the deploying machine,
       install AWS CLI v2 and run `aws configure --profile kroiko-pwa` (region `eu-central-1`). Enter the key
-      only there.
+      only there. GitHub Actions gets a second key of the same user (step 5).
 - [ ] **Spend alert:** in AWS Budgets, create a "Zero spend budget" with your email.
 - [ ] **Record:** fill in `hosting/aws/hosting.json` (bucket, distribution IDs, function names, the staging
       `*.cloudfront.net` URL) in the PR, with the date.
@@ -217,6 +220,42 @@ on `https://kroiko.com`:
 Nobody is given any URL in 07a. With staging deferred, production carries `v0.x` builds until then. They
 roll forward to `v1.0.0` at go-live, and an older version is never redeployed (ADR-0002 §8).
 
+### 5. Deploy on a pushed tag (GitHub Actions)
+
+`.github/workflows/deploy-pwa.yml` ([ADR-0013](../adr/0013-deploy-production-from-release-tag-with-github-actions.md))
+runs on every pushed tag:
+
+1. **Check the tag.** A tag that does not match `^v[0-9]+\.[0-9]+\.[0-9]+$` (the script's pattern) ends the run
+   with a notice, and nothing is deployed.
+2. **Deploy**, on `windows-latest`, in the GitHub environment `pwa-production`:
+   - check out the repository with its full history and tags, then `release` at `origin/release`;
+   - set up the SDK from `global.json`, build the tests and install the Playwright Chromium;
+   - write the environment's secrets to the runner's AWS credentials file as the profile `kroiko-pwa`;
+   - run `./scripts/publish-pwa.ps1 -Environment production`.
+
+The script decides everything else, as on a deploying machine. A tag that is not on `release`'s tip, or that
+differs from the csproj `<Version>`, or that is older than the newest tag, is refused before the tests. One deploy
+runs at a time; a second tag waits.
+
+As built:
+
+- `git fetch --force --tags origin` runs after the checkout, so the pushed tag is the annotated tag object on
+  `origin`, which the script compares.
+- The workflow reads the key only in the step that writes the credentials file, and fails there with the names of
+  the missing secrets if the environment has none.
+
+Setup (human), once:
+
+- [ ] **Second access key:** IAM → Users → `kroiko-pwa-deployer` → Security credentials → Create access key
+      (use case "Application running outside AWS"). Keep the one on the deploying machine, so each can be
+      deactivated on its own.
+- [ ] **Environment:** GitHub → the repository's Settings → Environments → New environment `pwa-production`.
+      Under "Deployment branches and tags", choose "Selected branches and tags" and add the tag rule `v*`. Add
+      the environment secrets `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` with the new key. A required
+      reviewer is optional; it makes each release wait for an approval.
+- [ ] **First run:** the next release tag deploys through the workflow. Check the run in the Actions tab and the
+      host checks of step 4.
+
 ## 07b — Go-live
 
 ### 1. `docs/release-checklist.md`
@@ -237,8 +276,8 @@ Write it from ADR-0007 §9, with two sections:
   real folder picker, which no test drives ([ADR-0007](../adr/0007-parity-and-test-strategy.md) §5;
   clash renaming, last folder, the final names listed); "Изтегли всички" and one file's link; offline start.
 - **Release procedure.** Bump `<Version>` in a PR to `main`, merge `main` into `release`, tag
-  `vX.Y.Z` on `release`, run `scripts/publish-pwa.ps1 -Environment production`, then open the
-  sign-off issue. A bad release is fixed forward: revert, bump, deploy. **Never** redeploy an older
+  `vX.Y.Z` on `release`, run `scripts/publish-pwa.ps1 -Environment production` (since ADR-0013:
+  push the tag, and the workflow runs it), then open the sign-off issue. A bad release is fixed forward: revert, bump, deploy. **Never** redeploy an older
   build (ADR-0002 §8).
 
 Done. [`docs/release-checklist.md`](../release-checklist.md) has three parts, in the order they are used:
@@ -273,13 +312,14 @@ Two choices go beyond this step's text:
       production over HTTPS.
 - [ ] The `main` staging deploy passes the step-4 checks (07a done).
 - [x] `docs/release-checklist.md` exists with the go-live, per-release and release-procedure sections.
+- [ ] A pushed release tag deploys production through `.github/workflows/deploy-pwa.yml` (step 5).
 - [ ] `v1.0.0` is tagged on `release` and deployed to production with the script.
 - [ ] "Release v1.0.0 sign-off" is closed with every box ticked.
 - [ ] The map's destination is reached: operators use the installed PWA.
 
 ## Out of this phase
 
-- A CI/CD workflow (GitHub Actions, deployment environments, `-p:Version` stamping). It is a later
-  improvement outside this plan, and when added it must enforce the same branch rules as the script.
+- Staging deploys from CI, `-p:Version` stamping, and OpenID Connect in place of the stored access key
+  (ADR-0013). The production workflow (step 5) runs the script, so it enforces the same branch rules.
 - Infrastructure as code for the AWS resources.
 - Any change to the Server's hosting or Azure resources.
