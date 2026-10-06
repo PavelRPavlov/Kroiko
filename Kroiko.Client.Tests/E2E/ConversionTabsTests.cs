@@ -211,6 +211,49 @@ public sealed class ConversionTabsTests(PublishedApp app)
         console.Should().BeEmpty();
     }
 
+    [Theory]
+    [InlineData(1280, 800)]
+    [InlineData(768, 1024)]
+    [InlineData(375, 812)]
+    public async Task The_MegaTrading_grid_stays_put_when_the_last_warning_goes(int width, int height)
+    {
+        await using var context = await app.NewContextAsync();
+        var page = await context.NewPageAsync();
+        await page.SetViewportSizeAsync(width, height);
+        var console = ConsoleErrors(page);
+        await page.GotoAsync("/");
+
+        await PickAsync(page, "Мега Трейдинг, гр.София");
+        await UploadAsync(page, new FilePayload
+        {
+            Name = "three-materials.txt",
+            MimeType = "text/plain",
+            // One banded side per material, so the warning lists three materials and wraps on narrow screens.
+            Buffer = Encoding.UTF8.GetBytes(
+                "2590;100;1;Бяло ПДЧ;0;1;0;0;0;[1K];1\r\n" +
+                "600;300;1;Cool Grey K0191 SU;1;0;0;1;0;[2K];2\r\n" +
+                "600;300;1;H3170 Dyb kendyl natur;1;0;1;0;0;[2K];3\r\n"),
+        });
+        var warning = page.GetByTestId("missing-edge-banding");
+        await Expect(warning).ToContainTextAsync("На 3 канта");
+        var grid = page.Locator(".mud-table");
+        var before = await TopAsync(grid);
+
+        var buckets = page.Locator(".edge-clear:not([disabled])");
+        while (await buckets.CountAsync() > 0)
+        {
+            await buckets.First.ClickAsync();
+        }
+
+        await Expect(warning).ToHaveCountAsync(0);
+        (await TopAsync(grid)).Should().Be(before, "the warnings keep their space when the last one goes");
+        console.Should().BeEmpty();
+    }
+
+    // The element's top on the page, not the viewport, so scrolling does not count.
+    private static Task<double> TopAsync(ILocator element) =>
+        element.EvaluateAsync<double>("e => Math.round(e.getBoundingClientRect().top + window.scrollY)");
+
     [Fact]
     public async Task Grid_numbers_are_written_in_the_invariant_culture_under_bg_BG()
     {

@@ -45,7 +45,9 @@ error for every edge dropdown. Decompiling the app (`monodis`) showed the cause:
 5. **The grid picks, it does not type.** The MegaTrading tab's four edge columns are a width and a thickness
    `MudSelect` each, with "—" for empty (both "—" removes the edge), and a bucket button that clears both at once,
    removing the edge (disabled on a side with no edge); a part an edge misses shows in red, and a warning
-   alert above the grid counts the missing edges and names their materials.
+   alert counts the missing edges and names their materials. The tab's warnings (this one and `TooManyMaterials`)
+   share one slot at the top of the tab that always keeps room for one warning — more on narrower screens, where the
+   text wraps (`.tab-warnings` in `app.css`) — so the rename rows and the grid do not jump as warnings come and go.
 6. **Golden files.** The five `*/MegaTrading/*.cut_mt` golden files are re-recorded: only edge cells change (`/0.5` →
    `/` where Polyboard gave no thickness, the Polyboard edge-material prefix dropped). A new
    `bathroom-4-materials/MegaTrading-edges-filled` golden records the order after the dialog is answered with

@@ -7,24 +7,28 @@
    and without MegaTradingViewModel: the grid edits the file's MegaTradingDetails in place (ADR-0005 §3).
    Editable as on the Server: the four edges, the edge-banding material, the note and the material rename; each edge is
    a width and a thickness picked from the values MegaTrading lists (ADR-0015). *@
-@if (TooManyMaterials is { } problem)
-{
-    @* ADR-0006 §3: the .cut_mt header has room for problem.Max materials; ConverterState blocks generating. *@
-    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
-        Мега Трейдинг приема най-много @problem.Max материала в една поръчка, а тази използва @problem.Materials.Count:
-        @string.Join(", ", problem.Materials).
-        Обединете материали, като ги преименувате в „Използвани материали“ по-долу, или разделете поръчката в Polyboard.
-    </MudAlert>
-}
-@if (MissingEdgeBanding is { } missing)
-{
-    @* ADR-0015: not blocking — "Генерирай бланки за поръчка" asks for these per material. *@
-    <MudAlert Severity="Severity.Warning" Class="my-2" data-testid="missing-edge-banding">
-        На @missing.Edges @(missing.Edges == 1 ? "кант" : "канта") липсва ширина или дебелина (в червено в таблицата):
-        @string.Join(", ", missing.Materials.Select(m => m.Material)).
-        Изберете ги в таблицата или при „Генерирай бланки за поръчка“.
-    </MudAlert>
-}
+@* The tab's warnings have one place, always there and at least one warning high, so the rename rows and the grid
+   below stay put as warnings come and go (the last missing edge picked or cleared). *@
+<div class="tab-warnings" data-testid="tab-warnings">
+    @if (TooManyMaterials is { } problem)
+    {
+        @* ADR-0006 §3: the .cut_mt header has room for problem.Max materials; ConverterState blocks generating. *@
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true">
+            Мега Трейдинг приема най-много @problem.Max материала в една поръчка, а тази използва @problem.Materials.Count:
+            @string.Join(", ", problem.Materials).
+            Обединете материали, като ги преименувате в „Използвани материали“ по-долу, или разделете поръчката в Polyboard.
+        </MudAlert>
+    }
+    @if (MissingEdgeBanding is { } missing)
+    {
+        @* ADR-0015: not blocking — "Генерирай бланки за поръчка" asks for these per material. *@
+        <MudAlert Severity="Severity.Warning" Dense="true" data-testid="missing-edge-banding">
+            На @missing.Edges @(missing.Edges == 1 ? "кант" : "канта") липсва ширина или дебелина (в червено в таблицата):
+            @string.Join(", ", missing.Materials.Select(m => m.Material)).
+            Изберете ги в таблицата или при „Генерирай бланки за поръчка“.
+        </MudAlert>
+    }
+</div>
 
 <MudPaper Class="pa-3" Elevation="0">
     <MudText Typo="Typo.subtitle1" GutterBottom="true">Използвани материали:</MudText>
