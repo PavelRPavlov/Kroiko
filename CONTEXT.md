@@ -125,7 +125,7 @@ Release, uploads `wwwroot` to a new S3 release folder `<environment>/<release>/`
 `Content-Type` and `Cache-Control` on every object), brings the environment's CloudFront Function up to the committed
 code, switches the distribution's origin path to the folder and invalidates `/*` (ADR-0010). The IDs are in
 `hosting/aws/hosting.json`; the credentials only in the AWS CLI profile `kroiko-pwa`. Production deploys itself on a
-pushed `vX.Y.Z` tag: `.github/workflows/deploy-pwa.yml` checks the tag's form, checks out `release` and runs the script
+pushed `vX.Y.Z` tag: `.github/workflows/deploy-pwa.yml` checks the tag's form, checks out the tagged commit and runs the script with `-Tag` (the commit must be on `release` and its csproj `<Version>` equal the tag, ADR-0017)
 on a Windows runner, writing that profile from the GitHub environment `pwa-production`'s secrets (ADR-0013); by hand,
 the script deploys staging and is the fallback. [`docs/release-checklist.md`](docs/release-checklist.md)
 has the release procedure (bump, merge `main` into `release`, push the tag, watch the run), the manual checks for every

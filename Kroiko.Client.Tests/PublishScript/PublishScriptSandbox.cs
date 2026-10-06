@@ -147,6 +147,11 @@ internal sealed class PublishScriptSandbox : IDisposable
             "-NoProfile", "-NonInteractive", "-File", Path.Combine(WorkTree, "scripts", "publish-pwa.ps1"), "-Environment", environment);
         if (options.DryRun)
             psi.ArgumentList.Add("-DryRun");
+        if (options.Tag is not null)
+        {
+            psi.ArgumentList.Add("-Tag");
+            psi.ArgumentList.Add(options.Tag);
+        }
 
         psi.Environment["PATH"] = StubsPath + Path.PathSeparator + Environment.GetEnvironmentVariable("PATH");
         psi.Environment["SANDBOX_CALL_LOG"] = CallLogPath;
@@ -373,6 +378,9 @@ internal sealed record RunOptions
 {
     public bool DryRun { get; init; }
     public int TestsExitCode { get; init; }
+
+    /// <summary>The <c>-Tag</c> to deploy, as the workflow passes the pushed tag (ADR-0017); none when null.</summary>
+    public string? Tag { get; init; }
 
     /// <summary>A file the stubbed publish adds to <c>wwwroot</c>, e.g. <c>notes.xyz</c>.</summary>
     public string? PublishExtraFile { get; init; }

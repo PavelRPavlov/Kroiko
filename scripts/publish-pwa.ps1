@@ -8,9 +8,10 @@
     run unless:
       1. the working tree is clean (git status --porcelain is empty);
       2. -Environment main:       HEAD equals origin/main (after a fetch);
-         -Environment production: release is checked out, HEAD equals origin/release, and HEAD carries the tag
-                                  vX.Y.Z of the csproj <Version>, pushed to origin and not older than any other
-                                  vX.Y.Z tag there (roll forward, never back: ADR-0002 §8);
+         -Environment production: HEAD is the commit tagged vX.Y.Z — -Tag, or the csproj <Version> without it —
+                                  that commit's csproj <Version> is X.Y.Z, the commit is on origin/release (merged
+                                  into it, not necessarily its tip), and the tag is pushed to origin and not older
+                                  than any other vX.Y.Z tag there (roll forward, never back: ADR-0002 §8; ADR-0017);
       3. the full `dotnet test` passes, E2E included.
     Then it runs `dotnet publish -c Release` into a temporary folder and deploys its wwwroot:
       - uploads it to a new release folder s3://<bucket>/<environment>/<release>/, as a raw/ tree (the plain
@@ -29,7 +30,11 @@
 
 .PARAMETER Environment
     main       - the staging distribution "main" (its *.cloudfront.net URL), from origin/main.
-    production - kroiko.com, from a tagged origin/release.
+    production - kroiko.com, from a tagged commit on origin/release.
+
+.PARAMETER Tag
+    Production only: the release tag to deploy, e.g. v0.1.2 — the workflow passes the tag that was pushed. HEAD must be
+    the commit it tags (check it out first: git checkout v0.1.2). Without it, the tag is v<csproj Version>.
 
 .PARAMETER DryRun
     Runs every check, the tests and the publish, then prints what it would upload and switch instead of doing it
@@ -40,11 +45,16 @@
 
 .EXAMPLE
     ./scripts/publish-pwa.ps1 -Environment production -DryRun
+
+.EXAMPLE
+    git checkout v0.1.2; ./scripts/publish-pwa.ps1 -Environment production -Tag v0.1.2
 #>
 param(
     [Parameter(Mandatory)]
     [ValidateSet('main', 'production')]
     [string] $Environment,
+
+    [string] $Tag,
 
     [switch] $DryRun
 )
@@ -137,17 +147,12 @@ try {
     git -C $repoRoot fetch --quiet --prune origin
     if ($LASTEXITCODE -ne 0) { Stop-Publish 'git fetch origin failed, so HEAD cannot be checked against origin' }
 
-    if ($Environment -eq 'production') {
-        $checkedOut = git -C $repoRoot symbolic-ref --quiet --short HEAD
-        if ($checkedOut -ne 'release') {
-            Stop-Publish "production deploys only from the release branch (checked out: $(if ($checkedOut) { $checkedOut } else { 'a detached HEAD' }))"
-        }
-    }
+    if ($Tag -and $Environment -ne 'production') { Stop-Publish "-Tag is for -Environment production only" }
 
     $head = Get-Commit 'HEAD'
     $originHead = Get-Commit "origin/$branch"
     if (-not $originHead) { Stop-Publish "origin has no $branch branch" }
-    if ($head -ne $originHead) {
+    if ($Environment -eq 'main' -and $head -ne $originHead) {
         Stop-Publish "HEAD is not origin/$branch; check out origin/$branch exactly (pull or push first)"
     }
 
@@ -156,14 +161,36 @@ try {
     $version = [string]((Select-Xml -LiteralPath $clientProject -XPath '/Project/PropertyGroup/Version').Node.InnerText | Select-Object -First 1)
 
     if ($Environment -eq 'production') {
-        if ($version -notmatch '^\d+\.\d+\.\d+$') {
+        # The pushed tag (-Tag, ADR-0017) or, by hand without it, the one the csproj names.
+        if ($Tag) {
+            if ($Tag -notmatch '^v\d+\.\d+\.\d+$') { Stop-Publish "-Tag must be a release tag vX.Y.Z (found: '$Tag')" }
+            $tag = $Tag
+        }
+        elseif ($version -notmatch '^\d+\.\d+\.\d+$') {
             Stop-Publish "the client csproj <Version> must be X.Y.Z (found: '$version'); bump it in a PR to main before releasing"
         }
-        $tag = "v$version"
+        else {
+            $tag = "v$version"
+        }
+
         $tagsOnHead = @(git -C $repoRoot tag --points-at HEAD)
         if ($tagsOnHead -notcontains $tag) {
             $found = if ($tagsOnHead) { $tagsOnHead -join ', ' } else { 'none' }
-            Stop-Publish "HEAD carries no tag $tag matching the csproj <Version> $version (tags on HEAD: $found)"
+            Stop-Publish "HEAD carries no tag $tag (tags on HEAD: $found); check out the commit it tags (git checkout $tag)"
+        }
+
+        # The tag names the version the build shows (About, ADR-0002 §5), so the tagged commit's csproj must say it.
+        if ($version -ne $tag.Substring(1)) {
+            $found = if ($version) { $version } else { 'none' }
+            Stop-Publish ("tag $tag does not match the csproj <Version> $found at the commit it tags; bump <Version> to " +
+                "$($tag.Substring(1)) in a PR to main, merge it into release and tag that commit")
+        }
+
+        # Production ships only what is merged into release; the tag may sit on any of its commits, e.g. on main's
+        # merge when release's tip is a later "Merge branch 'main' into release" (ADR-0017).
+        git -C $repoRoot merge-base --is-ancestor HEAD "origin/$branch"
+        if ($LASTEXITCODE -ne 0) {
+            Stop-Publish "the commit tagged $tag is not on origin/$branch; merge it into $branch and push before releasing"
         }
 
         # origin's tags, as refs/tags/<name> -> object id (the peeled ^{} lines are skipped).
