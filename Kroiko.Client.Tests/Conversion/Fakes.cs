@@ -1,4 +1,6 @@
 using Kroiko.Client.Blazor.Conversion;
+using Kroiko.Domain;
+using Kroiko.Domain.TemplateBuilding;
 
 namespace Kroiko.Client.Tests.Conversion;
 
@@ -21,6 +23,32 @@ internal sealed class FakeConfirmation : IConfirmation
         }
 
         return Task.FromResult(Answer);
+    }
+}
+
+/// <summary>
+/// Answers every edge-banding question with <see cref="Answer"/> for each material asked about, or cancels when it is
+/// <c>null</c>, and records the questions asked.
+/// </summary>
+internal sealed class FakeEdgeBandingPrompt : IEdgeBandingPrompt
+{
+    public MegaTradingEdge? Answer { get; set; } = new("22", "0.5");
+
+    public List<MissingEdgeBanding> Questions { get; } = [];
+
+    /// <summary>When set, asking throws it (the dialog could not open).</summary>
+    public Exception? Failure { get; set; }
+
+    public Task<IReadOnlyDictionary<string, MegaTradingEdge>?> AskAsync(MissingEdgeBanding missing)
+    {
+        Questions.Add(missing);
+        if (Failure is not null)
+        {
+            throw Failure;
+        }
+
+        return Task.FromResult<IReadOnlyDictionary<string, MegaTradingEdge>?>(
+            Answer is { } answer ? missing.Materials.ToDictionary(m => m.Material, _ => answer) : null);
     }
 }
 

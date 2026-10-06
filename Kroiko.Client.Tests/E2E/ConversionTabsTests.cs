@@ -1,5 +1,6 @@
-using System.Text;
+﻿using System.Text;
 using FluentAssertions;
+using Kroiko.Domain.TemplateBuilding;
 using Microsoft.Playwright;
 using Xunit;
 using static Kroiko.Client.Tests.E2E.ConverterPage;
@@ -10,7 +11,8 @@ namespace Kroiko.Client.Tests.E2E;
 /// <summary>
 /// The Lonira, Suliver and MegaTrading tabs under the upload panel (docs/implementation/04-conversion-flow.md,
 /// step 4): each grid edits the domain details in place, with the Server's editable fields (ADR-0005 §3), and the
-/// MegaTrading tab shows a <c>TooManyMaterials</c> problem next to the material rename (ADR-0006 §3).
+/// MegaTrading tab shows a <c>TooManyMaterials</c> problem next to the material rename (ADR-0006 §3), and its edges
+/// are a width and a thickness picked from MegaTrading's values, asked for before generating when missing (ADR-0015).
 /// </summary>
 [Collection(E2ECollection.Name)]
 [Trait("Category", "E2E")]
@@ -93,8 +95,10 @@ public sealed class ConversionTabsTests(PublishedApp app)
         await Expect(page.Locator(".mud-table th")).ToContainTextAsync(
             ["Материал на детайла", "X - фладер", "Y", "Брой", "Rot.", "Ляво", "Долу", "Дясно", "Горе",
              "Материал - Кант", "Забележка"]);
-        // The four edges, the edge-banding material and the note.
-        await Expect(page.Locator(".mud-table-body tr").First.Locator("input")).ToHaveCountAsync(6);
+        // The four edges are pickers; the edge-banding material and the note are text.
+        var firstRow = page.Locator(".mud-table-body tr").First;
+        await Expect(firstRow.Locator(".megatrading-edge")).ToHaveCountAsync(4);
+        await Expect(firstRow.Locator("input[type=text]:not([readonly])")).ToHaveCountAsync(2);
 
         var problem = page.Locator(".mud-alert").Filter(new() { HasText = "най-много 6 материала" });
         await Expect(problem).ToContainTextAsync("използва 8");
@@ -111,6 +115,60 @@ public sealed class ConversionTabsTests(PublishedApp app)
         await Expect(problem).ToHaveCountAsync(0);
         await Expect(renames).ToHaveCountAsync(6);
         await Expect(renames.Filter(new() { HasText = "Mirror" })).ToHaveCountAsync(0);
+        console.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task MegaTrading_edges_are_picked_from_its_values_and_the_missing_ones_are_asked_for_before_generating()
+    {
+        await using var context = await app.NewContextAsync();
+        var page = await context.NewPageAsync();
+        var console = ConsoleErrors(page);
+        await page.GotoAsync("/");
+
+        await PickAsync(page, "Мега Трейдинг, гр.София");
+        await UploadAsync(page, new FilePayload
+        {
+            Name = "two-edges.txt",
+            MimeType = "text/plain",
+            // One part of "Бяло" with its top and right edges banded; the 11-field format gives no width or thickness.
+            Buffer = Encoding.UTF8.GetBytes("600;300;1;Бяло;0;1;0;1;0;[1K];1\r\n"),
+        });
+
+        // Polyboard's top is MegaTrading's right and its right MegaTrading's bottom: both miss both values, in red.
+        var missing = page.GetByTestId("missing-edge-banding");
+        await Expect(missing).ToContainTextAsync("На 2 канта");
+        await Expect(missing).ToContainTextAsync("Бяло");
+        var bottom = page.Locator(".megatrading-edge[data-side='Долу']");
+        const string red = ".mud-input-control.mud-input-error";
+        await Expect(bottom.Locator(red)).ToHaveCountAsync(2);
+        await Expect(page.Locator($".megatrading-edge[data-side='Ляво'] {red}")).ToHaveCountAsync(0);
+
+        // Picking both in the grid completes that side.
+        await bottom.Locator(".edge-width").ClickAsync();
+        await page.GetByRole(AriaRole.Option, new() { Name = "28", Exact = true }).ClickAsync();
+        await bottom.Locator(".edge-thickness").ClickAsync();
+        await page.GetByRole(AriaRole.Option, new() { Name = "2.0", Exact = true }).ClickAsync();
+        await Expect(bottom.Locator(red)).ToHaveCountAsync(0);
+        await Expect(missing).ToContainTextAsync("На 1 кант");
+
+        // Generating asks for the rest; cancelling generates nothing.
+        await FillContactsAsync(page, "Тест ООД", "0888123456");
+        await GenerateButton(page).ClickAsync();
+        var dialog = page.GetByRole(AriaRole.Dialog);
+        await Expect(dialog.Locator(".edge-banding-row")).ToHaveCountAsync(1);
+        await Expect(dialog.GetByRole(AriaRole.Button, new() { Name = "Попълни и генерирай" })).ToBeDisabledAsync();
+        await dialog.GetByRole(AriaRole.Button, new() { Name = "Отказ" }).ClickAsync();
+        await Expect(dialog).ToHaveCountAsync(0);
+        await Expect(page.GetByTestId("generated-files")).ToHaveCountAsync(0);
+
+        // Answering it fills the right side only, keeps the bottom side's 28/2.0 and generates.
+        await GenerateButton(page).ClickAsync();
+        await FillEdgeBandingAsync(page, new MegaTradingEdge("22", "0.5"));
+        await Expect(missing).ToHaveCountAsync(0);
+        var files = await DownloadAllAsync(page, 2);
+        var cutMt = Encoding.UTF8.GetString(files.Single(f => f.FileName.EndsWith(".cut_mt")).Content);
+        cutMt.Should().Contain("Бяло╪600╪300╪1╪No╪╪28/2.0╪22/0.5╪╪");
         console.Should().BeEmpty();
     }
 

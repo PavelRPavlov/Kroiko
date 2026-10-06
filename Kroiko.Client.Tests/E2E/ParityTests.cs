@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Kroiko.Domain.ExcelFilesGeneration;
+using Kroiko.Domain.TemplateBuilding;
 using Kroiko.Testing;
 using Xunit;
 using static Kroiko.Client.Tests.E2E.ConverterPage;
@@ -11,7 +12,8 @@ namespace Kroiko.Client.Tests.E2E;
 /// Parity of the shipped artifact (docs/implementation/04-conversion-flow.md, step 6; ADR-0007 §5.1): the trimmed
 /// Release build, in the browser, turns a fixture into the Server's order files — the golden files the domain tests
 /// record — for every manufacturer, under the browser locales <c>bg-BG</c> (decimal comma) and <c>en-US</c>.
-/// Lonira and MegaTrading read the 11-field format, Suliver the 23-field one; MegaTrading's fixture has ≤ 6 materials.
+/// Lonira and MegaTrading read the 11-field format, Suliver the 23-field one; MegaTrading's fixture has ≤ 6 materials,
+/// and its edge banding, which that format does not give, is picked in the dialog as the golden files record (ADR-0015).
 /// </summary>
 [Collection(E2ECollection.Name)]
 [Trait("Category", "E2E")]
@@ -28,7 +30,7 @@ public sealed class ParityTests(PublishedApp app)
         {
             data.Add(locale, Lonira, "wardrobes-4-materials", "Lonira");
             data.Add(locale, Suliver, "cabinet-23-field", "Suliver");
-            data.Add(locale, MegaTrading, "bathroom-4-materials", "MegaTrading");
+            data.Add(locale, MegaTrading, "bathroom-4-materials", "MegaTrading-edges-filled");
         }
 
         return data;
@@ -71,7 +73,8 @@ public sealed class ParityTests(PublishedApp app)
                 @"() => performance.getEntriesByType('resource').some(e => /\/icudt[^/]*\.dat$/.test(e.name))"))
             .Should().BeTrue("the app must load ICU data, or the browser's locale never reaches .NET");
 
-        var files = await ConvertAsGoldenAsync(page, fixture, differentEdgeColor);
+        var edgeBanding = manufacturer == MegaTrading ? TestData.GoldenEdgeBanding : (MegaTradingEdge?)null;
+        var files = await ConvertAsGoldenAsync(page, fixture, differentEdgeColor, edgeBanding);
         console.Should().BeEmpty();
         return files;
     }

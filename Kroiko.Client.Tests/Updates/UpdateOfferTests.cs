@@ -27,7 +27,7 @@ public sealed class UpdateOfferTests : IAsyncDisposable
     public UpdateOfferTests()
     {
         _updates = new AppUpdates(_js, NullLogger<AppUpdates>.Instance);
-        _order = new ConverterState(_confirmation, new FakeDeviceSettingsStore(), new FakeFileDownloader(),
+        _order = new ConverterState(_confirmation, new FakeEdgeBandingPrompt(), new FakeDeviceSettingsStore(), new FakeFileDownloader(),
             new FakeFolderPicker(), NullLogger<ConverterState>.Instance);
         _offer = new UpdateOffer(_updates, _order, _confirmation, NullLogger<UpdateOffer>.Instance);
     }
@@ -178,6 +178,7 @@ public sealed class UpdateOfferTests : IAsyncDisposable
             .AddLogging()
             .AddScoped<IJSRuntime>(_ => new FakeUpdatesRuntime())
             .AddScoped<IConfirmation, FakeConfirmation>()
+            .AddScoped<IEdgeBandingPrompt, FakeEdgeBandingPrompt>()
             .AddScoped<IDeviceSettingsStore, FakeDeviceSettingsStore>()
             .AddScoped<IFileDownloader, FakeFileDownloader>()
             .AddScoped<IFolderPicker, FakeFolderPicker>()

@@ -5,7 +5,8 @@
 
 @* The Server's MegaTrading tab without its contact fields (one contact section is above the tabs, ADR-0005 §6)
    and without MegaTradingViewModel: the grid edits the file's MegaTradingDetails in place (ADR-0005 §3).
-   Editable as on the Server: the four edges, the edge-banding material, the note and the material rename. *@
+   Editable as on the Server: the four edges, the edge-banding material, the note and the material rename; each edge is
+   a width and a thickness picked from the values MegaTrading lists (ADR-0015). *@
 @if (TooManyMaterials is { } problem)
 {
     @* ADR-0006 §3: the .cut_mt header has room for problem.Max materials; ConverterState blocks generating. *@
@@ -13,6 +14,15 @@
         Мега Трейдинг приема най-много @problem.Max материала в една поръчка, а тази използва @problem.Materials.Count:
         @string.Join(", ", problem.Materials).
         Обединете материали, като ги преименувате в „Използвани материали“ по-долу, или разделете поръчката в Polyboard.
+    </MudAlert>
+}
+@if (MissingEdgeBanding is { } missing)
+{
+    @* ADR-0015: not blocking — "Генерирай бланки за поръчка" asks for these per material. *@
+    <MudAlert Severity="Severity.Warning" Class="my-2" data-testid="missing-edge-banding">
+        На @missing.Edges @(missing.Edges == 1 ? "кант" : "канта") липсва ширина или дебелина (в червено в таблицата):
+        @string.Join(", ", missing.Materials.Select(m => m.Material)).
+        Изберете ги в таблицата или при „Генерирай бланки за поръчка“.
     </MudAlert>
 }
 
@@ -42,10 +52,26 @@
         <PropertyColumn Property="x => x.Width" Title="Y" Editable="false" />
         <PropertyColumn Property="x => x.Quantity" Title="Брой" Editable="false" />
         <PropertyColumn Property="x => x.Rotated" Title="Rot." Editable="false" />
-        <PropertyColumn Property="x => x.LeftEdge" Title="Ляво" Editable="true" Required="false" />
-        <PropertyColumn Property="x => x.BottomEdge" Title="Долу" Editable="true" Required="false" />
-        <PropertyColumn Property="x => x.RightEdge" Title="Дясно" Editable="true" Required="false" />
-        <PropertyColumn Property="x => x.TopEdge" Title="Горе" Editable="true" Required="false" />
+        <TemplateColumn T="MegaTradingDetail" Title="Ляво" Editable="false" Sortable="false">
+            <CellTemplate>
+                <MegaTradingEdgeCell Side="Ляво" Value="@context.Item.LeftEdge" ValueChanged="e => SetEdge(() => context.Item.LeftEdge = e)" />
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn T="MegaTradingDetail" Title="Долу" Editable="false" Sortable="false">
+            <CellTemplate>
+                <MegaTradingEdgeCell Side="Долу" Value="@context.Item.BottomEdge" ValueChanged="e => SetEdge(() => context.Item.BottomEdge = e)" />
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn T="MegaTradingDetail" Title="Дясно" Editable="false" Sortable="false">
+            <CellTemplate>
+                <MegaTradingEdgeCell Side="Дясно" Value="@context.Item.RightEdge" ValueChanged="e => SetEdge(() => context.Item.RightEdge = e)" />
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn T="MegaTradingDetail" Title="Горе" Editable="false" Sortable="false">
+            <CellTemplate>
+                <MegaTradingEdgeCell Side="Горе" Value="@context.Item.TopEdge" ValueChanged="e => SetEdge(() => context.Item.TopEdge = e)" />
+            </CellTemplate>
+        </TemplateColumn>
         <PropertyColumn Property="x => x.EdgeBandingMaterial" Title="Материал - Кант" Editable="true" Required="false" />
         <PropertyColumn Property="x => x.Note" Title="Забележка" Editable="true" Required="false" />
     </Columns>
@@ -64,6 +90,8 @@
     private List<MaterialRename> _renames = [];
 
     private TooManyMaterials? TooManyMaterials => ConverterState.Problems.OfType<TooManyMaterials>().FirstOrDefault();
+
+    private MissingEdgeBanding? MissingEdgeBanding => ConverterState.Problems.OfType<MissingEdgeBanding>().FirstOrDefault();
 
     protected override void OnParametersSet()
     {
@@ -85,6 +113,13 @@
         _details.Select(d => d.Material).OfType<string>().Distinct().Select(m => new MaterialRename(m)).ToList();
 
     private void OnDetailCommitted(MegaTradingDetail detail) => ConverterState.NotifyInputEdited();
+
+    // The edge pickers write the detail directly, outside the grid's cell editing.
+    private void SetEdge(Action write)
+    {
+        write();
+        ConverterState.NotifyInputEdited();
+    }
 
     private sealed class MaterialRename(string oldName)
     {
