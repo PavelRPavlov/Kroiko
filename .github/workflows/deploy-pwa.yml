@@ -1,7 +1,8 @@
 # Deploys the PWA (Kroiko.Client.Blazor) to production, https://kroiko.com, when a release tag vX.Y.Z is pushed
-# (ADR-0013). The deploy is scripts/publish-pwa.ps1, the same script as a deploy by hand, so every rule of the branch
-# model holds here too: the tag must be on the tip of release and equal the csproj <Version>, it must not be older
-# than the newest vX.Y.Z tag, and the full dotnet test must pass (docs/release-checklist.md).
+# (ADR-0013). The deploy is scripts/publish-pwa.ps1, the same script as a deploy by hand, given the pushed tag, so every
+# rule of the branch model holds here too: the tagged commit must be on release (merged into it, not necessarily its
+# tip, ADR-0017), its csproj <Version> must equal the tag, the tag must not be older than the newest vX.Y.Z tag, and the
+# full dotnet test must pass (docs/release-checklist.md).
 #
 # The deploy user's access key is in the GitHub environment "pwa-production" (secrets AWS_ACCESS_KEY_ID and
 # AWS_SECRET_ACCESS_KEY), which only tags matching v* may use (07a.5).
@@ -52,17 +53,19 @@ jobs:
       group: pwa-production
       cancel-in-progress: false
     steps:
+      # The pushed tag's commit, with every branch and tag: the script checks that commit against origin/release and
+      # the other tags (ADR-0017). A tag whose commit is not on release, or whose csproj <Version> differs, is refused
+      # there, before the tests.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      # The script deploys production only from release, checked out at origin/release, with the tag on HEAD. A tag
-      # that is not on release's tip is refused there, before the tests.
-      - name: Check out release
+      # Origin's tags as they are: checkout can store the pushed annotated tag as a lightweight one, which the script's
+      # "is the tag on origin, unchanged" check would refuse. HEAD stays on the tagged commit.
+      - name: Fetch origin's tags
         run: |
           git fetch --force --tags origin
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          git checkout -B release origin/release
 
       - uses: actions/setup-dotnet@v6
         with:
@@ -90,8 +93,12 @@ jobs:
           $credentials = "[kroiko-pwa]`naws_access_key_id = $env:ACCESS_KEY_ID`naws_secret_access_key = $env:SECRET_ACCESS_KEY`n"
           [System.IO.File]::WriteAllText((Join-Path $awsFolder 'credentials'), $credentials)
 
+      # The tag that was pushed, not one derived from the csproj (ADR-0017); passed through the environment, never
+      # pasted into the script.
       - name: Deploy
-        run: ./scripts/publish-pwa.ps1 -Environment production
+        env:
+          TAG: ${{ github.ref_name }}
+        run: ./scripts/publish-pwa.ps1 -Environment production -Tag $env:TAG
 
       # Runs whatever happened before, even on a failed or cancelled run. The hosted runner is discarded after the
       # job anyway; this makes sure nothing the deploy wrote outlives it there.
