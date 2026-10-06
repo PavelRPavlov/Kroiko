@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "blockReadsOutsideWorkingDirectories": true
+  },
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "The workspace is this git repository only (PavelRPavlov/Kroiko). Every agent and sub-agent works inside the repository root; nothing outside it is part of the task."
+    ],
+    "hard_deny": [
+      "$defaults",
+      "Reading, listing, searching, creating, modifying or deleting files or directories outside the repository root (parent folders, sibling projects, the home directory, other git repositories, system folders), with a shell command or any other tool. Build tooling such as dotnet restore/build/test and Playwright may use their own package and browser caches implicitly.",
+      "Changing user-level or machine-level configuration outside the repository: ~/.gitconfig, ~/.claude, ~/.nuget/NuGet.Config, shell profiles, global dotnet tools, or system settings."
+    ]
+  }
+}
