@@ -30,8 +30,9 @@ box is done. For `v1.0.0`, operators get `https://kroiko.com` only after that is
 Production deploys itself when a release tag is pushed: the workflow `.github/workflows/deploy-pwa.yml` runs
 `scripts/publish-pwa.ps1` on a GitHub runner ([ADR-0013](adr/0013-deploy-production-from-release-tag-with-github-actions.md)).
 The script enforces the branch model ([ADR-0010](adr/0010-host-pwa-on-s3-and-cloudfront.md),
-[07](implementation/07-hosting-and-go-live.md) 07a.2): production is deployed only from `release`, from a pushed
-tag `vX.Y.Z` that equals the csproj `<Version>`, and never from an older version than the newest tag on `origin`.
+[07](implementation/07-hosting-and-go-live.md) 07a.2): production deploys the commit of the pushed tag `vX.Y.Z`,
+only if that commit is on `release` (merged into it; it need not be the tip) and its csproj `<Version>` equals the tag,
+and never an older version than the newest tag on `origin` ([ADR-0017](adr/0017-deploy-the-pushed-tag.md)).
 A tag that does not look like `vX.Y.Z` deploys nothing.
 
 ### Steps
@@ -54,7 +55,9 @@ A tag that does not look like `vX.Y.Z` deploys nothing.
    turned back on, a push that changes `ATAFurniture.Server/**` redeploys the Server too. Check before you push.
 3. **Prepare the test machine.** Do part 2's "Before you deploy" setup now: the update checks need the previous
    version open while this one lands, and the next step deploys.
-4. **Tag the release and push the tag.** This starts the deploy.
+4. **Tag the release and push the tag.** This starts the deploy. Tag `release`'s tip, or any commit merged into it,
+   such as main's merge commit; its csproj `<Version>` must equal the tag (step 1), or the deploy is refused and
+   that tag can never be deployed (tags are never moved), so the next try needs a new version.
 
    ```powershell
    git tag -a vX.Y.Z -m "vX.Y.Z"
@@ -87,12 +90,14 @@ Once per deploying machine:
 - The script needs a clean tree, including untracked files. Add local tool folders such as `.claude/` to
   `.git/info/exclude`, not to `.gitignore`.
 
-Then, with `release` checked out at the pushed tag (production) or `main` at `origin/main` (staging):
+Then, with the pushed tag checked out (production, `git checkout vX.Y.Z`) or `main` at `origin/main` (staging):
 
 ```powershell
-./scripts/publish-pwa.ps1 -Environment production -DryRun
-./scripts/publish-pwa.ps1 -Environment production
+./scripts/publish-pwa.ps1 -Environment production -Tag vX.Y.Z -DryRun
+./scripts/publish-pwa.ps1 -Environment production -Tag vX.Y.Z
 ```
+
+Without `-Tag`, the script deploys the tag the csproj `<Version>` names.
 
 `-DryRun` runs every check, the full `dotnet test` and the publish, then prints what it would do instead of
 deploying: `Dry run: would deploy vX.Y.Z (<sha>) to production - …`, followed by an `upload` and a `switch` line.

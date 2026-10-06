@@ -25,10 +25,11 @@ The earlier ADRs were deliberately removed (see git history) and are not carried
 | [0010](0010-host-pwa-on-s3-and-cloudfront.md) | Host the PWA on Amazon S3 + CloudFront (flat-rate Free plan) at `app.kroiko.com` | Accepted; the origin (§1) superseded by [0011](0011-serve-pwa-at-kroiko-com-with-route-53.md), the cache policy (§5) by [0012](0012-use-cachingoptimized-cache-policy.md), the production deploy by hand (§6–7) by [0013](0013-deploy-production-from-release-tag-with-github-actions.md) |
 | [0011](0011-serve-pwa-at-kroiko-com-with-route-53.md) | Serve the PWA at `kroiko.com`, with its DNS in Route 53 | Accepted |
 | [0012](0012-use-cachingoptimized-cache-policy.md) | Use the managed `CachingOptimized` cache policy | Accepted |
-| [0013](0013-deploy-production-from-release-tag-with-github-actions.md) | Deploy production from a pushed release tag with GitHub Actions | Accepted |
+| [0013](0013-deploy-production-from-release-tag-with-github-actions.md) | Deploy production from a pushed release tag with GitHub Actions | Accepted; the checkout of `release`'s tip (§2) superseded by [0017](0017-deploy-the-pushed-tag.md) |
 | [0014](0014-system-light-dark-theme.md) | A System / Light / Dark theme in the PWA, following the device by default | Accepted |
 | [0015](0015-megatrading-edge-banding-width-and-thickness.md) | MegaTrading edges carry a width and a thickness from MegaTrading's lists; the PWA asks for missing ones | Accepted |
 | [0016](0016-megatrading-sheet-note-is-the-edge-summary.md) | MegaTrading's sheet "Забележка" shows the banded sides, as Lonira's "Кантиране" does | Accepted |
+| [0017](0017-deploy-the-pushed-tag.md) | Production deploys the commit of the pushed tag, if it is on release | Accepted |
 
 ## Format
 

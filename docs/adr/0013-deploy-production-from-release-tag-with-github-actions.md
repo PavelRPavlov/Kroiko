@@ -1,6 +1,6 @@
 # ADR-0013: Deploy production from a pushed release tag with GitHub Actions
 
-- Status: Accepted
+- Status: Accepted; §2's checkout of `release`'s tip superseded by [ADR-0017](0017-deploy-the-pushed-tag.md)
 - Date: 2026-09-25
 - Deciders: Pavel Pavlov
 

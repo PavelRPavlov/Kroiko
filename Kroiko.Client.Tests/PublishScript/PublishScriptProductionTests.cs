@@ -4,8 +4,9 @@ using Xunit;
 namespace Kroiko.Client.Tests.PublishScript;
 
 /// <summary>
-/// <c>-Environment production</c>: only <c>origin/release</c>, checked out on <c>release</c>, tagged <c>vX.Y.Z</c> with
-/// the csproj <c>&lt;Version&gt;</c> (ADR-0010, ADR-0002 §6).
+/// <c>-Environment production</c>: only the commit tagged <c>vX.Y.Z</c> — the pushed tag (<c>-Tag</c>), or the csproj's
+/// without it — whose csproj <c>&lt;Version&gt;</c> is X.Y.Z, and which is on <c>origin/release</c> (ADR-0010,
+/// ADR-0002 §6, ADR-0017).
 /// </summary>
 public sealed class PublishScriptProductionTests(PublishScriptTemplate template) : PublishScriptTestBase(template)
 {
@@ -28,30 +29,108 @@ public sealed class PublishScriptProductionTests(PublishScriptTemplate template)
     }
 
     [Fact]
-    public void Refuses_production_from_a_branch_other_than_release()
+    public void Deploys_the_pushed_tag_when_release_has_moved_past_it()
     {
+        // What the workflow does (ADR-0017): v1.2.3 tags main's merge, and release's tip is a later merge commit.
         ReleaseVersion("1.2.3", tag: "v1.2.3");
-        Repo.Git("checkout", "--quiet", "main");
-        Repo.Git("merge", "--quiet", "--ff-only", "release");
-        Repo.Push("main");
+        var tagged = Repo.Git("rev-parse", "--short=7", "HEAD");
+        Repo.Commit("Merge branch 'main' into release");
+        Repo.Push("release");
+        Repo.Git("checkout", "--quiet", "--detach", "v1.2.3");
 
-        var run = Repo.Run("production");
+        var run = Repo.Run("production", new RunOptions { Tag = "v1.2.3" });
+
+        run.ExitCode.Should().Be(0, run.Output);
+        run.OriginPath.Should().MatchRegex($@"-v1\.2\.3-{tagged}$");
+        run.Output.Should().Contain($"Deployed v1.2.3 ({tagged}) to production");
+    }
+
+    [Fact]
+    public void Refuses_the_pushed_tag_when_its_commits_csproj_has_another_version()
+    {
+        // The failed v0.1.2 deploy: the tag was pushed, but <Version> was not bumped.
+        ReleaseVersion("1.2.3", tag: "v1.2.4");
+        Repo.Git("checkout", "--quiet", "--detach", "v1.2.4");
+
+        var run = Repo.Run("production", new RunOptions { Tag = "v1.2.4" });
 
         run.ExitCode.Should().NotBe(0);
-        run.Output.Should().Contain("production deploys only from the release branch");
+        run.Output.Should().Contain("tag v1.2.4 does not match the csproj <Version> 1.2.3")
+            .And.Contain("bump <Version> to 1.2.4");
         run.Calls.Should().BeEmpty();
     }
 
     [Fact]
-    public void Refuses_production_when_release_has_commits_origin_release_does_not()
+    public void Refuses_the_pushed_tag_when_HEAD_is_not_its_commit()
     {
         ReleaseVersion("1.2.3", tag: "v1.2.3");
+        Repo.Commit("after the tag");
+        Repo.Push("release");
+
+        var run = Repo.Run("production", new RunOptions { Tag = "v1.2.3" });
+
+        run.ExitCode.Should().NotBe(0);
+        run.Output.Should().Contain("HEAD carries no tag v1.2.3").And.Contain("git checkout v1.2.3");
+        run.Calls.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData("v1.2")]
+    [InlineData("1.2.3")]
+    [InlineData("v1.2.3-rc1")]
+    public void Refuses_a_pushed_tag_that_is_not_a_release_tag(string tag)
+    {
+        ReleaseVersion("1.2.3", tag: "v1.2.3");
+
+        var run = Repo.Run("production", new RunOptions { Tag = tag });
+
+        run.ExitCode.Should().NotBe(0);
+        run.Output.Should().Contain($"-Tag must be a release tag vX.Y.Z (found: '{tag}')");
+        run.Calls.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Refuses_a_tag_on_a_commit_that_is_not_on_release()
+    {
+        // Tagged on main, never merged into release.
+        ReleaseVersion("1.2.3", tag: "v1.2.3");
+        Repo.Git("checkout", "--quiet", "main");
+        Repo.SetVersion("1.2.4");
+        Repo.Commit("1.2.4 on main only");
+        Repo.Push("main");
+        Repo.Git("tag", "-a", "v1.2.4", "-m", "v1.2.4");
+        Repo.Push("v1.2.4");
+
+        var run = Repo.Run("production", new RunOptions { Tag = "v1.2.4" });
+
+        run.ExitCode.Should().NotBe(0);
+        run.Output.Should().Contain("the commit tagged v1.2.4 is not on origin/release");
+        run.Calls.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Refuses_a_tagged_release_commit_that_origin_release_does_not_have()
+    {
+        ReleaseVersion("1.2.3", tag: "v1.2.3");
+        Repo.SetVersion("1.2.4");
         Repo.Commit("not pushed");
+        Repo.Git("tag", "-a", "v1.2.4", "-m", "v1.2.4");
+        Repo.Push("v1.2.4");
 
         var run = Repo.Run("production");
 
         run.ExitCode.Should().NotBe(0);
-        run.Output.Should().Contain("HEAD is not origin/release");
+        run.Output.Should().Contain("the commit tagged v1.2.4 is not on origin/release");
+        run.Calls.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Tag_is_for_production_only()
+    {
+        var run = Repo.Run("main", new RunOptions { Tag = "v1.2.3" });
+
+        run.ExitCode.Should().NotBe(0);
+        run.Output.Should().Contain("-Tag is for -Environment production only");
         run.Calls.Should().BeEmpty();
     }
 
