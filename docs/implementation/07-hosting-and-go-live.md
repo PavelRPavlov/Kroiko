@@ -71,8 +71,9 @@ As built:
 `scripts/publish-pwa.ps1 -Environment main|production` refuses to run unless:
 
 1. the working tree is clean (`git status --porcelain` is empty);
-2. for `main`: `HEAD` equals `origin/main`. For `production`: `HEAD` is on `release`, equals
-   `origin/release`, and carries a tag `vX.Y.Z` that equals the csproj `<Version>`;
+2. for `main`: `HEAD` equals `origin/main`. For `production`: `HEAD` is the commit tagged `vX.Y.Z` (`-Tag`, or the
+   csproj `<Version>` without it), its csproj `<Version>` equals the tag, and it is on `origin/release` (merged into
+   it, not necessarily the tip; [ADR-0017](../adr/0017-deploy-the-pushed-tag.md));
 3. the full `dotnet test` passes (including E2E).
 
 Then it runs `dotnet publish Kroiko.Client.Blazor -c Release -o <temp>` and deploys `<temp>/wwwroot`:
