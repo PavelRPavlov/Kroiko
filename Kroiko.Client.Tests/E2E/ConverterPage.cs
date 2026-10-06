@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Kroiko.Domain.ExcelFilesGeneration;
+using Kroiko.Domain.TemplateBuilding;
 using Kroiko.Testing;
 using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
@@ -37,6 +38,32 @@ internal static class ConverterPage
     /// <summary>The "Генерирай бланки за поръчка" button.</summary>
     public static ILocator GenerateButton(IPage page) =>
         page.GetByRole(AriaRole.Button, new() { Name = "Генерирай бланки за поръчка" });
+
+    /// <summary>
+    /// Answers the MegaTrading edge-banding dialog (ADR-0015) with <paramref name="pick"/> for every material: the width
+    /// and the thickness where the material asks for them; then "Попълни и генерирай".
+    /// </summary>
+    public static async Task FillEdgeBandingAsync(IPage page, MegaTradingEdge pick)
+    {
+        var dialog = page.GetByRole(AriaRole.Dialog);
+        var rows = dialog.Locator(".edge-banding-row");
+        await Expect(rows.First).ToBeVisibleAsync();
+        for (var i = 0; i < await rows.CountAsync(); i++)
+        {
+            foreach (var (part, value) in new[] { ("width", pick.Width), ("thickness", pick.Thickness) })
+            {
+                var select = rows.Nth(i).Locator($".edge-banding-{part}");
+                if (await select.CountAsync() > 0)
+                {
+                    await select.ClickAsync();
+                    await page.GetByRole(AriaRole.Option, new() { Name = value, Exact = true }).ClickAsync();
+                }
+            }
+        }
+
+        await dialog.GetByRole(AriaRole.Button, new() { Name = "Попълни и генерирай" }).ClickAsync();
+        await Expect(dialog).ToHaveCountAsync(0);
+    }
 
     /// <summary>The generated files' download links, one per file, in the order of the list.</summary>
     public static ILocator FileLinks(IPage page) => page.GetByTestId("generated-files").GetByRole(AriaRole.Link);
@@ -91,11 +118,12 @@ internal static class ConverterPage
 
     /// <summary>
     /// Converts <paramref name="fixture"/> with the manufacturer already picked, as the golden files were recorded:
-    /// upload → the golden contacts (and the different edge colour, if given) → "Генерирай бланки за поръчка" →
-    /// "Изтегли всички". Returns every generated file as downloaded.
+    /// upload → the golden contacts (and the different edge colour, if given) → "Генерирай бланки за поръчка" (→ the
+    /// MegaTrading edge-banding dialog answered with <paramref name="edgeBanding"/>, if given) → "Изтегли всички".
+    /// Returns every generated file as downloaded.
     /// </summary>
     public static async Task<IReadOnlyList<FileSaveContext>> ConvertAsGoldenAsync(
-        IPage page, string fixture, string? differentEdgeColor = null)
+        IPage page, string fixture, string? differentEdgeColor = null, MegaTradingEdge? edgeBanding = null)
     {
         await UploadAsync(page, fixture);
         if (differentEdgeColor is not null)
@@ -107,6 +135,11 @@ internal static class ConverterPage
 
         await FillContactsAsync(page, TestData.GoldenContact.CompanyName!, TestData.GoldenContact.MobileNumber!);
         await GenerateButton(page).ClickAsync();
+        if (edgeBanding is { } pick)
+        {
+            await FillEdgeBandingAsync(page, pick);
+        }
+
         var generated = page.GetByRole(AriaRole.Listitem);
         await Expect(generated.First).ToBeVisibleAsync();
 

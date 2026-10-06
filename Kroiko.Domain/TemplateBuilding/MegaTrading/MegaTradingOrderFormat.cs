@@ -15,15 +15,24 @@ internal sealed class MegaTradingOrderFormat()
         OneFile("MegaTrading", details, ToMegaTradingDetail);
 
     // Counts materials exactly as the .cut_mt header does, after any rename the operator made, so a rename that
-    // merges two materials frees a header row.
+    // merges two materials frees a header row. Then the banded sides MegaTrading's software would not accept (ADR-0015).
     public override IReadOnlyList<OrderProblem> Check(IReadOnlyList<KroikoFile> files)
     {
         ArgumentNullException.ThrowIfNull(files);
 
+        var problems = new List<OrderProblem>();
         var materials = MegaTradingFileGenerator.GroupByMaterial(files).Select(g => g.Key).ToList();
-        return materials.Count > MegaTradingFileGenerator.MaxMaterials
-            ? [new TooManyMaterials(MegaTradingFileGenerator.MaxMaterials, materials)]
-            : [];
+        if (materials.Count > MegaTradingFileGenerator.MaxMaterials)
+        {
+            problems.Add(new TooManyMaterials(MegaTradingFileGenerator.MaxMaterials, materials));
+        }
+
+        if (MegaTradingEdges.FindMissing(files) is { } missing)
+        {
+            problems.Add(missing);
+        }
+
+        return problems;
     }
 
     // The .cut_mt comes first, then the .xlsx.
@@ -47,22 +56,28 @@ internal sealed class MegaTradingOrderFormat()
         EdgeBandingMaterial = HasAnyEdgeSet(detail),
         Rotated = detail.IsGrainDirectionReversed,
         Note = string.Empty,
-        // TODO edge material should hold the overall thickness of the edge banding (e.g. 22,28 or 42)
-        RightEdge = detail.HasTopEdge ? $"{detail.TopEdgeMaterial}/{GetEdgeBandingThickness(detail.TopEdgeThickness)}" : string.Empty,
-        TopEdge = detail.HasLeftEdge ? $"{detail.LeftEdgeMaterial}/{GetEdgeBandingThickness(detail.LeftEdgeThickness)}" : string.Empty,
-        BottomEdge = detail.HasRightEdge ? $"{detail.RightEdgeMaterial}/{GetEdgeBandingThickness(detail.RightEdgeThickness)}" : string.Empty,
-        LeftEdge = detail.HasBottomEdge ? $"{detail.BottomEdgeMaterial}/{GetEdgeBandingThickness(detail.BottomEdgeThickness)}" : string.Empty,
+        // Polyboard never gives the band's width and not always its thickness: what it does not give stays empty for the
+        // operator to pick (ADR-0015). Polyboard's edge material ("Same", "Falc", …) is no value MegaTrading accepts.
+        RightEdge = Edge(detail.HasTopEdge, detail.TopEdgeThickness),
+        TopEdge = Edge(detail.HasLeftEdge, detail.LeftEdgeThickness),
+        BottomEdge = Edge(detail.HasRightEdge, detail.RightEdgeThickness),
+        LeftEdge = Edge(detail.HasBottomEdge, detail.BottomEdgeThickness),
     };
+
+    /// <summary>
+    /// <paramref name="detail"/>'s banded sides as Lonira counts them (<see cref="EdgeBandingSummary"/>), from its edges as
+    /// they are now, so edges the operator picked or cleared count: the inverse of the side mapping above.
+    /// </summary>
+    internal static string EdgeSummary(MegaTradingDetail detail) =>
+        EdgeBandingSummary.Describe(detail.Height, detail.Width, detail.Rotated,
+            top: !string.IsNullOrEmpty(detail.RightEdge),
+            bottom: !string.IsNullOrEmpty(detail.LeftEdge),
+            right: !string.IsNullOrEmpty(detail.BottomEdge),
+            left: !string.IsNullOrEmpty(detail.TopEdge));
+
+    private static string Edge(bool hasEdge, double thickness) =>
+        hasEdge ? new MegaTradingEdge(string.Empty, MegaTradingEdge.ThicknessFromPolyboard(thickness)).ToString() : string.Empty;
 
     private static string HasAnyEdgeSet(Detail detail) =>
         detail.HasBottomEdge || detail.HasLeftEdge || detail.HasRightEdge || detail.HasTopEdge ? detail.Material : string.Empty;
-
-    private static string GetEdgeBandingThickness(double detailLeftEdgeThickness) =>
-        detailLeftEdgeThickness switch
-        {
-            <= 0.5 => "0.5",
-            > 0.5 and <= 1 => "0.8/1.0",
-            >= 1 => "2.0",
-            _ => ""
-        };
 }

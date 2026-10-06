@@ -8,6 +8,34 @@
 
 ---
 
+## Workspace boundary — this repository only (applies to every agent & sub-agent)
+
+Your workspace is **the root of this git checkout** (the folder that holds this file) and
+nothing outside it. A worktree of this repo that your tool creates counts as the repo.
+
+- ✅ Read, search, and inspect only files inside the repository root.
+- ✅ Create, edit, move, and delete only files inside the repository root.
+- ✅ Scratch files go in the git-ignored `.scratch/` folder at the repo root. Delete them when you're done.
+- ✅ When you start a sub-agent, its prompt must include this boundary: work only inside
+  this repository root.
+- ❌ Don't open, list, `grep`, `find`, or `cat` anything outside the repo. That means parent
+  folders (`..`), sibling projects, your home directory, other git repos, and system folders.
+  This holds for file tools and shell commands alike. Don't follow symlinks that point outside the repo.
+- ❌ Don't change user-level or machine-level config: `~/.gitconfig`, `~/.claude/`,
+  `~/.nuget/NuGet.Config`, shell profiles, environment variables, or global `dotnet tool` installs.
+  If a setting is needed, put it in a repo-local file (for example `nuget.config` or `.claude/settings.json`
+  at the repo root).
+- ❌ Don't add extra working directories (`--add-dir`, `permissions.additionalDirectories`)
+  or `cd` out of the repo.
+- ⚠️ The toolchain may still use its own caches: `dotnet restore` reads `~/.nuget/packages`,
+  and Playwright uses its installed browsers. Don't inspect or edit those caches yourself.
+- ⚠️ If a task seems to need anything outside the repo, **stop and ask the user**. Don't work around the boundary.
+
+This is enforced for Claude Code in [.claude/settings.json](.claude/settings.json):
+`permissions.blockReadsOutsideWorkingDirectories` refuses file-tool reads (Read, Grep, Glob,
+LSP) outside the repo, and an auto-mode hard-deny rule blocks shell access outside it. Edits
+outside the working directory already need explicit approval.
+
 ## What this is
 
 Two .NET 10 apps that convert Polyboard furniture cut-list text files into
@@ -24,6 +52,7 @@ See [CONTEXT.md](CONTEXT.md) for the domain model and the ubiquitous language.
 
 ```
 ATATextConverter/
+├── .claude/settings.json     ← Claude Code project settings: enforces the workspace boundary (see above)
 ├── .github/workflows/        ← deploy-pwa.yml (production deploy on a pushed vX.Y.Z tag, ADR-0013); the Server's workflows
 ├── AGENTS.md                 ← you are here
 ├── CONTEXT.md                ← domain model + architecture + decision log

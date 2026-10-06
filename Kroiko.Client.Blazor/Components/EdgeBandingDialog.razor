@@ -1,0 +1,73 @@
+@using Kroiko.Domain
+@using Kroiko.Domain.TemplateBuilding
+
+@* ADR-0015: before a MegaTrading order is generated, the operator picks per material what its banded sides miss — the
+   width MegaTrading lists, the thickness, or both. Only the missing values are filled in; what the operator chose in
+   the grid stays. *@
+<MudDialog>
+    <DialogContent>
+        <MudText Class="mb-3">
+            Мега Трейдинг приема само кантове с ширина и дебелина от списъка. За @Missing.Edges @(Missing.Edges == 1 ? "кант" : "канта")
+            липсват — изберете ги за всеки материал. Попълват се само празните стойности; избраното в таблицата остава.
+        </MudText>
+        @foreach (var row in _rows)
+        {
+            <MudStack @key="row.Material" Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="my-2 edge-banding-row">
+                <MudText Style="flex: 0 0 40%">
+                    @row.Material.Material <span class="mud-text-secondary">(@row.Material.Edges)</span>
+                </MudText>
+                @if (row.Material.NeedsWidth)
+                {
+                    <MudSelect T="string" @bind-Value="row.Width" Label="Ширина" Dense="true" Required="true" Class="edge-banding-width" Style="min-width: 7rem">
+                        @foreach (var width in MegaTradingEdge.Widths)
+                        {
+                            <MudSelectItem Value="@width">@width</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                @if (row.Material.NeedsThickness)
+                {
+                    <MudSelect T="string" @bind-Value="row.Thickness" Label="Дебелина" Dense="true" Required="true" Class="edge-banding-thickness" Style="min-width: 7rem">
+                        @foreach (var thickness in MegaTradingEdge.Thicknesses)
+                        {
+                            <MudSelectItem Value="@thickness">@thickness</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+            </MudStack>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отказ</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Fill" Disabled="@(!_rows.All(r => r.IsPicked))">
+            Попълни и генерирай
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter, EditorRequired] public MissingEdgeBanding Missing { get; set; } = default!;
+
+    private List<Row> _rows = [];
+
+    protected override void OnParametersSet() => _rows = Missing.Materials.Select(m => new Row(m)).ToList();
+
+    private void Fill() =>
+        Dialog.Close(DialogResult.Ok<IReadOnlyDictionary<string, MegaTradingEdge>>(
+            _rows.ToDictionary(r => r.Material.Material, r => new MegaTradingEdge(r.Width ?? string.Empty, r.Thickness ?? string.Empty))));
+
+    private void Cancel() => Dialog.Cancel();
+
+    private sealed class Row(MaterialEdgeBanding material)
+    {
+        public MaterialEdgeBanding Material { get; } = material;
+
+        public string? Width { get; set; }
+
+        public string? Thickness { get; set; }
+
+        public bool IsPicked => (!Material.NeedsWidth || Width is not null) && (!Material.NeedsThickness || Thickness is not null);
+    }
+}

@@ -27,6 +27,8 @@ The earlier ADRs were deliberately removed (see git history) and are not carried
 | [0012](0012-use-cachingoptimized-cache-policy.md) | Use the managed `CachingOptimized` cache policy | Accepted |
 | [0013](0013-deploy-production-from-release-tag-with-github-actions.md) | Deploy production from a pushed release tag with GitHub Actions | Accepted |
 | [0014](0014-system-light-dark-theme.md) | A System / Light / Dark theme in the PWA, following the device by default | Accepted |
+| [0015](0015-megatrading-edge-banding-width-and-thickness.md) | MegaTrading edges carry a width and a thickness from MegaTrading's lists; the PWA asks for missing ones | Accepted |
+| [0016](0016-megatrading-sheet-note-is-the-edge-summary.md) | MegaTrading's sheet "Забележка" shows the banded sides, as Lonira's "Кантиране" does | Accepted |
 
 ## Format
 
