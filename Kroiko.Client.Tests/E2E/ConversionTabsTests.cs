@@ -173,6 +173,45 @@ public sealed class ConversionTabsTests(PublishedApp app)
     }
 
     [Fact]
+    public async Task The_bucket_clears_a_MegaTrading_edge_so_it_is_neither_asked_for_nor_written()
+    {
+        await using var context = await app.NewContextAsync();
+        var page = await context.NewPageAsync();
+        var console = ConsoleErrors(page);
+        await page.GotoAsync("/");
+
+        await PickAsync(page, "Мега Трейдинг, гр.София");
+        await UploadAsync(page, new FilePayload
+        {
+            Name = "two-edges.txt",
+            MimeType = "text/plain",
+            // Polyboard's top and right edges: MegaTrading's right and bottom, both missing their width and thickness.
+            Buffer = Encoding.UTF8.GetBytes("600;300;1;Бяло;0;1;0;1;0;[1K];1\r\n"),
+        });
+        var missing = page.GetByTestId("missing-edge-banding");
+        await Expect(missing).ToContainTextAsync("На 2 канта");
+
+        // A side with no edge has nothing to clear.
+        await Expect(page.GetByRole(AriaRole.Button, new() { Name = "Ляво: изчисти канта" })).ToBeDisabledAsync();
+
+        var right = page.Locator(".megatrading-edge[data-side='Дясно']");
+        await page.GetByRole(AriaRole.Button, new() { Name = "Дясно: изчисти канта" }).ClickAsync();
+        await Expect(right.Locator(".mud-input-control.mud-input-error")).ToHaveCountAsync(0);
+        await Expect(page.GetByRole(AriaRole.Button, new() { Name = "Дясно: изчисти канта" })).ToBeDisabledAsync();
+        await Expect(missing).ToContainTextAsync("На 1 кант");
+
+        // Only the bottom side is asked for and written; the cleared right side stays empty.
+        await FillContactsAsync(page, "Тест ООД", "0888123456");
+        await GenerateButton(page).ClickAsync();
+        await Expect(page.GetByRole(AriaRole.Dialog)).ToContainTextAsync("За 1 кант липсват");
+        await FillEdgeBandingAsync(page, new MegaTradingEdge("22", "0.5"));
+        var files = await DownloadAllAsync(page, 2);
+        var cutMt = Encoding.UTF8.GetString(files.Single(f => f.FileName.EndsWith(".cut_mt")).Content);
+        cutMt.Should().Contain("Бяло╪600╪300╪1╪No╪╪22/0.5╪╪╪");
+        console.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task Grid_numbers_are_written_in_the_invariant_culture_under_bg_BG()
     {
         await using var context = await app.NewContextAsync("bg-BG");

@@ -1,8 +1,9 @@
 @using Kroiko.Domain.TemplateBuilding
 
 @* One banded side in the MegaTrading grid (ADR-0015): the width and the thickness, each picked from exactly the values
-   MegaTrading's software lists. A side with an edge whose value is missing shows it in red; "—" in both is no edge. *@
-<div class="d-flex gap-1 megatrading-edge" data-side="@Side">
+   MegaTrading's software lists. A side with an edge whose value is missing shows it in red; "—" in both is no edge,
+   and the bucket clears both at once. *@
+<div class="d-flex align-center gap-1 megatrading-edge" data-side="@Side">
     <MudSelect T="string" Value="@_edge?.Width" ValueChanged="SetWidthAsync" Dense="true" Margin="Margin.Dense"
                Error="@(_edge is { HasWidth: false })" Class="edge-width" aria-label="@($"{Side}: ширина")" Style="min-width: 4.5rem">
         <MudSelectItem Value="@string.Empty">—</MudSelectItem>
@@ -19,6 +20,11 @@
             <MudSelectItem Value="@thickness">@thickness</MudSelectItem>
         }
     </MudSelect>
+    @* Disabled rather than hidden with no edge, so the cells keep one width. *@
+    <MudTooltip Text="Изчисти канта">
+        <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="Size.Small" Class="edge-clear"
+                       aria-label="@($"{Side}: изчисти канта")" Disabled="@(_edge is null)" OnClick="ClearAsync" />
+    </MudTooltip>
 </div>
 
 @code {
@@ -37,6 +43,8 @@
     private Task SetWidthAsync(string? width) => SetAsync(width ?? string.Empty, _edge?.Thickness ?? string.Empty);
 
     private Task SetThicknessAsync(string? thickness) => SetAsync(_edge?.Width ?? string.Empty, thickness ?? string.Empty);
+
+    private Task ClearAsync() => SetAsync(string.Empty, string.Empty);
 
     // Both parts empty is no edge; otherwise the cell is {width}/{thickness}, a part still to pick left empty.
     private Task SetAsync(string width, string thickness)

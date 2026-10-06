@@ -43,7 +43,8 @@ error for every edge dropdown. Decompiling the app (`monodis`) showed the cause:
    in the grid stay), as an input edit, and generates. Cancelling generates and fills nothing; a dialog that fails to
    open shows a snackbar.
 5. **The grid picks, it does not type.** The MegaTrading tab's four edge columns are a width and a thickness
-   `MudSelect` each, with "—" for empty (both "—" removes the edge); a part an edge misses shows in red, and a warning
+   `MudSelect` each, with "—" for empty (both "—" removes the edge), and a bucket button that clears both at once,
+   removing the edge (disabled on a side with no edge); a part an edge misses shows in red, and a warning
    alert above the grid counts the missing edges and names their materials.
 6. **Golden files.** The five `*/MegaTrading/*.cut_mt` golden files are re-recorded: only edge cells change (`/0.5` →
    `/` where Polyboard gave no thickness, the Polyboard edge-material prefix dropped). A new
