@@ -105,3 +105,7 @@ appsettings.*.local.json
 # OS files
 .DS_Store
 Thumbs.db
+
+# Agent scratch space and personal Claude Code overrides (see AGENTS.md, Workspace boundary)
+.scratch/
+.claude/settings.local.json
