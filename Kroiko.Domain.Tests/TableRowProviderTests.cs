@@ -51,7 +51,7 @@ public sealed class TableRowProviderTests
     }
 
     [Fact]
-    public void MegaTrading_writes_material_and_note_left_and_the_rest_centred()
+    public void MegaTrading_writes_material_and_the_edge_summary_left_and_the_rest_centred()
     {
         var detail = new MegaTradingDetail
         {
@@ -68,7 +68,8 @@ public sealed class TableRowProviderTests
             ("E4", "3", 1),
             ("F4", "True", 1),
             ("G4", "MELA_BL", 1),
-            ("H4", "бележка", 0));
+            // "Забележка" counts the banded sides (ADR-0016); the operator's note goes to the .cut_mt only.
+            ("H4", "2 k 2 d", 0));
     }
 
     [Fact]

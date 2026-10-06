@@ -8,7 +8,8 @@ namespace Kroiko.Domain.Tests;
 
 /// <summary>
 /// <see cref="IOrderFormat.Check"/> finds the reasons a format refuses to generate (ADR-0006 §3): today only
-/// MegaTrading's <c>.cut_mt</c> header, which has room for exactly 6 materials.
+/// MegaTrading's — its <c>.cut_mt</c> header, which has room for exactly 6 materials, and banded sides with no
+/// edge-banding width or thickness its software accepts (ADR-0015).
 /// </summary>
 public sealed class OrderFormatCheckTests
 {
@@ -71,5 +72,43 @@ public sealed class OrderFormatCheckTests
         var files = format.CreateFiles(PartsOf(SevenMaterials));
 
         format.Check(files).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void MegaTrading_names_the_materials_whose_banded_sides_miss_a_width_or_a_thickness()
+    {
+        var format = OrderFormats.For(SupportedCompanies.MegaTrading);
+        var files = format.CreateFiles(
+        [
+            Part("M1") with { HasTopEdge = true, TopEdgeThickness = 2 },
+            Part("M2"),
+            Part("M3") with { HasLeftEdge = true, HasRightEdge = true },
+            Part("M1") with { HasBottomEdge = true, BottomEdgeThickness = 0.5 },
+        ]);
+
+        format.Check(files).Should().ContainSingle().Which.Should().BeOfType<MissingEdgeBanding>()
+            .Which.Materials.Should().Equal(
+                new MaterialEdgeBanding("M1", Edges: 2, NeedsWidth: true, NeedsThickness: false),
+                new MaterialEdgeBanding("M3", Edges: 2, NeedsWidth: true, NeedsThickness: true));
+    }
+
+    [Fact]
+    public void MegaTrading_accepts_banded_sides_once_their_width_and_thickness_are_picked()
+    {
+        var format = OrderFormats.For(SupportedCompanies.MegaTrading);
+        var files = format.CreateFiles([Part("M1") with { HasTopEdge = true }]);
+
+        ((MegaTradingDetail)files[0].Details[0]).RightEdge = "28/0.8/1.0";
+
+        format.Check(files).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void MegaTrading_reports_too_many_materials_before_the_missing_edge_banding()
+    {
+        var format = OrderFormats.For(SupportedCompanies.MegaTrading);
+        var files = format.CreateFiles([.. PartsOf(SevenMaterials), Part("M1") with { HasTopEdge = true }]);
+
+        format.Check(files).Select(p => p.GetType()).Should().Equal(typeof(TooManyMaterials), typeof(MissingEdgeBanding));
     }
 }

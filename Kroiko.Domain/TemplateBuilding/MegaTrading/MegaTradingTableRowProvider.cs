@@ -14,7 +14,9 @@ internal sealed class MegaTradingTableRowProvider: ITableRowProvider
         new(d => Invariant(d.Quantity), Centred),
         new(d => d.Rotated ? bool.TrueString : bool.FalseString, Centred),
         new(d => d.EdgeBandingMaterial, Centred),
-        new(d => d.Note, Left),
+        // "Забележка": which sides are banded, as Lonira's "Кантиране" shows it (2 k 2 d); the operator's note goes
+        // to the .cut_mt only.
+        new(MegaTradingOrderFormat.EdgeSummary, Left),
     ];
 
     public IEnumerable<Cell> GetTableRow(IKroikoDetail detail, int rowNumber, int startColumnNumber) =>

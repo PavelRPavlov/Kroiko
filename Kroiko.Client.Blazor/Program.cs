@@ -12,6 +12,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddMudServices();
 builder.Services.AddConfirmationDialog();
+builder.Services.AddEdgeBandingPrompt();
 builder.Services.AddDeviceSettingsStore();
 builder.Services.AddFileDownloader();
 builder.Services.AddFolderPicker();

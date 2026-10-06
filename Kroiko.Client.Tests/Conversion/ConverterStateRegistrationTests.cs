@@ -14,6 +14,7 @@ public sealed class ConverterStateRegistrationTests
         var services = new ServiceCollection()
             .AddLogging()
             .AddScoped<IConfirmation, FakeConfirmation>()
+            .AddScoped<IEdgeBandingPrompt, FakeEdgeBandingPrompt>()
             .AddScoped<IDeviceSettingsStore, FakeDeviceSettingsStore>()
             .AddScoped<IFileDownloader, FakeFileDownloader>()
             .AddScoped<IFolderPicker, FakeFolderPicker>()

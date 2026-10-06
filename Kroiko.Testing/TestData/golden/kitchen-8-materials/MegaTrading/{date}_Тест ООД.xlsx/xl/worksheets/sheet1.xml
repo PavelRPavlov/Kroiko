@@ -28,7 +28,7 @@
 <c r="E2" s="1"><v>1</v></c>
 <c r="F2" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G2" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H2" t="inlineStr"><is><t></t></is></c>
+<c r="H2" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="3">
 <c r="A3" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -38,7 +38,7 @@
 <c r="E3" s="1"><v>1</v></c>
 <c r="F3" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G3" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H3" t="inlineStr"><is><t></t></is></c>
+<c r="H3" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="4">
 <c r="A4" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -48,7 +48,7 @@
 <c r="E4" s="1"><v>1</v></c>
 <c r="F4" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G4" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H4" t="inlineStr"><is><t></t></is></c>
+<c r="H4" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="5">
 <c r="A5" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -58,7 +58,7 @@
 <c r="E5" s="1"><v>1</v></c>
 <c r="F5" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G5" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H5" t="inlineStr"><is><t></t></is></c>
+<c r="H5" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="6">
 <c r="A6" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -77,7 +77,7 @@
 <c r="E7" s="1"><v>1</v></c>
 <c r="F7" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G7" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H7" t="inlineStr"><is><t></t></is></c>
+<c r="H7" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="8">
 <c r="A8" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -87,7 +87,7 @@
 <c r="E8" s="1"><v>1</v></c>
 <c r="F8" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G8" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H8" t="inlineStr"><is><t></t></is></c>
+<c r="H8" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="9">
 <c r="A9" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -97,7 +97,7 @@
 <c r="E9" s="1"><v>1</v></c>
 <c r="F9" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G9" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H9" t="inlineStr"><is><t></t></is></c>
+<c r="H9" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="10">
 <c r="A10" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -107,7 +107,7 @@
 <c r="E10" s="1"><v>1</v></c>
 <c r="F10" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G10" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H10" t="inlineStr"><is><t></t></is></c>
+<c r="H10" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="11">
 <c r="A11" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -117,7 +117,7 @@
 <c r="E11" s="1"><v>1</v></c>
 <c r="F11" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G11" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H11" t="inlineStr"><is><t></t></is></c>
+<c r="H11" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="12">
 <c r="A12" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -127,7 +127,7 @@
 <c r="E12" s="1"><v>1</v></c>
 <c r="F12" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G12" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H12" t="inlineStr"><is><t></t></is></c>
+<c r="H12" t="inlineStr"><is><t>2 k 1 d</t></is></c>
 </row>
 <row r="13">
 <c r="A13" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -137,7 +137,7 @@
 <c r="E13" s="1"><v>1</v></c>
 <c r="F13" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G13" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H13" t="inlineStr"><is><t></t></is></c>
+<c r="H13" t="inlineStr"><is><t>2 k 1 d</t></is></c>
 </row>
 <row r="14">
 <c r="A14" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -147,7 +147,7 @@
 <c r="E14" s="1"><v>1</v></c>
 <c r="F14" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G14" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H14" t="inlineStr"><is><t></t></is></c>
+<c r="H14" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="15">
 <c r="A15" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -166,7 +166,7 @@
 <c r="E16" s="1"><v>1</v></c>
 <c r="F16" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G16" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H16" t="inlineStr"><is><t></t></is></c>
+<c r="H16" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="17">
 <c r="A17" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -185,7 +185,7 @@
 <c r="E18" s="1"><v>1</v></c>
 <c r="F18" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G18" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H18" t="inlineStr"><is><t></t></is></c>
+<c r="H18" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="19">
 <c r="A19" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -195,7 +195,7 @@
 <c r="E19" s="1"><v>1</v></c>
 <c r="F19" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G19" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H19" t="inlineStr"><is><t></t></is></c>
+<c r="H19" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="20">
 <c r="A20" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -205,7 +205,7 @@
 <c r="E20" s="1"><v>1</v></c>
 <c r="F20" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G20" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H20" t="inlineStr"><is><t></t></is></c>
+<c r="H20" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="21">
 <c r="A21" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -224,7 +224,7 @@
 <c r="E22" s="1"><v>1</v></c>
 <c r="F22" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G22" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H22" t="inlineStr"><is><t></t></is></c>
+<c r="H22" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="23">
 <c r="A23" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -234,7 +234,7 @@
 <c r="E23" s="1"><v>1</v></c>
 <c r="F23" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G23" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H23" t="inlineStr"><is><t></t></is></c>
+<c r="H23" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="24">
 <c r="A24" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -244,7 +244,7 @@
 <c r="E24" s="1"><v>1</v></c>
 <c r="F24" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G24" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H24" t="inlineStr"><is><t></t></is></c>
+<c r="H24" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="25">
 <c r="A25" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -263,7 +263,7 @@
 <c r="E26" s="1"><v>1</v></c>
 <c r="F26" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G26" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H26" t="inlineStr"><is><t></t></is></c>
+<c r="H26" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="27">
 <c r="A27" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -273,7 +273,7 @@
 <c r="E27" s="1"><v>1</v></c>
 <c r="F27" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G27" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H27" t="inlineStr"><is><t></t></is></c>
+<c r="H27" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="28">
 <c r="A28" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -283,7 +283,7 @@
 <c r="E28" s="1"><v>1</v></c>
 <c r="F28" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G28" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H28" t="inlineStr"><is><t></t></is></c>
+<c r="H28" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="29">
 <c r="A29" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -302,7 +302,7 @@
 <c r="E30" s="1"><v>1</v></c>
 <c r="F30" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G30" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H30" t="inlineStr"><is><t></t></is></c>
+<c r="H30" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="31">
 <c r="A31" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -312,7 +312,7 @@
 <c r="E31" s="1"><v>1</v></c>
 <c r="F31" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G31" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H31" t="inlineStr"><is><t></t></is></c>
+<c r="H31" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="32">
 <c r="A32" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -331,7 +331,7 @@
 <c r="E33" s="1"><v>1</v></c>
 <c r="F33" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G33" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H33" t="inlineStr"><is><t></t></is></c>
+<c r="H33" t="inlineStr"><is><t>1 k</t></is></c>
 </row>
 <row r="34">
 <c r="A34" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -341,7 +341,7 @@
 <c r="E34" s="1"><v>1</v></c>
 <c r="F34" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G34" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H34" t="inlineStr"><is><t></t></is></c>
+<c r="H34" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="35">
 <c r="A35" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -351,7 +351,7 @@
 <c r="E35" s="1"><v>1</v></c>
 <c r="F35" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G35" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H35" t="inlineStr"><is><t></t></is></c>
+<c r="H35" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="36">
 <c r="A36" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -370,7 +370,7 @@
 <c r="E37" s="1"><v>1</v></c>
 <c r="F37" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G37" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H37" t="inlineStr"><is><t></t></is></c>
+<c r="H37" t="inlineStr"><is><t>1 k</t></is></c>
 </row>
 <row r="38">
 <c r="A38" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -380,7 +380,7 @@
 <c r="E38" s="1"><v>1</v></c>
 <c r="F38" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G38" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H38" t="inlineStr"><is><t></t></is></c>
+<c r="H38" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="39">
 <c r="A39" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -390,7 +390,7 @@
 <c r="E39" s="1"><v>1</v></c>
 <c r="F39" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G39" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H39" t="inlineStr"><is><t></t></is></c>
+<c r="H39" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="40">
 <c r="A40" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -409,7 +409,7 @@
 <c r="E41" s="1"><v>1</v></c>
 <c r="F41" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G41" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H41" t="inlineStr"><is><t></t></is></c>
+<c r="H41" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="42">
 <c r="A42" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -419,7 +419,7 @@
 <c r="E42" s="1"><v>1</v></c>
 <c r="F42" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G42" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H42" t="inlineStr"><is><t></t></is></c>
+<c r="H42" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="43">
 <c r="A43" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -429,7 +429,7 @@
 <c r="E43" s="1"><v>1</v></c>
 <c r="F43" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G43" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H43" t="inlineStr"><is><t></t></is></c>
+<c r="H43" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="44">
 <c r="A44" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -448,7 +448,7 @@
 <c r="E45" s="1"><v>1</v></c>
 <c r="F45" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G45" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H45" t="inlineStr"><is><t></t></is></c>
+<c r="H45" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="46">
 <c r="A46" t="inlineStr"><is><t>Lemon sorbet</t></is></c>
@@ -458,7 +458,7 @@
 <c r="E46" s="1"><v>1</v></c>
 <c r="F46" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G46" s="1" t="inlineStr"><is><t>Lemon sorbet</t></is></c>
-<c r="H46" t="inlineStr"><is><t></t></is></c>
+<c r="H46" t="inlineStr"><is><t>2 k 1 d</t></is></c>
 </row>
 <row r="47">
 <c r="A47" t="inlineStr"><is><t>Lemon sorbet</t></is></c>
@@ -468,7 +468,7 @@
 <c r="E47" s="1"><v>1</v></c>
 <c r="F47" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G47" s="1" t="inlineStr"><is><t>Lemon sorbet</t></is></c>
-<c r="H47" t="inlineStr"><is><t></t></is></c>
+<c r="H47" t="inlineStr"><is><t>2 k</t></is></c>
 </row>
 <row r="48">
 <c r="A48" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -478,7 +478,7 @@
 <c r="E48" s="1"><v>1</v></c>
 <c r="F48" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G48" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H48" t="inlineStr"><is><t></t></is></c>
+<c r="H48" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="49">
 <c r="A49" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -488,7 +488,7 @@
 <c r="E49" s="1"><v>2</v></c>
 <c r="F49" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G49" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H49" t="inlineStr"><is><t></t></is></c>
+<c r="H49" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="50">
 <c r="A50" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -498,7 +498,7 @@
 <c r="E50" s="1"><v>1</v></c>
 <c r="F50" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G50" s="1" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
-<c r="H50" t="inlineStr"><is><t></t></is></c>
+<c r="H50" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="51">
 <c r="A51" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -508,7 +508,7 @@
 <c r="E51" s="1"><v>1</v></c>
 <c r="F51" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G51" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H51" t="inlineStr"><is><t></t></is></c>
+<c r="H51" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="52">
 <c r="A52" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -518,7 +518,7 @@
 <c r="E52" s="1"><v>1</v></c>
 <c r="F52" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G52" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H52" t="inlineStr"><is><t></t></is></c>
+<c r="H52" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="53">
 <c r="A53" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -537,7 +537,7 @@
 <c r="E54" s="1"><v>2</v></c>
 <c r="F54" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G54" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H54" t="inlineStr"><is><t></t></is></c>
+<c r="H54" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="55">
 <c r="A55" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -547,7 +547,7 @@
 <c r="E55" s="1"><v>2</v></c>
 <c r="F55" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G55" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H55" t="inlineStr"><is><t></t></is></c>
+<c r="H55" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="56">
 <c r="A56" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -557,7 +557,7 @@
 <c r="E56" s="1"><v>2</v></c>
 <c r="F56" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G56" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H56" t="inlineStr"><is><t></t></is></c>
+<c r="H56" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="57">
 <c r="A57" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -576,7 +576,7 @@
 <c r="E58" s="1"><v>2</v></c>
 <c r="F58" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G58" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H58" t="inlineStr"><is><t></t></is></c>
+<c r="H58" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="59">
 <c r="A59" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -586,7 +586,7 @@
 <c r="E59" s="1"><v>2</v></c>
 <c r="F59" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G59" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H59" t="inlineStr"><is><t></t></is></c>
+<c r="H59" t="inlineStr"><is><t>2 k 1 d</t></is></c>
 </row>
 <row r="60">
 <c r="A60" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -596,7 +596,7 @@
 <c r="E60" s="1"><v>1</v></c>
 <c r="F60" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G60" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H60" t="inlineStr"><is><t></t></is></c>
+<c r="H60" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="61">
 <c r="A61" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -606,7 +606,7 @@
 <c r="E61" s="1"><v>1</v></c>
 <c r="F61" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G61" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H61" t="inlineStr"><is><t></t></is></c>
+<c r="H61" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="62">
 <c r="A62" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -616,7 +616,7 @@
 <c r="E62" s="1"><v>1</v></c>
 <c r="F62" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G62" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H62" t="inlineStr"><is><t></t></is></c>
+<c r="H62" t="inlineStr"><is><t>1 k 2 d</t></is></c>
 </row>
 <row r="63">
 <c r="A63" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -626,7 +626,7 @@
 <c r="E63" s="1"><v>1</v></c>
 <c r="F63" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G63" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H63" t="inlineStr"><is><t></t></is></c>
+<c r="H63" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="64">
 <c r="A64" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -645,7 +645,7 @@
 <c r="E65" s="1"><v>4</v></c>
 <c r="F65" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G65" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H65" t="inlineStr"><is><t></t></is></c>
+<c r="H65" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="66">
 <c r="A66" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -655,7 +655,7 @@
 <c r="E66" s="1"><v>1</v></c>
 <c r="F66" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G66" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H66" t="inlineStr"><is><t></t></is></c>
+<c r="H66" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="67">
 <c r="A67" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -665,7 +665,7 @@
 <c r="E67" s="1"><v>1</v></c>
 <c r="F67" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G67" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H67" t="inlineStr"><is><t></t></is></c>
+<c r="H67" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="68">
 <c r="A68" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -684,7 +684,7 @@
 <c r="E69" s="1"><v>1</v></c>
 <c r="F69" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G69" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H69" t="inlineStr"><is><t></t></is></c>
+<c r="H69" t="inlineStr"><is><t>1 k</t></is></c>
 </row>
 <row r="70">
 <c r="A70" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -694,7 +694,7 @@
 <c r="E70" s="1"><v>1</v></c>
 <c r="F70" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G70" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H70" t="inlineStr"><is><t></t></is></c>
+<c r="H70" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="71">
 <c r="A71" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -704,7 +704,7 @@
 <c r="E71" s="1"><v>1</v></c>
 <c r="F71" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G71" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H71" t="inlineStr"><is><t></t></is></c>
+<c r="H71" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="72">
 <c r="A72" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -723,7 +723,7 @@
 <c r="E73" s="1"><v>1</v></c>
 <c r="F73" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G73" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H73" t="inlineStr"><is><t></t></is></c>
+<c r="H73" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="74">
 <c r="A74" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -733,7 +733,7 @@
 <c r="E74" s="1"><v>1</v></c>
 <c r="F74" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G74" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H74" t="inlineStr"><is><t></t></is></c>
+<c r="H74" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="75">
 <c r="A75" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -743,7 +743,7 @@
 <c r="E75" s="1"><v>1</v></c>
 <c r="F75" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G75" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H75" t="inlineStr"><is><t></t></is></c>
+<c r="H75" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="76">
 <c r="A76" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -753,7 +753,7 @@
 <c r="E76" s="1"><v>2</v></c>
 <c r="F76" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G76" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H76" t="inlineStr"><is><t></t></is></c>
+<c r="H76" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="77">
 <c r="A77" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -772,7 +772,7 @@
 <c r="E78" s="1"><v>1</v></c>
 <c r="F78" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G78" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H78" t="inlineStr"><is><t></t></is></c>
+<c r="H78" t="inlineStr"><is><t>1 k</t></is></c>
 </row>
 <row r="79">
 <c r="A79" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -782,7 +782,7 @@
 <c r="E79" s="1"><v>1</v></c>
 <c r="F79" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G79" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H79" t="inlineStr"><is><t></t></is></c>
+<c r="H79" t="inlineStr"><is><t>1 k</t></is></c>
 </row>
 <row r="80">
 <c r="A80" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -792,7 +792,7 @@
 <c r="E80" s="1"><v>2</v></c>
 <c r="F80" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G80" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H80" t="inlineStr"><is><t></t></is></c>
+<c r="H80" t="inlineStr"><is><t>1 k</t></is></c>
 </row>
 <row r="81">
 <c r="A81" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -802,7 +802,7 @@
 <c r="E81" s="1"><v>1</v></c>
 <c r="F81" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G81" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H81" t="inlineStr"><is><t></t></is></c>
+<c r="H81" t="inlineStr"><is><t>1 k</t></is></c>
 </row>
 <row r="82">
 <c r="A82" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -812,7 +812,7 @@
 <c r="E82" s="1"><v>2</v></c>
 <c r="F82" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G82" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H82" t="inlineStr"><is><t></t></is></c>
+<c r="H82" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="83">
 <c r="A83" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -822,7 +822,7 @@
 <c r="E83" s="1"><v>1</v></c>
 <c r="F83" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G83" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H83" t="inlineStr"><is><t></t></is></c>
+<c r="H83" t="inlineStr"><is><t>1 k</t></is></c>
 </row>
 <row r="84">
 <c r="A84" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -832,7 +832,7 @@
 <c r="E84" s="1"><v>1</v></c>
 <c r="F84" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G84" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H84" t="inlineStr"><is><t></t></is></c>
+<c r="H84" t="inlineStr"><is><t>1 k</t></is></c>
 </row>
 <row r="85">
 <c r="A85" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -842,7 +842,7 @@
 <c r="E85" s="1"><v>1</v></c>
 <c r="F85" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G85" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H85" t="inlineStr"><is><t></t></is></c>
+<c r="H85" t="inlineStr"><is><t>1 k</t></is></c>
 </row>
 <row r="86">
 <c r="A86" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -852,7 +852,7 @@
 <c r="E86" s="1"><v>1</v></c>
 <c r="F86" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G86" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H86" t="inlineStr"><is><t></t></is></c>
+<c r="H86" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="87">
 <c r="A87" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -862,7 +862,7 @@
 <c r="E87" s="1"><v>1</v></c>
 <c r="F87" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G87" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H87" t="inlineStr"><is><t></t></is></c>
+<c r="H87" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="88">
 <c r="A88" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -872,7 +872,7 @@
 <c r="E88" s="1"><v>1</v></c>
 <c r="F88" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G88" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H88" t="inlineStr"><is><t></t></is></c>
+<c r="H88" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="89">
 <c r="A89" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -882,7 +882,7 @@
 <c r="E89" s="1"><v>1</v></c>
 <c r="F89" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G89" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H89" t="inlineStr"><is><t></t></is></c>
+<c r="H89" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="90">
 <c r="A90" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -901,7 +901,7 @@
 <c r="E91" s="1"><v>1</v></c>
 <c r="F91" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G91" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H91" t="inlineStr"><is><t></t></is></c>
+<c r="H91" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="92">
 <c r="A92" t="inlineStr"><is><t>Med</t></is></c>
@@ -911,7 +911,7 @@
 <c r="E92" s="1"><v>1</v></c>
 <c r="F92" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G92" s="1" t="inlineStr"><is><t>Med</t></is></c>
-<c r="H92" t="inlineStr"><is><t></t></is></c>
+<c r="H92" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="93">
 <c r="A93" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -921,7 +921,7 @@
 <c r="E93" s="1"><v>1</v></c>
 <c r="F93" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G93" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H93" t="inlineStr"><is><t></t></is></c>
+<c r="H93" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="94">
 <c r="A94" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -931,7 +931,7 @@
 <c r="E94" s="1"><v>1</v></c>
 <c r="F94" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G94" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H94" t="inlineStr"><is><t></t></is></c>
+<c r="H94" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="95">
 <c r="A95" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -941,7 +941,7 @@
 <c r="E95" s="1"><v>1</v></c>
 <c r="F95" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G95" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H95" t="inlineStr"><is><t></t></is></c>
+<c r="H95" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="96">
 <c r="A96" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -951,7 +951,7 @@
 <c r="E96" s="1"><v>1</v></c>
 <c r="F96" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G96" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H96" t="inlineStr"><is><t></t></is></c>
+<c r="H96" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="97">
 <c r="A97" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -961,7 +961,7 @@
 <c r="E97" s="1"><v>1</v></c>
 <c r="F97" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G97" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H97" t="inlineStr"><is><t></t></is></c>
+<c r="H97" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="98">
 <c r="A98" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -980,7 +980,7 @@
 <c r="E99" s="1"><v>4</v></c>
 <c r="F99" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G99" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H99" t="inlineStr"><is><t></t></is></c>
+<c r="H99" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="100">
 <c r="A100" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -990,7 +990,7 @@
 <c r="E100" s="1"><v>1</v></c>
 <c r="F100" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G100" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H100" t="inlineStr"><is><t></t></is></c>
+<c r="H100" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="101">
 <c r="A101" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1000,7 +1000,7 @@
 <c r="E101" s="1"><v>1</v></c>
 <c r="F101" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G101" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H101" t="inlineStr"><is><t></t></is></c>
+<c r="H101" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="102">
 <c r="A102" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1010,7 +1010,7 @@
 <c r="E102" s="1"><v>2</v></c>
 <c r="F102" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G102" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H102" t="inlineStr"><is><t></t></is></c>
+<c r="H102" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="103">
 <c r="A103" t="inlineStr"><is><t>Med</t></is></c>
@@ -1029,7 +1029,7 @@
 <c r="E104" s="1"><v>1</v></c>
 <c r="F104" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G104" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H104" t="inlineStr"><is><t></t></is></c>
+<c r="H104" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="105">
 <c r="A105" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1039,7 +1039,7 @@
 <c r="E105" s="1"><v>3</v></c>
 <c r="F105" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G105" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H105" t="inlineStr"><is><t></t></is></c>
+<c r="H105" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="106">
 <c r="A106" t="inlineStr"><is><t>Cool Grey K0191 SU</t></is></c>
@@ -1049,7 +1049,7 @@
 <c r="E106" s="1"><v>1</v></c>
 <c r="F106" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G106" s="1" t="inlineStr"><is><t>Cool Grey K0191 SU</t></is></c>
-<c r="H106" t="inlineStr"><is><t></t></is></c>
+<c r="H106" t="inlineStr"><is><t>2 k 1 d</t></is></c>
 </row>
 <row r="107">
 <c r="A107" t="inlineStr"><is><t>Cool Grey K0191 SU</t></is></c>
@@ -1059,7 +1059,7 @@
 <c r="E107" s="1"><v>1</v></c>
 <c r="F107" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G107" s="1" t="inlineStr"><is><t>Cool Grey K0191 SU</t></is></c>
-<c r="H107" t="inlineStr"><is><t></t></is></c>
+<c r="H107" t="inlineStr"><is><t>1 k 2 d</t></is></c>
 </row>
 <row r="108">
 <c r="A108" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1078,7 +1078,7 @@
 <c r="E109" s="1"><v>1</v></c>
 <c r="F109" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G109" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H109" t="inlineStr"><is><t></t></is></c>
+<c r="H109" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="110">
 <c r="A110" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1088,7 +1088,7 @@
 <c r="E110" s="1"><v>1</v></c>
 <c r="F110" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G110" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H110" t="inlineStr"><is><t></t></is></c>
+<c r="H110" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="111">
 <c r="A111" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1098,7 +1098,7 @@
 <c r="E111" s="1"><v>1</v></c>
 <c r="F111" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G111" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H111" t="inlineStr"><is><t></t></is></c>
+<c r="H111" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="112">
 <c r="A112" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -1117,7 +1117,7 @@
 <c r="E113" s="1"><v>1</v></c>
 <c r="F113" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G113" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H113" t="inlineStr"><is><t></t></is></c>
+<c r="H113" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="114">
 <c r="A114" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1127,7 +1127,7 @@
 <c r="E114" s="1"><v>1</v></c>
 <c r="F114" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G114" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H114" t="inlineStr"><is><t></t></is></c>
+<c r="H114" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="115">
 <c r="A115" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1137,7 +1137,7 @@
 <c r="E115" s="1"><v>1</v></c>
 <c r="F115" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G115" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H115" t="inlineStr"><is><t></t></is></c>
+<c r="H115" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="116">
 <c r="A116" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1147,7 +1147,7 @@
 <c r="E116" s="1"><v>1</v></c>
 <c r="F116" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G116" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H116" t="inlineStr"><is><t></t></is></c>
+<c r="H116" t="inlineStr"><is><t>2 k 1 d</t></is></c>
 </row>
 <row r="117">
 <c r="A117" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1157,7 +1157,7 @@
 <c r="E117" s="1"><v>1</v></c>
 <c r="F117" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G117" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H117" t="inlineStr"><is><t></t></is></c>
+<c r="H117" t="inlineStr"><is><t>2 k 1 d</t></is></c>
 </row>
 <row r="118">
 <c r="A118" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1167,7 +1167,7 @@
 <c r="E118" s="1"><v>1</v></c>
 <c r="F118" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G118" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H118" t="inlineStr"><is><t></t></is></c>
+<c r="H118" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="119">
 <c r="A119" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -1186,7 +1186,7 @@
 <c r="E120" s="1"><v>1</v></c>
 <c r="F120" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G120" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H120" t="inlineStr"><is><t></t></is></c>
+<c r="H120" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="121">
 <c r="A121" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1196,7 +1196,7 @@
 <c r="E121" s="1"><v>1</v></c>
 <c r="F121" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G121" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H121" t="inlineStr"><is><t></t></is></c>
+<c r="H121" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="122">
 <c r="A122" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1206,7 +1206,7 @@
 <c r="E122" s="1"><v>1</v></c>
 <c r="F122" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G122" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H122" t="inlineStr"><is><t></t></is></c>
+<c r="H122" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="123">
 <c r="A123" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1216,7 +1216,7 @@
 <c r="E123" s="1"><v>2</v></c>
 <c r="F123" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G123" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H123" t="inlineStr"><is><t></t></is></c>
+<c r="H123" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="124">
 <c r="A124" t="inlineStr"><is><t>Med</t></is></c>
@@ -1235,7 +1235,7 @@
 <c r="E125" s="1"><v>1</v></c>
 <c r="F125" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G125" s="1" t="inlineStr"><is><t>Mirror</t></is></c>
-<c r="H125" t="inlineStr"><is><t></t></is></c>
+<c r="H125" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="126">
 <c r="A126" t="inlineStr"><is><t>Cool Grey K0191 SU</t></is></c>
@@ -1245,7 +1245,7 @@
 <c r="E126" s="1"><v>1</v></c>
 <c r="F126" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G126" s="1" t="inlineStr"><is><t>Cool Grey K0191 SU</t></is></c>
-<c r="H126" t="inlineStr"><is><t></t></is></c>
+<c r="H126" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="127">
 <c r="A127" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1255,7 +1255,7 @@
 <c r="E127" s="1"><v>1</v></c>
 <c r="F127" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G127" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H127" t="inlineStr"><is><t></t></is></c>
+<c r="H127" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="128">
 <c r="A128" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1265,7 +1265,7 @@
 <c r="E128" s="1"><v>1</v></c>
 <c r="F128" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G128" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H128" t="inlineStr"><is><t></t></is></c>
+<c r="H128" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="129">
 <c r="A129" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1275,7 +1275,7 @@
 <c r="E129" s="1"><v>2</v></c>
 <c r="F129" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G129" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H129" t="inlineStr"><is><t></t></is></c>
+<c r="H129" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="130">
 <c r="A130" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -1294,7 +1294,7 @@
 <c r="E131" s="1"><v>1</v></c>
 <c r="F131" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G131" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H131" t="inlineStr"><is><t></t></is></c>
+<c r="H131" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="132">
 <c r="A132" t="inlineStr"><is><t>Med</t></is></c>
@@ -1304,7 +1304,7 @@
 <c r="E132" s="1"><v>1</v></c>
 <c r="F132" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G132" s="1" t="inlineStr"><is><t>Med</t></is></c>
-<c r="H132" t="inlineStr"><is><t></t></is></c>
+<c r="H132" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="133">
 <c r="A133" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1314,7 +1314,7 @@
 <c r="E133" s="1"><v>2</v></c>
 <c r="F133" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G133" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H133" t="inlineStr"><is><t></t></is></c>
+<c r="H133" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="134">
 <c r="A134" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1324,7 +1324,7 @@
 <c r="E134" s="1"><v>2</v></c>
 <c r="F134" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G134" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H134" t="inlineStr"><is><t></t></is></c>
+<c r="H134" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="135">
 <c r="A135" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1334,7 +1334,7 @@
 <c r="E135" s="1"><v>4</v></c>
 <c r="F135" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G135" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H135" t="inlineStr"><is><t></t></is></c>
+<c r="H135" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="136">
 <c r="A136" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -1353,7 +1353,7 @@
 <c r="E137" s="1"><v>4</v></c>
 <c r="F137" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G137" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H137" t="inlineStr"><is><t></t></is></c>
+<c r="H137" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="138">
 <c r="A138" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1363,7 +1363,7 @@
 <c r="E138" s="1"><v>2</v></c>
 <c r="F138" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G138" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H138" t="inlineStr"><is><t></t></is></c>
+<c r="H138" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="139">
 <c r="A139" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1373,7 +1373,7 @@
 <c r="E139" s="1"><v>1</v></c>
 <c r="F139" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G139" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H139" t="inlineStr"><is><t></t></is></c>
+<c r="H139" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="140">
 <c r="A140" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1383,7 +1383,7 @@
 <c r="E140" s="1"><v>1</v></c>
 <c r="F140" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G140" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H140" t="inlineStr"><is><t></t></is></c>
+<c r="H140" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="141">
 <c r="A141" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1393,7 +1393,7 @@
 <c r="E141" s="1"><v>2</v></c>
 <c r="F141" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G141" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H141" t="inlineStr"><is><t></t></is></c>
+<c r="H141" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="142">
 <c r="A142" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -1412,7 +1412,7 @@
 <c r="E143" s="1"><v>2</v></c>
 <c r="F143" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G143" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H143" t="inlineStr"><is><t></t></is></c>
+<c r="H143" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="144">
 <c r="A144" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1422,7 +1422,7 @@
 <c r="E144" s="1"><v>1</v></c>
 <c r="F144" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G144" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H144" t="inlineStr"><is><t></t></is></c>
+<c r="H144" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="145">
 <c r="A145" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1432,7 +1432,7 @@
 <c r="E145" s="1"><v>1</v></c>
 <c r="F145" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G145" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H145" t="inlineStr"><is><t></t></is></c>
+<c r="H145" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="146">
 <c r="A146" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1442,7 +1442,7 @@
 <c r="E146" s="1"><v>1</v></c>
 <c r="F146" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G146" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H146" t="inlineStr"><is><t></t></is></c>
+<c r="H146" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="147">
 <c r="A147" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1452,7 +1452,7 @@
 <c r="E147" s="1"><v>1</v></c>
 <c r="F147" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G147" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H147" t="inlineStr"><is><t></t></is></c>
+<c r="H147" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="148">
 <c r="A148" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1462,7 +1462,7 @@
 <c r="E148" s="1"><v>2</v></c>
 <c r="F148" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G148" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H148" t="inlineStr"><is><t></t></is></c>
+<c r="H148" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="149">
 <c r="A149" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -1481,7 +1481,7 @@
 <c r="E150" s="1"><v>2</v></c>
 <c r="F150" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G150" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H150" t="inlineStr"><is><t></t></is></c>
+<c r="H150" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="151">
 <c r="A151" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1491,7 +1491,7 @@
 <c r="E151" s="1"><v>1</v></c>
 <c r="F151" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G151" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H151" t="inlineStr"><is><t></t></is></c>
+<c r="H151" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="152">
 <c r="A152" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1501,7 +1501,7 @@
 <c r="E152" s="1"><v>1</v></c>
 <c r="F152" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G152" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H152" t="inlineStr"><is><t></t></is></c>
+<c r="H152" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="153">
 <c r="A153" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1520,7 +1520,7 @@
 <c r="E154" s="1"><v>1</v></c>
 <c r="F154" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G154" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H154" t="inlineStr"><is><t></t></is></c>
+<c r="H154" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="155">
 <c r="A155" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1530,7 +1530,7 @@
 <c r="E155" s="1"><v>1</v></c>
 <c r="F155" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G155" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H155" t="inlineStr"><is><t></t></is></c>
+<c r="H155" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="156">
 <c r="A156" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1540,7 +1540,7 @@
 <c r="E156" s="1"><v>1</v></c>
 <c r="F156" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G156" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H156" t="inlineStr"><is><t></t></is></c>
+<c r="H156" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="157">
 <c r="A157" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -1559,7 +1559,7 @@
 <c r="E158" s="1"><v>2</v></c>
 <c r="F158" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G158" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H158" t="inlineStr"><is><t></t></is></c>
+<c r="H158" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="159">
 <c r="A159" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1569,7 +1569,7 @@
 <c r="E159" s="1"><v>1</v></c>
 <c r="F159" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G159" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H159" t="inlineStr"><is><t></t></is></c>
+<c r="H159" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="160">
 <c r="A160" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1579,7 +1579,7 @@
 <c r="E160" s="1"><v>2</v></c>
 <c r="F160" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G160" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H160" t="inlineStr"><is><t></t></is></c>
+<c r="H160" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="161">
 <c r="A161" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1589,7 +1589,7 @@
 <c r="E161" s="1"><v>2</v></c>
 <c r="F161" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G161" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H161" t="inlineStr"><is><t></t></is></c>
+<c r="H161" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="162">
 <c r="A162" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1599,7 +1599,7 @@
 <c r="E162" s="1"><v>2</v></c>
 <c r="F162" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G162" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H162" t="inlineStr"><is><t></t></is></c>
+<c r="H162" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="163">
 <c r="A163" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -1627,7 +1627,7 @@
 <c r="E165" s="1"><v>1</v></c>
 <c r="F165" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G165" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H165" t="inlineStr"><is><t></t></is></c>
+<c r="H165" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="166">
 <c r="A166" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1637,7 +1637,7 @@
 <c r="E166" s="1"><v>1</v></c>
 <c r="F166" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G166" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H166" t="inlineStr"><is><t></t></is></c>
+<c r="H166" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="167">
 <c r="A167" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1647,7 +1647,7 @@
 <c r="E167" s="1"><v>1</v></c>
 <c r="F167" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G167" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H167" t="inlineStr"><is><t></t></is></c>
+<c r="H167" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="168">
 <c r="A168" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1657,7 +1657,7 @@
 <c r="E168" s="1"><v>1</v></c>
 <c r="F168" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G168" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H168" t="inlineStr"><is><t></t></is></c>
+<c r="H168" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="169">
 <c r="A169" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1667,7 +1667,7 @@
 <c r="E169" s="1"><v>1</v></c>
 <c r="F169" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G169" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H169" t="inlineStr"><is><t></t></is></c>
+<c r="H169" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="170">
 <c r="A170" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1677,7 +1677,7 @@
 <c r="E170" s="1"><v>1</v></c>
 <c r="F170" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G170" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H170" t="inlineStr"><is><t></t></is></c>
+<c r="H170" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="171">
 <c r="A171" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1687,7 +1687,7 @@
 <c r="E171" s="1"><v>1</v></c>
 <c r="F171" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G171" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H171" t="inlineStr"><is><t></t></is></c>
+<c r="H171" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="172">
 <c r="A172" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1697,7 +1697,7 @@
 <c r="E172" s="1"><v>1</v></c>
 <c r="F172" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G172" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H172" t="inlineStr"><is><t></t></is></c>
+<c r="H172" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="173">
 <c r="A173" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1707,7 +1707,7 @@
 <c r="E173" s="1"><v>2</v></c>
 <c r="F173" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G173" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H173" t="inlineStr"><is><t></t></is></c>
+<c r="H173" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="174">
 <c r="A174" t="inlineStr"><is><t>Med</t></is></c>
@@ -1726,7 +1726,7 @@
 <c r="E175" s="1"><v>1</v></c>
 <c r="F175" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G175" s="1" t="inlineStr"><is><t>Cool Grey K0191 SU</t></is></c>
-<c r="H175" t="inlineStr"><is><t></t></is></c>
+<c r="H175" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="176">
 <c r="A176" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1736,7 +1736,7 @@
 <c r="E176" s="1"><v>1</v></c>
 <c r="F176" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G176" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H176" t="inlineStr"><is><t></t></is></c>
+<c r="H176" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="177">
 <c r="A177" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1746,7 +1746,7 @@
 <c r="E177" s="1"><v>1</v></c>
 <c r="F177" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G177" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H177" t="inlineStr"><is><t></t></is></c>
+<c r="H177" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="178">
 <c r="A178" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1756,7 +1756,7 @@
 <c r="E178" s="1"><v>2</v></c>
 <c r="F178" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G178" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H178" t="inlineStr"><is><t></t></is></c>
+<c r="H178" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="179">
 <c r="A179" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -1775,7 +1775,7 @@
 <c r="E180" s="1"><v>1</v></c>
 <c r="F180" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G180" s="1" t="inlineStr"><is><t>Med</t></is></c>
-<c r="H180" t="inlineStr"><is><t></t></is></c>
+<c r="H180" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="181">
 <c r="A181" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1785,7 +1785,7 @@
 <c r="E181" s="1"><v>1</v></c>
 <c r="F181" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G181" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H181" t="inlineStr"><is><t></t></is></c>
+<c r="H181" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="182">
 <c r="A182" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1795,7 +1795,7 @@
 <c r="E182" s="1"><v>1</v></c>
 <c r="F182" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G182" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H182" t="inlineStr"><is><t></t></is></c>
+<c r="H182" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="183">
 <c r="A183" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1805,7 +1805,7 @@
 <c r="E183" s="1"><v>2</v></c>
 <c r="F183" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G183" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H183" t="inlineStr"><is><t></t></is></c>
+<c r="H183" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="184">
 <c r="A184" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -1824,7 +1824,7 @@
 <c r="E185" s="1"><v>1</v></c>
 <c r="F185" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G185" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H185" t="inlineStr"><is><t></t></is></c>
+<c r="H185" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="186">
 <c r="A186" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1834,7 +1834,7 @@
 <c r="E186" s="1"><v>1</v></c>
 <c r="F186" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G186" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H186" t="inlineStr"><is><t></t></is></c>
+<c r="H186" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="187">
 <c r="A187" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1844,7 +1844,7 @@
 <c r="E187" s="1"><v>1</v></c>
 <c r="F187" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G187" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H187" t="inlineStr"><is><t></t></is></c>
+<c r="H187" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="188">
 <c r="A188" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1854,7 +1854,7 @@
 <c r="E188" s="1"><v>1</v></c>
 <c r="F188" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G188" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H188" t="inlineStr"><is><t></t></is></c>
+<c r="H188" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="189">
 <c r="A189" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1864,7 +1864,7 @@
 <c r="E189" s="1"><v>2</v></c>
 <c r="F189" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G189" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H189" t="inlineStr"><is><t></t></is></c>
+<c r="H189" t="inlineStr"><is><t>1 k 1 d</t></is></c>
 </row>
 <row r="190">
 <c r="A190" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -1883,7 +1883,7 @@
 <c r="E191" s="1"><v>1</v></c>
 <c r="F191" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G191" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H191" t="inlineStr"><is><t></t></is></c>
+<c r="H191" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="192">
 <c r="A192" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1893,7 +1893,7 @@
 <c r="E192" s="1"><v>1</v></c>
 <c r="F192" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G192" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H192" t="inlineStr"><is><t></t></is></c>
+<c r="H192" t="inlineStr"><is><t>2 k 1 d</t></is></c>
 </row>
 <row r="193">
 <c r="A193" t="inlineStr"><is><t>Med</t></is></c>
@@ -1903,7 +1903,7 @@
 <c r="E193" s="1"><v>1</v></c>
 <c r="F193" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G193" s="1" t="inlineStr"><is><t>Med</t></is></c>
-<c r="H193" t="inlineStr"><is><t></t></is></c>
+<c r="H193" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="194">
 <c r="A194" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1913,7 +1913,7 @@
 <c r="E194" s="1"><v>1</v></c>
 <c r="F194" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G194" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H194" t="inlineStr"><is><t></t></is></c>
+<c r="H194" t="inlineStr"><is><t>2 k 1 d</t></is></c>
 </row>
 <row r="195">
 <c r="A195" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1923,7 +1923,7 @@
 <c r="E195" s="1"><v>1</v></c>
 <c r="F195" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G195" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H195" t="inlineStr"><is><t></t></is></c>
+<c r="H195" t="inlineStr"><is><t>2 k 1 d</t></is></c>
 </row>
 <row r="196">
 <c r="A196" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
@@ -1933,7 +1933,7 @@
 <c r="E196" s="1"><v>1</v></c>
 <c r="F196" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G196" s="1" t="inlineStr"><is><t>H3170 Dyb kendyl natur</t></is></c>
-<c r="H196" t="inlineStr"><is><t></t></is></c>
+<c r="H196" t="inlineStr"><is><t>2 k 1 d</t></is></c>
 </row>
 <row r="197">
 <c r="A197" t="inlineStr"><is><t>Plot siv-1st</t></is></c>
@@ -1970,7 +1970,7 @@
 <c r="E200" s="1"><v>1</v></c>
 <c r="F200" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G200" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H200" t="inlineStr"><is><t></t></is></c>
+<c r="H200" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="201">
 <c r="A201" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1980,7 +1980,7 @@
 <c r="E201" s="1"><v>1</v></c>
 <c r="F201" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G201" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H201" t="inlineStr"><is><t></t></is></c>
+<c r="H201" t="inlineStr"><is><t>1 k 2 d</t></is></c>
 </row>
 <row r="202">
 <c r="A202" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -1990,7 +1990,7 @@
 <c r="E202" s="1"><v>1</v></c>
 <c r="F202" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G202" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H202" t="inlineStr"><is><t></t></is></c>
+<c r="H202" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="203">
 <c r="A203" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -2009,7 +2009,7 @@
 <c r="E204" s="1"><v>2</v></c>
 <c r="F204" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G204" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H204" t="inlineStr"><is><t></t></is></c>
+<c r="H204" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="205">
 <c r="A205" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2019,7 +2019,7 @@
 <c r="E205" s="1"><v>1</v></c>
 <c r="F205" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G205" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H205" t="inlineStr"><is><t></t></is></c>
+<c r="H205" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="206">
 <c r="A206" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2029,7 +2029,7 @@
 <c r="E206" s="1"><v>2</v></c>
 <c r="F206" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G206" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H206" t="inlineStr"><is><t></t></is></c>
+<c r="H206" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="207">
 <c r="A207" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2039,7 +2039,7 @@
 <c r="E207" s="1"><v>2</v></c>
 <c r="F207" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G207" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H207" t="inlineStr"><is><t></t></is></c>
+<c r="H207" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="208">
 <c r="A208" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2049,7 +2049,7 @@
 <c r="E208" s="1"><v>2</v></c>
 <c r="F208" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G208" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H208" t="inlineStr"><is><t></t></is></c>
+<c r="H208" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="209">
 <c r="A209" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -2077,7 +2077,7 @@
 <c r="E211" s="1"><v>1</v></c>
 <c r="F211" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G211" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H211" t="inlineStr"><is><t></t></is></c>
+<c r="H211" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="212">
 <c r="A212" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2087,7 +2087,7 @@
 <c r="E212" s="1"><v>1</v></c>
 <c r="F212" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G212" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H212" t="inlineStr"><is><t></t></is></c>
+<c r="H212" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="213">
 <c r="A213" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2097,7 +2097,7 @@
 <c r="E213" s="1"><v>1</v></c>
 <c r="F213" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G213" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H213" t="inlineStr"><is><t></t></is></c>
+<c r="H213" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="214">
 <c r="A214" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2107,7 +2107,7 @@
 <c r="E214" s="1"><v>1</v></c>
 <c r="F214" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G214" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H214" t="inlineStr"><is><t></t></is></c>
+<c r="H214" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="215">
 <c r="A215" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2117,7 +2117,7 @@
 <c r="E215" s="1"><v>1</v></c>
 <c r="F215" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G215" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H215" t="inlineStr"><is><t></t></is></c>
+<c r="H215" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="216">
 <c r="A216" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2127,7 +2127,7 @@
 <c r="E216" s="1"><v>1</v></c>
 <c r="F216" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G216" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H216" t="inlineStr"><is><t></t></is></c>
+<c r="H216" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="217">
 <c r="A217" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2146,7 +2146,7 @@
 <c r="E218" s="1"><v>1</v></c>
 <c r="F218" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G218" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H218" t="inlineStr"><is><t></t></is></c>
+<c r="H218" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="219">
 <c r="A219" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2156,7 +2156,7 @@
 <c r="E219" s="1"><v>1</v></c>
 <c r="F219" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G219" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H219" t="inlineStr"><is><t></t></is></c>
+<c r="H219" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="220">
 <c r="A220" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2166,7 +2166,7 @@
 <c r="E220" s="1"><v>1</v></c>
 <c r="F220" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G220" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H220" t="inlineStr"><is><t></t></is></c>
+<c r="H220" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="221">
 <c r="A221" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -2185,7 +2185,7 @@
 <c r="E222" s="1"><v>2</v></c>
 <c r="F222" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G222" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H222" t="inlineStr"><is><t></t></is></c>
+<c r="H222" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="223">
 <c r="A223" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2195,7 +2195,7 @@
 <c r="E223" s="1"><v>1</v></c>
 <c r="F223" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G223" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H223" t="inlineStr"><is><t></t></is></c>
+<c r="H223" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="224">
 <c r="A224" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2205,7 +2205,7 @@
 <c r="E224" s="1"><v>2</v></c>
 <c r="F224" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G224" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H224" t="inlineStr"><is><t></t></is></c>
+<c r="H224" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="225">
 <c r="A225" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2215,7 +2215,7 @@
 <c r="E225" s="1"><v>2</v></c>
 <c r="F225" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G225" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H225" t="inlineStr"><is><t></t></is></c>
+<c r="H225" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="226">
 <c r="A226" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2225,7 +2225,7 @@
 <c r="E226" s="1"><v>2</v></c>
 <c r="F226" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G226" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H226" t="inlineStr"><is><t></t></is></c>
+<c r="H226" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="227">
 <c r="A227" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -2253,7 +2253,7 @@
 <c r="E229" s="1"><v>1</v></c>
 <c r="F229" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G229" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H229" t="inlineStr"><is><t></t></is></c>
+<c r="H229" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="230">
 <c r="A230" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2263,7 +2263,7 @@
 <c r="E230" s="1"><v>1</v></c>
 <c r="F230" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G230" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H230" t="inlineStr"><is><t></t></is></c>
+<c r="H230" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="231">
 <c r="A231" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2273,7 +2273,7 @@
 <c r="E231" s="1"><v>1</v></c>
 <c r="F231" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G231" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H231" t="inlineStr"><is><t></t></is></c>
+<c r="H231" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="232">
 <c r="A232" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2283,7 +2283,7 @@
 <c r="E232" s="1"><v>1</v></c>
 <c r="F232" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G232" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H232" t="inlineStr"><is><t></t></is></c>
+<c r="H232" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="233">
 <c r="A233" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2293,7 +2293,7 @@
 <c r="E233" s="1"><v>1</v></c>
 <c r="F233" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G233" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H233" t="inlineStr"><is><t></t></is></c>
+<c r="H233" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="234">
 <c r="A234" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2303,7 +2303,7 @@
 <c r="E234" s="1"><v>1</v></c>
 <c r="F234" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G234" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H234" t="inlineStr"><is><t></t></is></c>
+<c r="H234" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="235">
 <c r="A235" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2322,7 +2322,7 @@
 <c r="E236" s="1"><v>1</v></c>
 <c r="F236" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G236" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H236" t="inlineStr"><is><t></t></is></c>
+<c r="H236" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="237">
 <c r="A237" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2332,7 +2332,7 @@
 <c r="E237" s="1"><v>1</v></c>
 <c r="F237" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G237" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H237" t="inlineStr"><is><t></t></is></c>
+<c r="H237" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="238">
 <c r="A238" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2342,7 +2342,7 @@
 <c r="E238" s="1"><v>1</v></c>
 <c r="F238" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G238" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H238" t="inlineStr"><is><t></t></is></c>
+<c r="H238" t="inlineStr"><is><t>1 k 2 d</t></is></c>
 </row>
 <row r="239">
 <c r="A239" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -2361,7 +2361,7 @@
 <c r="E240" s="1"><v>2</v></c>
 <c r="F240" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G240" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H240" t="inlineStr"><is><t></t></is></c>
+<c r="H240" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="241">
 <c r="A241" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2371,7 +2371,7 @@
 <c r="E241" s="1"><v>1</v></c>
 <c r="F241" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G241" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H241" t="inlineStr"><is><t></t></is></c>
+<c r="H241" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="242">
 <c r="A242" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2381,7 +2381,7 @@
 <c r="E242" s="1"><v>2</v></c>
 <c r="F242" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G242" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H242" t="inlineStr"><is><t></t></is></c>
+<c r="H242" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="243">
 <c r="A243" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2391,7 +2391,7 @@
 <c r="E243" s="1"><v>2</v></c>
 <c r="F243" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G243" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H243" t="inlineStr"><is><t></t></is></c>
+<c r="H243" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="244">
 <c r="A244" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2401,7 +2401,7 @@
 <c r="E244" s="1"><v>2</v></c>
 <c r="F244" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G244" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H244" t="inlineStr"><is><t></t></is></c>
+<c r="H244" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="245">
 <c r="A245" t="inlineStr"><is><t>HDF 3 mm</t></is></c>
@@ -2429,7 +2429,7 @@
 <c r="E247" s="1"><v>1</v></c>
 <c r="F247" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G247" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H247" t="inlineStr"><is><t></t></is></c>
+<c r="H247" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="248">
 <c r="A248" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2439,7 +2439,7 @@
 <c r="E248" s="1"><v>1</v></c>
 <c r="F248" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G248" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H248" t="inlineStr"><is><t></t></is></c>
+<c r="H248" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="249">
 <c r="A249" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2449,7 +2449,7 @@
 <c r="E249" s="1"><v>1</v></c>
 <c r="F249" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G249" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H249" t="inlineStr"><is><t></t></is></c>
+<c r="H249" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="250">
 <c r="A250" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2459,7 +2459,7 @@
 <c r="E250" s="1"><v>1</v></c>
 <c r="F250" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G250" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H250" t="inlineStr"><is><t></t></is></c>
+<c r="H250" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="251">
 <c r="A251" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2469,7 +2469,7 @@
 <c r="E251" s="1"><v>1</v></c>
 <c r="F251" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G251" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H251" t="inlineStr"><is><t></t></is></c>
+<c r="H251" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="252">
 <c r="A252" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2479,7 +2479,7 @@
 <c r="E252" s="1"><v>1</v></c>
 <c r="F252" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G252" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H252" t="inlineStr"><is><t></t></is></c>
+<c r="H252" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="253">
 <c r="A253" t="inlineStr"><is><t>Plot siv-1st</t></is></c>
@@ -2489,7 +2489,7 @@
 <c r="E253" s="1"><v>2</v></c>
 <c r="F253" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G253" s="1" t="inlineStr"><is><t>Plot siv-1st</t></is></c>
-<c r="H253" t="inlineStr"><is><t></t></is></c>
+<c r="H253" t="inlineStr"><is><t>2 k 1 d</t></is></c>
 </row>
 <row r="254">
 <c r="A254" t="inlineStr"><is><t>Med</t></is></c>
@@ -2499,7 +2499,7 @@
 <c r="E254" s="1"><v>1</v></c>
 <c r="F254" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G254" s="1" t="inlineStr"><is><t>Med</t></is></c>
-<c r="H254" t="inlineStr"><is><t></t></is></c>
+<c r="H254" t="inlineStr"><is><t>2 k 2 d</t></is></c>
 </row>
 <row r="255">
 <c r="A255" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
@@ -2509,7 +2509,7 @@
 <c r="E255" s="1"><v>1</v></c>
 <c r="F255" s="1" t="inlineStr"><is><t>False</t></is></c>
 <c r="G255" s="1" t="inlineStr"><is><t>Basic white W908 ST2</t></is></c>
-<c r="H255" t="inlineStr"><is><t></t></is></c>
+<c r="H255" t="inlineStr"><is><t>1 d</t></is></c>
 </row>
 <row r="256">
 <c r="A256" t="inlineStr"><is><t>Plot siv-1st</t></is></c>

@@ -72,6 +72,11 @@ Confirmations use a `MudDialog` implementation of the confirmation interface, in
   edit notifies `ConverterState`.
 - The per-tab contact fields are **not** copied (see step 5). A MegaTrading `TooManyMaterials`
   problem shows the offending materials and points to the rename row.
+- Since [ADR-0015](../adr/0015-megatrading-edge-banding-width-and-thickness.md) (after this phase), the
+  MegaTrading edges are no longer free text: each side is a width and a thickness picked from MegaTrading's
+  lists (`MegaTradingEdgeCell`, whose bucket button clears the side), a missing part is red, and a `MissingEdgeBanding` warning, in a warnings slot at the top of the tab that keeps its space, names the
+  materials. "Генерирай бланки за поръчка" asks for the missing values per material (`EdgeBandingDialog`)
+  before generating.
 
 ### 5. Contacts, generation and "Изтегли всички"
 

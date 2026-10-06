@@ -1,4 +1,5 @@
 using Kroiko.Domain;
+using Kroiko.Domain.TemplateBuilding;
 
 namespace Kroiko.Testing;
 
@@ -23,6 +24,12 @@ public static class TestData
 
     /// <summary>The "Кантиране с друг цвят" text of the <c>cabinet-23-field/Suliver-different-edge-color</c> golden files.</summary>
     public const string GoldenDifferentEdgeColor = "Бял гланц";
+
+    /// <summary>
+    /// The edge-banding width and thickness the operator picks for every material of the
+    /// <c>bathroom-4-materials/MegaTrading-edges-filled</c> golden files, where Polyboard gives neither (ADR-0015).
+    /// </summary>
+    public static MegaTradingEdge GoldenEdgeBanding { get; } = new(Width: "22", Thickness: "0.5");
 
     /// <summary>The output copy of the golden files, which <see cref="OrderFilesAssert"/> compares with.</summary>
     internal static string GoldenRoot => Path.Combine(Root, "golden");

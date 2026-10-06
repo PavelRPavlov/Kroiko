@@ -14,13 +14,15 @@ namespace Kroiko.Client.Blazor.Conversion;
 /// <para>
 /// Components read it directly and re-render on <see cref="Changed"/>. The grids edit the domain details in
 /// <see cref="Files"/> in place and then call <see cref="NotifyInputEdited"/>; every input edit discards the
-/// generated files without asking (ADR-0005 §7). Reading a file, the confirmation, making the files, generating,
+/// generated files without asking (ADR-0005 §7). A MegaTrading order whose banded sides miss an edge-banding width or
+/// thickness is completed while generating: the operator is asked for the missing values per material (ADR-0015). Reading a file, the confirmation, making the files, generating,
 /// the device settings and the downloads do not throw: a failure is logged, raises <see cref="Error"/> with a Bulgarian message
 /// where the operator must know, and leaves the Order as it was (ADR-0006 §4).
 /// </para>
 /// </summary>
 public sealed class ConverterState(
     IConfirmation confirmation,
+    IEdgeBandingPrompt edgeBandingPrompt,
     IDeviceSettingsStore deviceSettings,
     IFileDownloader downloader,
     IFolderPicker folderPicker,
@@ -33,6 +35,7 @@ public sealed class ConverterState(
     internal const string ConfirmFailedMessage = "Действието не можа да бъде потвърдено.";
     internal const string CreateFilesFailedMessage = "Файловете за поръчка не можаха да бъдат подготвени.";
     internal const string GenerateFailedMessage = "Бланките за поръчка не можаха да бъдат генерирани.";
+    internal const string EdgeBandingFailedMessage = "Ширината и дебелината на кантовете не можаха да бъдат избрани.";
     internal const string SaveSettingsFailedMessage =
         "Контактите и производителят не можаха да бъдат запомнени на това устройство.";
     internal const string DownloadFailedMessage = "Файловете за поръчка не можаха да бъдат изтеглени.";
@@ -47,6 +50,7 @@ public sealed class ConverterState(
     private string? _mobileNumber;
     private string? _differentEdgeColor;
     private bool _deviceSettingsLoaded;
+    private bool _askingEdgeBanding;
 
     // Counts input changes, so a generation can tell that the input changed while it ran.
     private int _inputVersion;
@@ -85,7 +89,10 @@ public sealed class ConverterState(
     /// </summary>
     public IReadOnlyList<string> UploadErrors { get; private set; } = [];
 
-    /// <summary>Why the manufacturer refuses to generate <see cref="Files"/> as they are now (ADR-0006 §3).</summary>
+    /// <summary>
+    /// Why the manufacturer refuses to generate <see cref="Files"/> as they are now (ADR-0006 §3). All but
+    /// <see cref="MissingEdgeBanding"/> block generating; that one <see cref="GenerateAsync"/> resolves by asking (ADR-0015).
+    /// </summary>
     public IReadOnlyList<OrderProblem> Problems { get; private set; } = [];
 
     /// <summary>The end customer's company name. Setting it is an input edit.</summary>
@@ -132,14 +139,14 @@ public sealed class ConverterState(
 
     /// <summary>
     /// "Генерирай бланки за поръчка" is allowed: there are files, both contact fields are filled (not just
-    /// whitespace) and <see cref="Problems"/> is empty (ADR-0005 §6, ADR-0006 §3), and nothing is being generated
-    /// or saved.
+    /// whitespace), <see cref="Problems"/> has none but <see cref="MissingEdgeBanding"/>, which generating asks for
+    /// (ADR-0005 §6, ADR-0006 §3, ADR-0015), and nothing is being generated or saved.
     /// </summary>
     public bool CanGenerate =>
         Files.Count > 0
         && !string.IsNullOrWhiteSpace(CompanyName)
         && !string.IsNullOrWhiteSpace(MobileNumber)
-        && Problems.Count == 0
+        && Problems.All(p => p is MissingEdgeBanding)
         && !IsGenerating
         && !IsSaving;
 
@@ -322,11 +329,13 @@ public sealed class ConverterState(
 
     /// <summary>
     /// Generates the order files, if <see cref="CanGenerate"/>, and remembers the contacts and the manufacturer
-    /// on this device. An edit made while it runs wins: nothing is generated from the old input.
+    /// on this device. A <see cref="MissingEdgeBanding"/> problem is resolved first: the operator picks the missing
+    /// values, which are filled in as an input edit, and cancelling generates nothing (ADR-0015). An edit made while it
+    /// runs wins: nothing is generated from the old input.
     /// </summary>
     public async Task GenerateAsync()
     {
-        if (!CanGenerate)
+        if (!CanGenerate || _askingEdgeBanding || !await FillMissingEdgeBandingAsync())
         {
             return;
         }
@@ -458,6 +467,46 @@ public sealed class ConverterState(
             IsSavingToFolder = false;
             OnChanged();
         }
+    }
+
+    // ADR-0015: asks for the edge banding the MegaTrading parts miss and fills it in (an input edit). True when there is
+    // nothing left to resolve; false when the operator cancelled, the dialog failed, or the Order changed meanwhile.
+    private async Task<bool> FillMissingEdgeBandingAsync()
+    {
+        if (Problems.OfType<MissingEdgeBanding>().FirstOrDefault() is not { } missing)
+        {
+            return true;
+        }
+
+        var files = Files;
+        IReadOnlyDictionary<string, MegaTradingEdge>? picks;
+        _askingEdgeBanding = true;
+        try
+        {
+            picks = await edgeBandingPrompt.AskAsync(missing);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "The operator could not be asked for the missing edge banding.");
+            OnError(EdgeBandingFailedMessage);
+            return false;
+        }
+        finally
+        {
+            _askingEdgeBanding = false;
+        }
+
+        if (picks is null || Files != files)
+        {
+            return false;
+        }
+
+        if (MegaTradingEdges.FillMissing(Files, picks))
+        {
+            InputChanged();
+        }
+
+        return Problems.Count == 0;
     }
 
     // Triggers the downloads of some of the generated files, one after another, as IsDownloading: each marks the files

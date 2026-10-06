@@ -18,6 +18,7 @@ namespace Kroiko.Client.Tests.Conversion;
 public sealed class ConverterStateTests
 {
     private readonly FakeConfirmation _confirmation = new();
+    private readonly FakeEdgeBandingPrompt _edgeBanding = new();
     private readonly FakeDeviceSettingsStore _settings = new();
     private readonly FakeFileDownloader _downloader = new();
     private readonly FakeFolderPicker _picker = new();
@@ -25,7 +26,7 @@ public sealed class ConverterStateTests
 
     public ConverterStateTests()
     {
-        _state = new ConverterState(_confirmation, _settings, _downloader, _picker, NullLogger<ConverterState>.Instance);
+        _state = new ConverterState(_confirmation, _edgeBanding, _settings, _downloader, _picker, NullLogger<ConverterState>.Instance);
     }
 
     [Fact]
@@ -237,8 +238,7 @@ public sealed class ConverterStateTests
         await LoadAsync(SupportedCompanies.MegaTrading, "kitchen-8-materials");
         FillContacts();
 
-        _state.Problems.Should().ContainSingle().Which.Should().BeOfType<TooManyMaterials>()
-            .Which.Materials.Should().HaveCount(8);
+        _state.Problems.OfType<TooManyMaterials>().Should().ContainSingle().Which.Materials.Should().HaveCount(8);
         _state.CanGenerate.Should().BeFalse();
     }
 
@@ -256,8 +256,98 @@ public sealed class ConverterStateTests
 
         _state.NotifyInputEdited();
 
-        _state.Problems.Should().BeEmpty();
+        // The fixture's edges still miss their banding, which generating asks for and does not block (ADR-0015).
+        _state.Problems.Should().ContainSingle().Which.Should().BeOfType<MissingEdgeBanding>();
         _state.CanGenerate.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Generating_a_MegaTrading_order_asks_for_the_missing_edge_banding_and_fills_it_in()
+    {
+        await LoadAsync(SupportedCompanies.MegaTrading, "wardrobes-4-materials");
+        FillContacts();
+        var missing = _state.Problems.OfType<MissingEdgeBanding>().Should().ContainSingle().Subject;
+
+        await _state.GenerateAsync();
+
+        _edgeBanding.Questions.Should().Equal(missing);
+        Edges().Should().NotBeEmpty().And.OnlyContain(e => e == "22/0.5");
+        _state.Problems.Should().BeEmpty();
+        var cutMt = Encoding.UTF8.GetString(_state.GeneratedFiles.Single(f => f.FileName.EndsWith(".cut_mt")).Content);
+        cutMt.Should().Contain("╪22/0.5╪").And.NotContain("╪/");
+    }
+
+    [Fact]
+    public async Task Cancelling_the_edge_banding_question_generates_nothing_and_fills_nothing()
+    {
+        await LoadAsync(SupportedCompanies.MegaTrading, "wardrobes-4-materials");
+        FillContacts();
+        var edges = Edges();
+        _edgeBanding.Answer = null;
+
+        await _state.GenerateAsync();
+
+        _edgeBanding.Questions.Should().ContainSingle();
+        _state.GeneratedFiles.Should().BeEmpty();
+        Edges().Should().Equal(edges);
+        _state.Problems.Should().ContainSingle().Which.Should().BeOfType<MissingEdgeBanding>();
+        _state.CanGenerate.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task An_edge_banding_question_that_cannot_open_reports_it_and_generates_nothing()
+    {
+        await LoadAsync(SupportedCompanies.MegaTrading, "wardrobes-4-materials");
+        FillContacts();
+        var errors = new List<string>();
+        _state.Error += errors.Add;
+        _edgeBanding.Failure = new InvalidOperationException("The dialog could not open.");
+
+        await _state.GenerateAsync();
+
+        errors.Should().Equal(ConverterState.EdgeBandingFailedMessage);
+        _state.GeneratedFiles.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Edge_banding_picked_in_the_grid_is_kept_and_complete_edge_banding_is_not_asked_for()
+    {
+        await LoadAsync(SupportedCompanies.MegaTrading, "wardrobes-4-materials");
+        FillContacts();
+        var details = _state.Files.SelectMany(f => f.Details).Cast<MegaTradingDetail>().ToList();
+        var picked = details.First(d => d.LeftEdge != string.Empty);
+        picked.LeftEdge = "42/2.0";
+        _state.NotifyInputEdited();
+
+        await _state.GenerateAsync();
+        picked.LeftEdge.Should().Be("42/2.0");
+
+        _edgeBanding.Questions.Clear();
+        _state.CompanyName = "Друга ООД";
+        await _state.GenerateAsync();
+
+        _edgeBanding.Questions.Should().BeEmpty();
+        _state.GeneratedFiles.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task Too_many_materials_cannot_generate_so_the_edge_banding_is_not_asked_for()
+    {
+        await LoadAsync(SupportedCompanies.MegaTrading, "kitchen-8-materials");
+        FillContacts();
+
+        await _state.GenerateAsync();
+
+        _edgeBanding.Questions.Should().BeEmpty();
+        _state.GeneratedFiles.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Lonira_never_asks_for_edge_banding()
+    {
+        await GenerateAsync(SupportedCompanies.Lonira, "wardrobes-4-materials");
+
+        _edgeBanding.Questions.Should().BeEmpty();
     }
 
     [Fact]
@@ -271,7 +361,8 @@ public sealed class ConverterStateTests
 
         Materials().Should().NotContain(["Mirror", "Med"]);
         Materials().Count(m => m == "Lemon sorbet").Should().Be(parts["Lemon sorbet"] + parts["Mirror"] + parts["Med"]);
-        _state.Problems.Should().BeEmpty();
+        // The fixture's edges still miss their banding, which generating asks for and does not block (ADR-0015).
+        _state.Problems.Should().ContainSingle().Which.Should().BeOfType<MissingEdgeBanding>();
         _state.CanGenerate.Should().BeTrue();
     }
 
@@ -1286,6 +1377,13 @@ public sealed class ConverterStateTests
         await _state.SelectManufacturerAsync(manufacturer);
         (await _state.UploadAsync(Fixture(fixture))).Should().BeTrue();
     }
+
+    // Every banded MegaTrading side of the Order, in order.
+    private List<string> Edges() =>
+        _state.Files.SelectMany(f => f.Details).Cast<MegaTradingDetail>()
+            .SelectMany(d => new[] { d.LeftEdge, d.BottomEdge, d.RightEdge, d.TopEdge })
+            .Where(e => e != string.Empty)
+            .ToList();
 
     private List<string> Materials() => _state.Files.SelectMany(f => f.Details).Select(d => d.Material).ToList();
 
