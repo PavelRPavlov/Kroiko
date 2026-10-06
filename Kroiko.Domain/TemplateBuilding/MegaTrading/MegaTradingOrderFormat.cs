@@ -64,6 +64,17 @@ internal sealed class MegaTradingOrderFormat()
         LeftEdge = Edge(detail.HasBottomEdge, detail.BottomEdgeThickness),
     };
 
+    /// <summary>
+    /// <paramref name="detail"/>'s banded sides as Lonira counts them (<see cref="EdgeBandingSummary"/>), from its edges as
+    /// they are now, so edges the operator picked or cleared count: the inverse of the side mapping above.
+    /// </summary>
+    internal static string EdgeSummary(MegaTradingDetail detail) =>
+        EdgeBandingSummary.Describe(detail.Height, detail.Width, detail.Rotated,
+            top: !string.IsNullOrEmpty(detail.RightEdge),
+            bottom: !string.IsNullOrEmpty(detail.LeftEdge),
+            right: !string.IsNullOrEmpty(detail.BottomEdge),
+            left: !string.IsNullOrEmpty(detail.TopEdge));
+
     private static string Edge(bool hasEdge, double thickness) =>
         hasEdge ? new MegaTradingEdge(string.Empty, MegaTradingEdge.ThicknessFromPolyboard(thickness)).ToString() : string.Empty;
 

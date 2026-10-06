@@ -40,76 +40,7 @@ internal sealed class LoniraOrderFormat()
         return string.Empty;
     }
 
-    private static string GetLoniraEdges(Detail detail)
-    {
-        if (detail.IsGrainDirectionReversed)
-        {
-            detail = detail with { Height = detail.Width, Width = detail.Height };
-        }
-
-        int longEdgeCount = 0;
-        int shortEdgeCount = 0;
-
-        if (detail.Width >= detail.Height)
-        {
-            if (detail.HasLeftEdge)
-            {
-                shortEdgeCount++;
-            }
-
-            if (detail.HasTopEdge)
-            {
-                longEdgeCount++;
-            }
-
-            if (detail.HasRightEdge)
-            {
-                shortEdgeCount++;
-            }
-
-            if (detail.HasBottomEdge)
-            {
-                longEdgeCount++;
-            }
-        }
-        else
-        {
-            if (detail.HasLeftEdge)
-            {
-                longEdgeCount++;
-            }
-
-            if (detail.HasTopEdge)
-            {
-                shortEdgeCount++;
-            }
-
-            if (detail.HasRightEdge)
-            {
-                longEdgeCount++;
-            }
-
-            if (detail.HasBottomEdge)
-            {
-                shortEdgeCount++;
-            }
-        }
-
-        if (shortEdgeCount == 0 && longEdgeCount == 0)
-        {
-            return string.Empty;
-        }
-
-        if (shortEdgeCount == 0 && longEdgeCount != 0)
-        {
-            return string.Create(CultureInfo.InvariantCulture, $"{longEdgeCount} d");
-        }
-
-        if (longEdgeCount == 0 && shortEdgeCount != 0)
-        {
-            return string.Create(CultureInfo.InvariantCulture, $"{shortEdgeCount} k");
-        }
-
-        return string.Create(CultureInfo.InvariantCulture, $"{shortEdgeCount} k {longEdgeCount} d");
-    }
+    private static string GetLoniraEdges(Detail detail) =>
+        EdgeBandingSummary.Describe(detail.Height, detail.Width, detail.IsGrainDirectionReversed,
+            detail.HasTopEdge, detail.HasBottomEdge, detail.HasRightEdge, detail.HasLeftEdge);
 }
