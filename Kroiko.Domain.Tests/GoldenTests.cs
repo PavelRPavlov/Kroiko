@@ -1,6 +1,7 @@
 using System.Globalization;
 using Kroiko.Domain.CellsExtracting;
 using Kroiko.Domain.ExcelFilesGeneration;
+using Kroiko.Domain.TemplateBuilding;
 using Kroiko.Testing;
 using Xunit;
 
@@ -77,10 +78,22 @@ public sealed class GoldenTests
         OrderFilesAssert.MatchGolden(fixture, "Suliver-different-edge-color", files);
     }
 
+    [Fact]
+    public async Task MegaTrading_with_the_missing_edge_banding_filled_matches_the_golden_files()
+    {
+        // bathroom-4-materials is the 11-field format: Polyboard gives no edge-banding width or thickness, so the PWA
+        // asks for both per material before generating, and fills them in (ADR-0015).
+        const string fixture = "bathroom-4-materials";
+        var files = await RunPipelineAsync(fixture, nameof(SupportedCompanies.MegaTrading), fillMissingEdgeBanding: true);
+
+        OrderFilesAssert.MatchGolden(fixture, "MegaTrading-edges-filled", files);
+    }
+
     // The only place that knows how the Server turns a fixture into order files (the steps below name its components).
     // Phase 02 changes this method's body — and nothing else in the tests.
     private static async Task<IReadOnlyList<FileSaveContext>> RunPipelineAsync(
-        string fixture, string manufacturer, string? differentEdgeColor = null, CultureInfo? culture = null)
+        string fixture, string manufacturer, string? differentEdgeColor = null, CultureInfo? culture = null,
+        bool fillMissingEdgeBanding = false)
     {
         var content = await File.ReadAllBytesAsync(TestData.Polyboard(fixture));
 
@@ -100,6 +113,12 @@ public sealed class GoldenTests
         var format = FormatTestData.FormatNamed(manufacturer);
         var files = format.CreateFiles(parsed.Details);
         var contact = TestData.GoldenContact;
+
+        // The PWA's edge-banding dialog, answered with the same pick for every material (the Server has none).
+        if (fillMissingEdgeBanding && MegaTradingEdges.FindMissing(files) is { } missing)
+        {
+            MegaTradingEdges.FillMissing(files, missing.Materials.ToDictionary(m => m.Material, _ => TestData.GoldenEdgeBanding));
+        }
 
         // ConverterContext.DifferentEdgeColor starts as string.Empty when the operator leaves it alone.
         return format.Generate(contact, files, differentEdgeColor ?? string.Empty);
