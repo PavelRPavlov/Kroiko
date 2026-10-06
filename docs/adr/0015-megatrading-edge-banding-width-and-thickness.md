@@ -44,7 +44,8 @@ error for every edge dropdown. Decompiling the app (`monodis`) showed the cause:
    open shows a snackbar.
 5. **The grid picks, it does not type.** The MegaTrading tab's four edge columns are a width and a thickness
    `MudSelect` each, with "—" for empty (both "—" removes the edge), and a bucket button that clears both at once,
-   removing the edge (disabled on a side with no edge); a part an edge misses shows in red, and a warning
+   removing the edge (disabled on a side with no edge); a part an edge misses shows in red — only red: the picker's
+   empty error helper row is hidden, so a cell is the same height in every state — and a warning
    alert counts the missing edges and names their materials. The tab's warnings (this one and `TooManyMaterials`)
    share one slot at the top of the tab that always keeps room for one warning — more on narrower screens, where the
    text wraps (`.tab-warnings` in `app.css`) — so the rename rows and the grid do not jump as warnings come and go.

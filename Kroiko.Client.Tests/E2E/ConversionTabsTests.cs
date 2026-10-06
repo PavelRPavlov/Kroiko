@@ -250,6 +250,49 @@ public sealed class ConversionTabsTests(PublishedApp app)
         console.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task A_MegaTrading_edge_cell_is_the_same_height_empty_missing_half_picked_and_picked()
+    {
+        await using var context = await app.NewContextAsync();
+        var page = await context.NewPageAsync();
+        var console = ConsoleErrors(page);
+        await page.GotoAsync("/");
+
+        await PickAsync(page, "Мега Трейдинг, гр.София");
+        await UploadAsync(page, new FilePayload
+        {
+            Name = "one-edge.txt",
+            MimeType = "text/plain",
+            // The first part has Polyboard's bottom edge (MegaTrading's left) with no values; the second has no edges.
+            Buffer = Encoding.UTF8.GetBytes("600;300;1;Бяло;0;0;1;0;0;[1K];1\r\n600;300;1;Бяло;0;0;0;0;0;[1K];2\r\n"),
+        });
+        var rows = page.Locator(".mud-table-body tr");
+        var left = rows.First.Locator(".megatrading-edge[data-side='Ляво']");
+        const string red = ".mud-input-control.mud-input-error";
+        await Expect(left.Locator(red)).ToHaveCountAsync(2);
+        var empty = await HeightAsync(rows.Nth(1));
+
+        (await HeightAsync(rows.First)).Should().Be(empty, "a missing value is red, not taller");
+
+        await left.Locator(".edge-width").ClickAsync();
+        await page.GetByRole(AriaRole.Option, new() { Name = "22", Exact = true }).ClickAsync();
+        await Expect(left.Locator(red)).ToHaveCountAsync(1);
+        (await HeightAsync(rows.First)).Should().Be(empty, "half picked");
+
+        await left.Locator(".edge-thickness").ClickAsync();
+        await page.GetByRole(AriaRole.Option, new() { Name = "0.5", Exact = true }).ClickAsync();
+        await Expect(left.Locator(red)).ToHaveCountAsync(0);
+        (await HeightAsync(rows.First)).Should().Be(empty, "picked");
+
+        await page.GetByRole(AriaRole.Button, new() { Name = "Ляво: изчисти канта" }).First.ClickAsync();
+        await Expect(page.GetByTestId("missing-edge-banding")).ToHaveCountAsync(0);
+        (await HeightAsync(rows.First)).Should().Be(empty, "cleared");
+        console.Should().BeEmpty();
+    }
+
+    private static Task<double> HeightAsync(ILocator element) =>
+        element.EvaluateAsync<double>("e => e.getBoundingClientRect().height");
+
     // The element's top on the page, not the viewport, so scrolling does not count.
     private static Task<double> TopAsync(ILocator element) =>
         element.EvaluateAsync<double>("e => Math.round(e.getBoundingClientRect().top + window.scrollY)");

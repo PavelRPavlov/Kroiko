@@ -94,6 +94,13 @@ h1:focus {
     cursor: pointer;
 }
 
+/* A MegaTrading edge cell's pickers (MegaTradingEdgeCell) show a missing value in red only. MudBlazor adds an empty
+   helper-text row under a picker in the error state, 3 px that made the grid row grow and shrink as edges were
+   picked or cleared; with it hidden, a cell is the same height whatever its state. */
+.megatrading-edge .mud-input-control-helper-container {
+    display: none;
+}
+
 /* A tab's warnings (MegaTradingTabItemContent): space for one warning is always kept, so the content below does not
    jump as warnings come and go. The text wraps more on narrower screens (MudBlazor's sm/md breakpoints), so more space
    is kept there; more warnings, or a long material list, still grow it. */
